@@ -16,15 +16,18 @@ SOURCES +=\
     src/main.cpp \
     src/Distributor.cpp \
     src/Client.cpp \
-    src/AboutDialog.cpp
+    src/AboutDialog.cpp \
+    src/SettingsDialog.cpp
 
 HEADERS  += src/HaveClip.h \
     src/Distributor.h \
     src/Client.h \
-    src/AboutDialog.h
+    src/AboutDialog.h \
+    src/SettingsDialog.h
 
 FORMS    += mainwindow.ui \
-    src/AboutDialog.ui
+    src/AboutDialog.ui \
+    src/SettingsDialog.ui
 
 RESOURCES += \
     HaveClip.qrc

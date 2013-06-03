@@ -63,6 +63,7 @@ private slots:
 	void updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory = false);
 	void historyActionClicked(QObject *obj);
 	void toggleSharedClipboard(bool enabled);
+	void showSettings();
 	void showAbout();
 };
 

@@ -10,6 +10,7 @@
 
 #include "Client.h"
 #include "Distributor.h"
+#include "SettingsDialog.h"
 #include "AboutDialog.h"
 
 HaveClip::HaveClip(QObject *parent) :
@@ -55,7 +56,7 @@ HaveClip::HaveClip(QObject *parent) :
 	connect(a, SIGNAL(toggled(bool)), this, SLOT(toggleSharedClipboard(bool)));
 
 	menu->addSeparator();
-	menu->addAction(tr("&Settings"));
+	menu->addAction(tr("&Settings"), this, SLOT(showSettings()));
 	menu->addAction(tr("&About..."), this, SLOT(showAbout()));
 	menu->addAction(tr("&Quit"), qApp, SLOT(quit()));
 
@@ -155,7 +156,7 @@ void HaveClip::incomingConnection(int handle)
 }
 
 /**
-  Called when we receive new clipboard by network
+  Called when new clipboard is received via network
   */
 void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory)
 {
@@ -177,11 +178,10 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHis
 		clipboard->setText(data.toStringList().join("\n"));
 		break;
 
-	case HaveClip::ImageData: {
+	case HaveClip::ImageData:
 		qDebug() << "Set clipboard image";
 		clipboard->setImage( qvariant_cast<QImage>(data) );
 		break;
-	}
 	default:break;
 	}
 
@@ -273,6 +273,18 @@ void HaveClip::historyActionClicked(QObject *obj)
 void HaveClip::toggleSharedClipboard(bool enabled)
 {
 	synchronize = enabled;
+}
+
+void HaveClip::showSettings()
+{
+	SettingsDialog *dlg = new SettingsDialog(settings);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		settings->setValue("Pool/Nodes", dlg->nodes());
+	}
+
+	dlg->deleteLater();
 }
 
 void HaveClip::showAbout()
