@@ -63,9 +63,11 @@ void Distributor::onConnect()
 		ba.append(data.toStringList().join("\n").toUtf8());
 		break;
 	case HaveClip::ImageData: {
-		QBuffer buffer(&ba);
+		QByteArray tmp;
+		QBuffer buffer(&tmp);
 		buffer.open(QIODevice::WriteOnly);
-		data.value<QImage>().save(&buffer);
+		data.value<QImage>().save(&buffer, "PNG");
+		ba.append(tmp);
 		break;
 	}
 	default:
