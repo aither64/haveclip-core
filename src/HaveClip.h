@@ -51,16 +51,18 @@ private:
 	QList<HistoryItem*> history;
 	QHash<QAction*, HistoryItem*> historyHash;
 	QSignalMapper *signalMapper;
+	bool synchronize;
 
-	void addToHistory(HistoryItem *it);
+	void addToHistory(MimeType type, QVariant data);
 	void updateHistoryContextMenu();
 
 private slots:
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m);
 	void incomingConnection(int handle);
-	void updateClipboard(HaveClip::MimeType t, QVariant data);
+	void updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory = false);
 	void historyActionClicked(QObject *obj);
+	void toggleSharedClipboard(bool enabled);
 	void showAbout();
 };
 

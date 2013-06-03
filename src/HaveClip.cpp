@@ -13,7 +13,8 @@
 #include "AboutDialog.h"
 
 HaveClip::HaveClip(QObject *parent) :
-	QTcpServer(parent)
+	QTcpServer(parent),
+	synchronize(true)
 {
 	clipboard = QApplication::clipboard();
 	signalMapper = new QSignalMapper(this);
@@ -47,6 +48,13 @@ HaveClip::HaveClip(QObject *parent) :
 
 	menu = new QMenu;
 	menuSeparator = menu->addSeparator();
+
+	QAction *a = menu->addAction(tr("&Enable clipboard synchronization"));
+	a->setCheckable(true);
+	a->setChecked(synchronize);
+	connect(a, SIGNAL(toggled(bool)), this, SLOT(toggleSharedClipboard(bool)));
+
+	menu->addSeparator();
 	menu->addAction(tr("&Settings"));
 	menu->addAction(tr("&About..."), this, SLOT(showAbout()));
 	menu->addAction(tr("&Quit"), qApp, SLOT(quit()));
@@ -107,20 +115,18 @@ void HaveClip::clipboardChanged()
 		return;
 	}
 
-	HistoryItem *item = new HistoryItem;
-	item->type = type;
-	item->data = data;
-
-	addToHistory(item);
-
+	addToHistory(type, data);
 	updateHistoryContextMenu();
 
 	lastClipboard = data;
 
-	foreach(Node *n, pool)
+	if(synchronize)
 	{
-		Distributor *d = new Distributor(n, this);
-		d->distribute(type, data);
+		foreach(Node *n, pool)
+		{
+			Distributor *d = new Distributor(n, this);
+			d->distribute(type, data);
+		}
 	}
 }
 
@@ -151,11 +157,12 @@ void HaveClip::incomingConnection(int handle)
 /**
   Called when we receive new clipboard by network
   */
-void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data)
+void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory)
 {
 	qDebug() << "Update clipboard" << t << data;
 
-	lastClipboard = data;
+	if(!fromHistory)
+		lastClipboard = data;
 
 	switch(t)
 	{
@@ -178,21 +185,30 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data)
 	default:break;
 	}
 
-	HistoryItem *item = new HistoryItem;
-	item->type = t;
-	item->data = data;
+	if(!fromHistory)
+	{
+		addToHistory(t, data);
 
-	addToHistory(item);
-
-	updateHistoryContextMenu();
+		updateHistoryContextMenu();
+	}
 }
 
-void HaveClip::addToHistory(HistoryItem *it)
+void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data)
 {
+	foreach(HistoryItem *it, history)
+	{
+		if(it->data == data)
+			return;
+	}
+
+	HistoryItem *item = new HistoryItem;
+	item->type = type;
+	item->data = data;
+
 	if(history.size() >= 10)
 		delete history.takeFirst();
 
-	history << it;
+	history << item;
 }
 
 void HaveClip::updateHistoryContextMenu()
@@ -213,7 +229,22 @@ void HaveClip::updateHistoryContextMenu()
 
 	foreach(HistoryItem *it, history)
 	{
-		QString text = it->data.toString().trimmed().left(30);
+		QString text;
+
+		switch(it->type)
+		{
+		case HaveClip::Text:
+		case HaveClip::Html:
+			text = it->data.toString().trimmed().left(30);
+			break;
+		case HaveClip::Urls:
+			text = it->data.toStringList().first().left(30);
+			break;
+		case HaveClip::ImageData:
+			text = tr("Image");
+			break;
+		}
+
 		QAction *act = new QAction(text, this);
 
 		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
@@ -235,8 +266,13 @@ void HaveClip::historyActionClicked(QObject *obj)
 	{
 		HistoryItem *it = historyHash[act];
 
-		updateClipboard(it->type, it->data);
+		updateClipboard(it->type, it->data, true);
 	}
+}
+
+void HaveClip::toggleSharedClipboard(bool enabled)
+{
+	synchronize = enabled;
 }
 
 void HaveClip::showAbout()

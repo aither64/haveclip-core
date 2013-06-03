@@ -68,6 +68,8 @@ void Distributor::onConnect()
 		buffer.open(QIODevice::WriteOnly);
 		data.value<QImage>().save(&buffer, "PNG");
 		ba.append(tmp);
+
+		qDebug() << data.value<QImage>().textKeys();
 		break;
 	}
 	default:
