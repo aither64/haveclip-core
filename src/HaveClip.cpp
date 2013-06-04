@@ -7,14 +7,29 @@
 #include <QImage>
 #include <QColor>
 #include <QMenu>
+#include <QLabel>
+#include <QTemporaryFile>
+#include <QDir>
 
 #include "Client.h"
 #include "Distributor.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
 
+HaveClip::ItemPreview::~ItemPreview()
+{
+	QFile::remove(path);
+}
+
+HaveClip::HistoryItem::~HistoryItem()
+{
+	if(preview)
+		delete preview;
+}
+
 HaveClip::HaveClip(QObject *parent) :
-	QTcpServer(parent)
+	QTcpServer(parent),
+	currentItem(0)
 {
 	clipboard = QApplication::clipboard();
 	signalMapper = new QSignalMapper(this);
@@ -99,6 +114,7 @@ void HaveClip::clipboardChanged()
 	HaveClip::MimeType type;
 	const QMimeData *mimeData = clipboard->mimeData(QClipboard::Clipboard);
 	QVariant data;
+	HaveClip::ItemPreview *preview = 0;
 
 	if(mimeData->hasText()) {
 		type = HaveClip::Text;
@@ -123,6 +139,9 @@ void HaveClip::clipboardChanged()
 		type = HaveClip::ImageData;
 		data = mimeData->imageData();
 
+		QImage img = data.value<QImage>();
+
+		preview = createItemPreview(img);
 	} else {
 		qDebug() << "Uknown MIME type, ignoring";
 		return;
@@ -134,7 +153,8 @@ void HaveClip::clipboardChanged()
 		return;
 	}
 
-	addToHistory(type, data);
+	addToHistory(type, data, preview);
+	updateToolTip();
 	updateHistoryContextMenu();
 
 	lastClipboard = data;
@@ -183,6 +203,8 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHis
 	if(!fromHistory)
 		lastClipboard = data;
 
+	HaveClip::ItemPreview *preview = 0;
+
 	switch(t)
 	{
 	case HaveClip::Text:
@@ -196,25 +218,65 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHis
 		clipboard->setText(data.toStringList().join("\n"));
 		break;
 
-	case HaveClip::ImageData:
+	case HaveClip::ImageData: {
 		qDebug() << "Set clipboard image";
-		clipboard->setImage( qvariant_cast<QImage>(data) );
+		QImage img = data.value<QImage>();
+		clipboard->setImage(img);
+
+		preview = createItemPreview(img);
 		break;
+	}
 	default:break;
 	}
 
-	if(!fromHistory)
+	if(fromHistory)
 	{
-		addToHistory(t, data);
-
+		updateToolTip();
+	} else {
+		addToHistory(t, data, preview);
+		updateToolTip();
 		updateHistoryContextMenu();
 	}
 }
 
-void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data)
+HaveClip::ItemPreview* HaveClip::createItemPreview(QImage &img)
+{
+	ItemPreview *preview = 0;
+	QTemporaryFile tmp(QDir::tempPath() + "/haveclip-preview-XXXXXX");
+	tmp.setAutoRemove(false);
+
+	if(tmp.open())
+	{
+		if( img.save(&tmp, "PNG") )
+		{
+			preview = new ItemPreview;
+			preview->path = tmp.fileName();
+			preview->width = img.width();
+			preview->height = img.height();
+		}
+
+		tmp.close();
+	}
+
+	return preview;
+}
+
+void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data, ItemPreview *preview)
 {
 	if(!histEnabled)
+	{
+		if(currentItem == 0)
+		{
+			currentItem = new HistoryItem;
+			history << currentItem;
+		}
+
+		currentItem->type = type;
+		currentItem->data = data;
+		currentItem->preview = preview;
+
 		return;
+	}
 
 	foreach(HistoryItem *it, history)
 	{
@@ -225,11 +287,13 @@ void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data)
 	HistoryItem *item = new HistoryItem;
 	item->type = type;
 	item->data = data;
+	item->preview = preview;
 
 	if(history.size() >= histSize)
 		delete history.takeFirst();
 
 	history << item;
+	currentItem = item;
 }
 
 void HaveClip::updateHistoryContextMenu()
@@ -266,10 +330,17 @@ void HaveClip::updateHistoryContextMenu()
 			break;
 		case HaveClip::ImageData:
 			text = tr("Image");
+
+			if(it->icon.isNull())
+				it->icon = QIcon( QPixmap::fromImage(it->data.value<QImage>()) );
+
 			break;
 		}
 
 		QAction *act = new QAction(text, this);
+
+		if(!it->icon.isNull())
+			act->setIcon(it->icon);
 
 		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 		signalMapper->setMapping(act, act);
@@ -282,6 +353,45 @@ void HaveClip::updateHistoryContextMenu()
 	}
 }
 
+void HaveClip::updateToolTip()
+{
+	QString tip;
+
+	switch(currentItem->type)
+	{
+	case HaveClip::Text:
+	case HaveClip::Html: {
+		QString s = currentItem->data.toString();
+		tip = "<pre>" + s.mid(0, 200) + "</pre>";
+
+		if(s.size() > 200)
+			tip += "<br>...";
+		break;
+	}
+	case HaveClip::Urls: {
+		QStringList l = currentItem->data.toStringList();
+		tip = QStringList(l.mid(0, 10)).join("\n");
+
+		if(l.size() > 10)
+			tip += "<br>...";
+		break;
+	}
+	case HaveClip::ImageData: {
+		QString prop;
+
+		if(currentItem->preview->width > 400)
+			prop = QString("width=\"%1\"").arg(400);
+		else if(currentItem->preview->height > 400)
+			prop = QString("height=\"%1\"").arg(400);
+
+		tip = QString("<p><img src=\"%1\" %2></p>").arg(currentItem->preview->path).arg(prop);
+		break;
+	}
+	}
+
+	trayIcon->setToolTip("HaveClip" + tip);
+}
+
 void HaveClip::historyActionClicked(QObject *obj)
 {
 	QAction *act = static_cast<QAction*>(obj);
@@ -290,6 +400,7 @@ void HaveClip::historyActionClicked(QObject *obj)
 	{
 		HistoryItem *it = historyHash[act];
 
+		currentItem = it;
 		updateClipboard(it->type, it->data, true);
 	}
 }

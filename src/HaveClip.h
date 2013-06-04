@@ -29,9 +29,21 @@ public:
 		Unknown
 	};
 
+	struct ItemPreview {
+		QString path;
+		int width;
+		int height;
+
+		~ItemPreview();
+	};
+
 	struct HistoryItem {
 		MimeType type;
 		QVariant data;
+		QIcon icon;
+		ItemPreview *preview;
+
+		~HistoryItem();
 	};
 
 	explicit HaveClip(QObject *parent = 0);
@@ -53,6 +65,7 @@ private:
 	QAction *clipRecvAction;
 	QList<HistoryItem*> history;
 	QHash<QAction*, HistoryItem*> historyHash;
+	HistoryItem *currentItem;
 	QSignalMapper *signalMapper;
 	bool clipSync;
 	bool clipSnd;
@@ -60,8 +73,10 @@ private:
 	bool histEnabled;
 	int histSize;
 
-	void addToHistory(MimeType type, QVariant data);
+	ItemPreview* createItemPreview(QImage &img);
+	void addToHistory(MimeType type, QVariant data, ItemPreview *preview);
 	void updateHistoryContextMenu();
+	void updateToolTip();
 
 private slots:
 	void clipboardChanged();
