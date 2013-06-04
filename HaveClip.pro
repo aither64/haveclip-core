@@ -25,8 +25,7 @@ HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
     src/SettingsDialog.h
 
-FORMS    += mainwindow.ui \
-    src/AboutDialog.ui \
+FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui
 
 RESOURCES += \
