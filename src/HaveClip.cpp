@@ -153,11 +153,9 @@ void HaveClip::clipboardChanged()
 		return;
 	}
 
+	// Clipboards did not change
 	if(lastClipboard == data)
-	{
-		qDebug() << "Clipboard is the same, no need to propagate";
 		return;
-	}
 
 	addToHistory(type, data, preview);
 	updateToolTip();
