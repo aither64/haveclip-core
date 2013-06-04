@@ -1,0 +1,67 @@
+HaveClip - a simple clipboard management tool
+=============================================
+
+Have you ever grown tired of thinking how to transfer a link or a text from one
+computer to another? Will you email yourself, use 3rd party service like
+pastebin, or will you copy it by hand?
+
+HaveClip may be the solution. Ctrl+C on one computer, Ctrl+V on another. Simple.
+
+Main features are:
+ - synchronize clipboard on multiple devices
+ - save clipboard history, easily get overwritten data
+
+Clipboard is instantly synchronized across all your devices. It can handle all
+forms of text and images.
+
+HaveClip is multiplatform. Copy a file in one OS, paste in another.
+Supports Windows, Linux and Mac OS X. Client for Android is planned.
+It should also be possible to create client for iOS and other mobile OSes.
+
+So far it is not possible to copy files over network with HaveClip. I would
+like to implement it though. HaveClip also does not support non-standard
+or application specific data in clipboard. These are ignored.
+
+Build
+-----
+  # tar -xzf HaveClip-0.1.0-src.tar.gz
+  # cd HaveClip-0.1.0-src
+  # qmake
+  # make
+
+Installation
+------------
+You can either copy it to /usr/local/bin
+
+  # cp HaveClip /usr/local/bin/
+
+or wherever you want.
+
+Run with
+
+  # ./HaveClip
+
+Usage
+-----
+Launch it. First thing you want to do is to setup devices, where the clipboard
+will be synced. Right click on the tray icon and select Settings. Go to tab Pool
+and add IP addresses of your devices. The format for each entry is
+IP address:port. For example:
+
+  1.2.3.4:9999
+
+Now when you copy something into clipboard, it will be sent to all devices
+listed in Pool.
+
+License
+-------
+HaveClip is released under GNU/GPL.
+
+WARNING
+-------
+Currently, there is *no* security in place. Contents of clipboard are sent
+in plaintext. It is meant for home and personal use only. Definitely do not use
+it unsecured over the Internet!
+
+However, I plan to implement SSL and some passwords, so no one would be able
+to easily inject something in your clipboard.

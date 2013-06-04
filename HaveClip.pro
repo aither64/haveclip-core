@@ -31,3 +31,6 @@ FORMS    += mainwindow.ui \
 
 RESOURCES += \
     HaveClip.qrc
+
+OTHER_FILES += \
+    README
