@@ -14,8 +14,7 @@
 #include "AboutDialog.h"
 
 HaveClip::HaveClip(QObject *parent) :
-	QTcpServer(parent),
-	synchronize(true)
+	QTcpServer(parent)
 {
 	clipboard = QApplication::clipboard();
 	signalMapper = new QSignalMapper(this);
@@ -40,6 +39,10 @@ HaveClip::HaveClip(QObject *parent) :
 		pool << n;
 	}
 
+	clipSync = settings->value("Sync/Enable", true).toBool();
+	clipSnd = settings->value("Sync/Send", true).toBool();
+	clipRecv = settings->value("Sync/Receive", true).toBool();
+
 	// Start server
 	listen(QHostAddress::Any, 9999);
 
@@ -52,8 +55,20 @@ HaveClip::HaveClip(QObject *parent) :
 
 	QAction *a = menu->addAction(tr("&Enable clipboard synchronization"));
 	a->setCheckable(true);
-	a->setChecked(synchronize);
+	a->setChecked(clipSync);
 	connect(a, SIGNAL(toggled(bool)), this, SLOT(toggleSharedClipboard(bool)));
+
+	clipSndAction = menu->addAction(tr("Enable clipboard se&nding"));
+	clipSndAction->setCheckable(true);
+	clipSndAction->setChecked(clipSnd);
+	clipSndAction->setEnabled(clipSync);
+	connect(clipSndAction, SIGNAL(toggled(bool)), this, SLOT(toggleClipboardSending(bool)));
+
+	clipRecvAction = menu->addAction(tr("Enable clipboard &receiving"));
+	clipRecvAction->setCheckable(true);
+	clipRecvAction->setChecked(clipRecv);
+	clipRecvAction->setEnabled(clipSync);
+	connect(clipRecvAction, SIGNAL(toggled(bool)), this, SLOT(toggleClipboardReceiving(bool)));
 
 	menu->addSeparator();
 	menu->addAction(tr("&Settings"), this, SLOT(showSettings()));
@@ -121,7 +136,7 @@ void HaveClip::clipboardChanged()
 
 	lastClipboard = data;
 
-	if(synchronize)
+	if(clipSnd)
 	{
 		foreach(Node *n, pool)
 		{
@@ -272,7 +287,33 @@ void HaveClip::historyActionClicked(QObject *obj)
 
 void HaveClip::toggleSharedClipboard(bool enabled)
 {
-	synchronize = enabled;
+	clipSync = enabled;
+
+	toggleClipboardSending(enabled);
+	toggleClipboardReceiving(enabled);
+
+	clipSndAction->setEnabled(enabled);
+	clipRecvAction->setEnabled(enabled);
+
+	settings->setValue("Sync/Enable", clipSync);
+}
+
+void HaveClip::toggleClipboardSending(bool enabled)
+{
+	clipSnd = enabled;
+
+	settings->setValue("Sync/Send", clipSnd);
+}
+
+void HaveClip::toggleClipboardReceiving(bool enabled)
+{
+	if(enabled && !clipRecv)
+		listen(QHostAddress::Any, 9999);
+	else if(!enabled && clipRecv)
+		close();
+
+	clipRecv = enabled;
+	settings->setValue("Sync/Receive", clipRecv);
 }
 
 void HaveClip::showSettings()

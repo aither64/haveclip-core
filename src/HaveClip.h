@@ -48,10 +48,14 @@ private:
 	QSystemTrayIcon *trayIcon;
 	QMenu *menu;
 	QAction *menuSeparator;
+	QAction *clipSndAction;
+	QAction *clipRecvAction;
 	QList<HistoryItem*> history;
 	QHash<QAction*, HistoryItem*> historyHash;
 	QSignalMapper *signalMapper;
-	bool synchronize;
+	bool clipSync;
+	bool clipSnd;
+	bool clipRecv;
 
 	void addToHistory(MimeType type, QVariant data);
 	void updateHistoryContextMenu();
@@ -63,6 +67,8 @@ private slots:
 	void updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory = false);
 	void historyActionClicked(QObject *obj);
 	void toggleSharedClipboard(bool enabled);
+	void toggleClipboardSending(bool enabled);
+	void toggleClipboardReceiving(bool enabled);
 	void showSettings();
 	void showAbout();
 };
