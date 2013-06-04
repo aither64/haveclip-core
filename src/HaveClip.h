@@ -9,6 +9,7 @@
 #include <QMenu>
 #include <QHash>
 #include <QSignalMapper>
+#include <QIcon>
 
 class HaveClip : public QTcpServer
 {
@@ -56,6 +57,8 @@ private:
 	bool clipSync;
 	bool clipSnd;
 	bool clipRecv;
+	bool histEnabled;
+	int histSize;
 
 	void addToHistory(MimeType type, QVariant data);
 	void updateHistoryContextMenu();

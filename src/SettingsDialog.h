@@ -2,7 +2,10 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include<QSettings>
+#include <QSettings>
+#include <QListWidgetItem>
+
+#define NODE_ADD_STR tr("IP address:port")
 
 namespace Ui {
 class SettingsDialog;
@@ -16,6 +19,8 @@ public:
 	explicit SettingsDialog(QSettings *settings, QWidget *parent = 0);
 	~SettingsDialog();
 	QStringList nodes();
+	bool historyEnabled();
+	int historySize();
 	
 private:
 	Ui::SettingsDialog *ui;
@@ -24,6 +29,7 @@ private slots:
 	void addNode();
 	void editNode();
 	void deleteNode();
+	void nodeChange(QString str);
 };
 
 #endif // SETTINGSDIALOG_H

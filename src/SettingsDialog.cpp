@@ -12,6 +12,7 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	connect(ui->nodeAddButton, SIGNAL(clicked()), this, SLOT(addNode()));
 	connect(ui->nodeEditButton, SIGNAL(clicked()), this, SLOT(editNode()));
 	connect(ui->nodeRemoveButton, SIGNAL(clicked()), this, SLOT(deleteNode()));
+	connect(ui->nodeListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(nodeChange(QString)));
 
 	foreach(QString n, settings->value("Pool/Nodes").toStringList())
 	{
@@ -19,6 +20,9 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 		it->setFlags(it->flags() | Qt::ItemIsEditable);
 		ui->nodeListWidget->addItem(it);
 	}
+
+	ui->historyGroupBox->setChecked( settings->value("History/Enable", true).toBool() );
+	ui->historySizeSpinBox->setValue( settings->value("History/Size", 10).toInt() );
 }
 
 SettingsDialog::~SettingsDialog()
@@ -36,12 +40,22 @@ QStringList SettingsDialog::nodes()
 	return ret;
 }
 
+bool SettingsDialog::historyEnabled()
+{
+	return ui->historyGroupBox->isChecked();
+}
+
+int SettingsDialog::historySize()
+{
+	return ui->historySizeSpinBox->value();
+}
+
 void SettingsDialog::addNode()
 {
-	QListWidgetItem *it = new QListWidgetItem(ui->nodeLineEdit->text());
+	QListWidgetItem *it = new QListWidgetItem(NODE_ADD_STR);
 	it->setFlags(it->flags() | Qt::ItemIsEditable);
 	ui->nodeListWidget->addItem(it);
-	ui->nodeLineEdit->clear();
+	ui->nodeListWidget->editItem(it);
 }
 
 void SettingsDialog::editNode()
@@ -55,7 +69,18 @@ void SettingsDialog::editNode()
 void SettingsDialog::deleteNode()
 {
 	foreach(QListWidgetItem *it, ui->nodeListWidget->selectedItems())
-	{
 		delete ui->nodeListWidget->takeItem( ui->nodeListWidget->row(it) );
+}
+
+void SettingsDialog::nodeChange(QString str)
+{
+	int cnt = ui->nodeListWidget->count();
+
+	for(int i = 0; i < cnt; i++)
+	{
+		QListWidgetItem *it = ui->nodeListWidget->item(i);
+
+		if(it->text().isEmpty() || it->text() == NODE_ADD_STR)
+			delete ui->nodeListWidget->takeItem( ui->nodeListWidget->row(it) );
 	}
 }

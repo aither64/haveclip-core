@@ -43,6 +43,9 @@ HaveClip::HaveClip(QObject *parent) :
 	clipSnd = settings->value("Sync/Send", true).toBool();
 	clipRecv = settings->value("Sync/Receive", true).toBool();
 
+	histEnabled = settings->value("History/Enable", true).toBool();
+	histSize = settings->value("History/Size", 10).toInt();
+
 	// Start server
 	listen(QHostAddress::Any, 9999);
 
@@ -210,6 +213,9 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHis
 
 void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data)
 {
+	if(!histEnabled)
+		return;
+
 	foreach(HistoryItem *it, history)
 	{
 		if(it->data == data)
@@ -220,7 +226,7 @@ void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data)
 	item->type = type;
 	item->data = data;
 
-	if(history.size() >= 10)
+	if(history.size() >= histSize)
 		delete history.takeFirst();
 
 	history << item;
@@ -239,6 +245,9 @@ void HaveClip::updateHistoryContextMenu()
 		historyHash.remove(i.key());
 		i.key()->deleteLater();
 	}
+
+	if(!histEnabled)
+		return;
 
 	QAction *lastAction = 0;
 
@@ -323,6 +332,15 @@ void HaveClip::showSettings()
 	if(dlg->exec() == QDialog::Accepted)
 	{
 		settings->setValue("Pool/Nodes", dlg->nodes());
+
+		histEnabled = dlg->historyEnabled();
+		histSize = dlg->historySize();
+
+		settings->setValue("History/Enable", histEnabled);
+		settings->setValue("History/Size", histSize);
+
+		if(!histEnabled)
+			updateHistoryContextMenu();
 	}
 
 	dlg->deleteLater();
