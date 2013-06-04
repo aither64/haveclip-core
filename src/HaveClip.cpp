@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QTemporaryFile>
 #include <QDir>
+#include <QTimer>
 
 #include "Client.h"
 #include "Distributor.h"
@@ -41,6 +42,11 @@ HaveClip::HaveClip(QObject *parent) :
 #elif defined Q_OS_WIN32
 	// Signal change(QClipboard::Mode) is not sent on Windows
 	connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
+#elif defined Q_OS_MAC
+	// There's no notification about clipboard changes on OS X, active checking is needed
+	QTimer *timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
+	timer->start(300);
 #endif
 
 	// Load settings
