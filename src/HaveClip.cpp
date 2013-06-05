@@ -52,13 +52,7 @@ HaveClip::HaveClip(QObject *parent) :
 	// Load settings
 	settings = new QSettings(this);
 
-	foreach(QString node, settings->value("Pool/Nodes").toStringList())
-	{
-		Node *n = new Node;
-		n->addr = node.section(':', 0, 0);
-		n->port = node.section(':', 1, 1).toUShort();
-		pool << n;
-	}
+	loadNodes();
 
 	clipSync = settings->value("Sync/Enable", true).toBool();
 	clipSnd = settings->value("Sync/Send", true).toBool();
@@ -359,14 +353,14 @@ void HaveClip::updateHistoryContextMenu()
 
 void HaveClip::updateToolTip()
 {
-	QString tip;
+	QString tip = "<p>%1</p>";
 
 	switch(currentItem->type)
 	{
 	case HaveClip::Text:
 	case HaveClip::Html: {
 		QString s = currentItem->data.toString();
-		tip = "<pre>" + s.mid(0, 200) + "</pre>";
+		tip += "<pre>" + s.mid(0, 200) + "</pre>";
 
 		if(s.size() > 200)
 			tip += "<br>...";
@@ -374,7 +368,7 @@ void HaveClip::updateToolTip()
 	}
 	case HaveClip::Urls: {
 		QStringList l = currentItem->data.toStringList();
-		tip = QStringList(l.mid(0, 10)).join("\n");
+		tip += QStringList(l.mid(0, 10)).join("\n");
 
 		if(l.size() > 10)
 			tip += "<br>...";
@@ -388,12 +382,25 @@ void HaveClip::updateToolTip()
 		else if(currentItem->preview->height > 400)
 			prop = QString("height=\"%1\"").arg(400);
 
-		tip = QString("<p><img src=\"%1\" %2></p>").arg(currentItem->preview->path).arg(prop);
+		tip += QString("<p><img src=\"%1\" %2></p>").arg(currentItem->preview->path).arg(prop);
 		break;
 	}
 	}
 
-	trayIcon->setToolTip("HaveClip" + tip);
+	trayIcon->setToolTip(tip.arg(tr("HaveClip")));
+}
+
+void HaveClip::loadNodes()
+{
+	pool.clear();
+
+	foreach(QString node, settings->value("Pool/Nodes").toStringList())
+	{
+		Node *n = new Node;
+		n->addr = node.section(':', 0, 0);
+		n->port = node.section(':', 1, 1).toUShort();
+		pool << n;
+	}
 }
 
 void HaveClip::historyActionClicked(QObject *obj)
@@ -447,6 +454,8 @@ void HaveClip::showSettings()
 	if(dlg->exec() == QDialog::Accepted)
 	{
 		settings->setValue("Pool/Nodes", dlg->nodes());
+
+		loadNodes();
 
 		histEnabled = dlg->historyEnabled();
 		histSize = dlg->historySize();

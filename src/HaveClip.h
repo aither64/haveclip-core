@@ -77,6 +77,7 @@ private:
 	void addToHistory(MimeType type, QVariant data, ItemPreview *preview);
 	void updateHistoryContextMenu();
 	void updateToolTip();
+	void loadNodes();
 
 private slots:
 	void clipboardChanged();
