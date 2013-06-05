@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>HaveClip Settings</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../HaveClip.qrc">
+    <normaloff>:/gfx/icon.png</normaloff>:/gfx/icon.png</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
@@ -124,7 +128,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../HaveClip.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

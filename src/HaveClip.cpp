@@ -65,7 +65,7 @@ HaveClip::HaveClip(QObject *parent) :
 	listen(QHostAddress::Any, 9999);
 
 	// Tray
-	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/trayicon.png"), this);
+	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/icon.png"), this);
 	trayIcon->setToolTip(tr("HaveClip"));
 
 	menu = new QMenu;
@@ -97,6 +97,9 @@ HaveClip::HaveClip(QObject *parent) :
 	trayIcon->show();
 
 	qApp->setQuitOnLastWindowClosed(false);
+
+	// Load contents of clipboard
+	clipboardChanged();
 }
 
 HaveClip::~HaveClip()
