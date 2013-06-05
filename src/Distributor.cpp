@@ -1,5 +1,6 @@
 #include <QBuffer>
 #include <QImage>
+#include <QDomDocument>
 
 #include "Distributor.h"
 
@@ -12,26 +13,20 @@ Distributor::Distributor(HaveClip::Node *node, QObject *parent) :
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
 }
 
-void Distributor::distribute(HaveClip::MimeType type, QVariant data)
+void Distributor::distribute(const ClipboardContent *content)
 {
 	/**
-	  Protocol:
-	    message_type:content_type:data
-
-	  Where:
-	    : - compulsory separator
-	    message_type: 1 - sync clipboard
-	    content_type: 0 - plain text
-			  1 - HTML
-			  2 - URLs, separated by \n
-			  3 - image data
-	    data: usually contents of clipboard, depends on message_type
-
-	  For now only one message per connection is supported.
+	  XML protocol
+	  <haveclip>
+		<password>1234</password>
+		<clipboard>
+			<mimedata mimetype="text/plain">base64 encoded data</mimedata>
+			...
+		</clipboard>
+	  </haveclip>
 	  */
 
-	this->type = type;
-	this->data = data;
+	this->content = content;
 
 	connectToHost(node->addr, node->port);
 
@@ -48,35 +43,27 @@ void Distributor::onError(QAbstractSocket::SocketError socketError)
 
 void Distributor::onConnect()
 {
-	QByteArray ba;
-	QString msg("%1:%2:");
+	QDomDocument doc;
+	QDomElement root = doc.createElement("haveclip");
+	doc.appendChild(root);
 
-	ba.append(msg.arg(Distributor::CLIPBOARD_SYNC).arg(type).toUtf8());
+	QDomElement clip = doc.createElement("clipboard");
+	root.appendChild(clip);
 
-	switch(type)
+	foreach(QString mimetype, content->mimeData->formats())
 	{
-	case HaveClip::Text:
-	case HaveClip::Html:
-		ba.append(data.toString().toUtf8());
-		break;
-	case HaveClip::Urls:
-		ba.append(data.toStringList().join("\n").toUtf8());
-		break;
-	case HaveClip::ImageData: {
-		QByteArray tmp;
-		QBuffer buffer(&tmp);
-		buffer.open(QIODevice::WriteOnly);
-		data.value<QImage>().save(&buffer, "PNG");
-		ba.append(tmp);
+		QDomElement mimedata = doc.createElement("mimedata");
+		mimedata.setAttribute("mimetype", mimetype);
 
-		qDebug() << data.value<QImage>().textKeys();
-		break;
-	}
-	default:
-		break;
+		QDomText text = doc.createTextNode(content->mimeData->data(mimetype).toBase64());
+		mimedata.appendChild(text);
+
+		clip.appendChild(mimedata);
 	}
 
-	qDebug() << "Distributing" << ba.size() << "bytes: " << ba;
+	QByteArray ba = doc.toByteArray();
+
+	qDebug() << "Distributing" << ba.size() << "bytes";
 	write(ba);
 
 	disconnectFromHost();

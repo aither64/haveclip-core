@@ -13,7 +13,7 @@ public:
 	void communicate();
 	
 signals:
-	void clipboardUpdated(HaveClip::MimeType t, QVariant data);
+	void clipboardUpdated(ClipboardContent *content);
 	
 public slots:
 
@@ -21,7 +21,6 @@ private:
 	QByteArray buffer;
 	quint64 len;
 	quint64 dataRead;
-	HaveClip::MimeType type;
 
 private slots:
 	void onRead();

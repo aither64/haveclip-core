@@ -1,5 +1,6 @@
 #include "AboutDialog.h"
 #include "ui_AboutDialog.h"
+#include "HaveClip.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
         QDialog(parent),
@@ -9,9 +10,9 @@ AboutDialog::AboutDialog(QWidget *parent) :
 
 	ui->textLabel->setText(tr(
 		"<h1>HaveClip</h1>"
-		"<p>Version 0.1.0</p>"
+		"<p>Version %1</p>"
 		"<p>© 2013 Jakub Skokan &lt;aither@havefun.cz&gt;</p>"
-	));
+	).arg(VERSION));
 }
 
 AboutDialog::~AboutDialog()

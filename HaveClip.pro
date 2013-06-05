@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network xml
 
 TARGET = HaveClip
 TEMPLATE = app
@@ -17,13 +17,15 @@ SOURCES +=\
     src/Distributor.cpp \
     src/Client.cpp \
     src/AboutDialog.cpp \
-    src/SettingsDialog.cpp
+    src/SettingsDialog.cpp \
+    src/ClipboardContent.cpp
 
 HEADERS  += src/HaveClip.h \
     src/Distributor.h \
     src/Client.h \
     src/AboutDialog.h \
-    src/SettingsDialog.h
+    src/SettingsDialog.h \
+    src/ClipboardContent.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui

@@ -2,6 +2,7 @@
 #define DISTRIBUTOR_H
 
 #include <QTcpSocket>
+#include <QMimeData>
 #include "HaveClip.h"
 
 class Distributor : public QTcpSocket
@@ -17,12 +18,11 @@ public:
 signals:
 	
 public slots:
-	void distribute(HaveClip::MimeType type, QVariant data);
+	void distribute(const ClipboardContent *content);
 
 private:
 	HaveClip::Node *node;
-	HaveClip::MimeType type;
-	QVariant data;
+	const ClipboardContent *content;
 
 private slots:
 	void onError(QAbstractSocket::SocketError socketError);

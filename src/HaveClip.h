@@ -1,6 +1,8 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
+#define VERSION "0.2.0"
+
 #include <QTcpServer>
 #include <QClipboard>
 #include <QSettings>
@@ -11,6 +13,8 @@
 #include <QSignalMapper>
 #include <QIcon>
 
+#include "ClipboardContent.h"
+
 class HaveClip : public QTcpServer
 {
 	Q_OBJECT
@@ -18,32 +22,6 @@ public:
 	struct Node {
 		QHostAddress addr;
 		quint16 port;
-	};
-
-	enum MimeType {
-		Text=0,
-		Html,
-		Urls,
-		ImageData,
-		ColorData,
-		Unknown
-	};
-
-	struct ItemPreview {
-		QString path;
-		int width;
-		int height;
-
-		~ItemPreview();
-	};
-
-	struct HistoryItem {
-		MimeType type;
-		QVariant data;
-		QIcon icon;
-		ItemPreview *preview;
-
-		~HistoryItem();
 	};
 
 	explicit HaveClip(QObject *parent = 0);
@@ -57,15 +35,14 @@ private:
 	QSettings *settings;
 	QClipboard *clipboard;
 	QList<Node*> pool;
-	QVariant lastClipboard;
 	QSystemTrayIcon *trayIcon;
 	QMenu *menu;
 	QAction *menuSeparator;
 	QAction *clipSndAction;
 	QAction *clipRecvAction;
-	QList<HistoryItem*> history;
-	QHash<QAction*, HistoryItem*> historyHash;
-	HistoryItem *currentItem;
+	QList<ClipboardContent*> history;
+	QHash<QAction*, ClipboardContent*> historyHash;
+	ClipboardContent *currentItem;
 	QSignalMapper *signalMapper;
 	bool clipSync;
 	bool clipSnd;
@@ -73,17 +50,17 @@ private:
 	bool histEnabled;
 	int histSize;
 
-	ItemPreview* createItemPreview(QImage &img);
-	void addToHistory(MimeType type, QVariant data, ItemPreview *preview);
+	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
 	void updateToolTip();
 	void loadNodes();
+	QMimeData* copyMimeData(const QMimeData *mimeReference);
 
 private slots:
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m);
 	void incomingConnection(int handle);
-	void updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory = false);
+	void updateClipboard(ClipboardContent *content, bool fromHistory = false);
 	void historyActionClicked(QObject *obj);
 	void toggleSharedClipboard(bool enabled);
 	void toggleClipboardSending(bool enabled);

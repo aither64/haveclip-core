@@ -1,5 +1,6 @@
 #include <QStringList>
 #include <QImage>
+#include <QDomDocument>
 
 #include "Client.h"
 #include "Distributor.h"
@@ -7,8 +8,7 @@
 Client::Client(QObject *parent) :
 	QTcpSocket(parent),
 	len(0),
-	dataRead(0),
-	type(HaveClip::Unknown)
+	dataRead(0)
 {
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
@@ -33,71 +33,32 @@ void Client::onRead()
 
 void Client::onDisconnect()
 {
-	QVariant data;
-	QString str;
-	Distributor::Protocol msg_type;
-	HaveClip::MimeType mime_type;
+	QDomDocument doc;
 
-	int pos, startPos, rawType;
-	bool ok;
-
-	// Message type
-	if((pos = buffer.indexOf(':')) == -1) {
-		qDebug() << "Bad format - missing message type";
-		return;
-	}
-
-	rawType = buffer.left(pos).toInt(&ok);
-
-	if(!ok)
+	if(!doc.setContent(buffer))
 	{
-		qDebug() << "Bad format - wrong number format";
+		qDebug() << "Invalid message";
 		return;
 	}
 
-	msg_type = (Distributor::Protocol) rawType;
-	startPos = pos + 1;
+	QDomElement root = doc.documentElement();
+	QDomElement clipboard = root.firstChildElement("clipboard");
+	QDomNode n = clipboard.firstChild();
+	QMimeData *mimedata = new QMimeData();
 
-	// Mime type
-	if((pos = buffer.indexOf(':', startPos)) == -1) {
-		qDebug() << "Bad format - missing content type";
-		return;
-	}
-
-	rawType = buffer.mid(startPos, pos - startPos).toInt(&ok);
-
-	if(!ok)
+	while(!n.isNull())
 	{
-		qDebug() << "Bad format - wrong number format";
-		return;
+		QDomElement e = n.toElement();
+
+		if(!e.isNull())
+			mimedata->setData(e.attribute("mimetype"), QByteArray::fromBase64( e.text().toAscii() ));
+
+		n = n.nextSibling();
 	}
 
-	mime_type = (HaveClip::MimeType) rawType;
-	startPos = pos + 1;
+	ClipboardContent *content = new ClipboardContent(mimedata);
+	content->init();
 
-	// Contents
-	QByteArray content = buffer.mid(startPos);
-
-	switch(mime_type)
-	{
-	case HaveClip::Text:
-	case HaveClip::Html: {
-		const char *s = content.data();
-		data = QString::fromUtf8(s);
-		break;
-	}
-	case HaveClip::Urls: {
-		const char *s = content.data();
-		str = QString::fromUtf8(s);
-		data = str.split("\n");
-		break;
-	}
-	case HaveClip::ImageData:
-		data = QImage::fromData(content);
-		break;
-	default:break;
-	}
-
-	emit clipboardUpdated(mime_type, data);
+	emit clipboardUpdated(content);
 	this->deleteLater();
 }

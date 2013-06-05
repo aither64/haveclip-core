@@ -8,8 +8,6 @@
 #include <QColor>
 #include <QMenu>
 #include <QLabel>
-#include <QTemporaryFile>
-#include <QDir>
 #include <QTimer>
 #include <QTextDocument>
 
@@ -17,17 +15,6 @@
 #include "Distributor.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
-
-HaveClip::ItemPreview::~ItemPreview()
-{
-	QFile::remove(path);
-}
-
-HaveClip::HistoryItem::~HistoryItem()
-{
-	if(preview)
-		delete preview;
-}
 
 HaveClip::HaveClip(QObject *parent) :
 	QTcpServer(parent),
@@ -115,60 +102,28 @@ HaveClip::~HaveClip()
   */
 void HaveClip::clipboardChanged()
 {
-	HaveClip::MimeType type;
-	const QMimeData *mimeData = clipboard->mimeData(QClipboard::Clipboard);
-	QVariant data;
-	HaveClip::ItemPreview *preview = 0;
+	QMimeData *mimeData = copyMimeData(clipboard->mimeData(QClipboard::Clipboard));
 
-	if(mimeData->hasText()) {
-		type = HaveClip::Text;
-		data = mimeData->text();
+	ClipboardContent *cnt = new ClipboardContent(mimeData);
 
-	} else if(mimeData->hasHtml()) {
-		type = HaveClip::Html;
-		data = mimeData->html();
-
-	} else if(mimeData->hasUrls()) {
-		type = HaveClip::Urls;
-
-		// Convert to string list
-		QStringList urls;
-
-		foreach(QUrl u, mimeData->urls())
-			urls << u.toString();
-
-		data = urls;
-
-	} else if(mimeData->hasImage()) {
-		type = HaveClip::ImageData;
-		data = mimeData->imageData();
-
-#ifdef Q_OS_LINUX
-		QImage img = data.value<QImage>();
-
-		preview = createItemPreview(img);
-#endif
-	} else {
-		qDebug() << "Uknown MIME type, ignoring";
+	if(currentItem && *currentItem == *cnt)
+	{
+		delete cnt;
 		return;
 	}
 
-	// Clipboards did not change
-	if(lastClipboard == data)
-		return;
+	cnt->init();
 
-	addToHistory(type, data, preview);
+	addToHistory(cnt);
 	updateToolTip();
 	updateHistoryContextMenu();
-
-	lastClipboard = data;
 
 	if(clipSnd)
 	{
 		foreach(Node *n, pool)
 		{
 			Distributor *d = new Distributor(n, this);
-			d->distribute(type, data);
+			d->distribute(cnt);
 		}
 	}
 }
@@ -192,7 +147,7 @@ void HaveClip::incomingConnection(int handle)
 	Client *c = new Client(this);
 	c->setSocketDescriptor(handle);
 
-	connect(c, SIGNAL(clipboardUpdated(HaveClip::MimeType,QVariant)), this, SLOT(updateClipboard(HaveClip::MimeType,QVariant)));
+	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));
 
 	c->communicate();
 }
@@ -200,111 +155,53 @@ void HaveClip::incomingConnection(int handle)
 /**
   Called when new clipboard is received via network
   */
-void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHistory)
+void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 {
-	qDebug() << "Update clipboard" << t << data;
+	qDebug() << "Update clipboard";
 
-	if(!fromHistory)
-		lastClipboard = data;
-
-	HaveClip::ItemPreview *preview = 0;
-
-	switch(t)
-	{
-	case HaveClip::Text:
-	case HaveClip::Html:
-		qDebug() << "Set clipboard" << data.toString();
-		clipboard->setText(data.toString(), QClipboard::Clipboard);
-		break;
-
-	case HaveClip::Urls:
-		qDebug() << "Set clipboard urls";
-		clipboard->setText(data.toStringList().join("\n"));
-		break;
-
-	case HaveClip::ImageData: {
-		qDebug() << "Set clipboard image";
-		QImage img = data.value<QImage>();
-		clipboard->setImage(img);
-
-#ifdef Q_OS_LINUX
-		preview = createItemPreview(img);
-#endif
-		break;
-	}
-	default:break;
-	}
+	currentItem = content;
+	clipboard->setMimeData(content->mimeData, QClipboard::Clipboard);
 
 	if(fromHistory)
 	{
 		updateToolTip();
 	} else {
-		addToHistory(t, data, preview);
+		addToHistory(content);
 		updateToolTip();
 		updateHistoryContextMenu();
 	}
 }
 
-HaveClip::ItemPreview* HaveClip::createItemPreview(QImage &img)
-{
-	ItemPreview *preview = 0;
-	QTemporaryFile tmp(QDir::tempPath() + "/haveclip-preview-XXXXXX");
-	tmp.setAutoRemove(false);
 
-	if(tmp.open())
-	{
-		if( img.save(&tmp, "PNG") )
-		{
-			preview = new ItemPreview;
-			preview->path = tmp.fileName();
-			preview->width = img.width();
-			preview->height = img.height();
-		}
 
-		tmp.close();
-	}
-
-	return preview;
-}
-
-void HaveClip::addToHistory(HaveClip::MimeType type, QVariant data, ItemPreview *preview)
+void HaveClip::addToHistory(ClipboardContent *content)
 {
 	if(!histEnabled)
 	{
-		if(currentItem == 0)
-		{
-			currentItem = new HistoryItem;
-			history << currentItem;
-		}
+		if(currentItem)
+			delete currentItem;
 
-		currentItem->type = type;
-		currentItem->data = data;
-		currentItem->preview = preview;
+		currentItem = content;
 
 		return;
 	}
 
-	foreach(HistoryItem *it, history)
+	foreach(ClipboardContent *c, history)
 	{
-		if(it->data == data)
+		if(*c == *content)
 			return;
 	}
-
-	HistoryItem *item = new HistoryItem;
-	item->type = type;
-	item->data = data;
-	item->preview = preview;
 
 	if(history.size() >= histSize)
 		delete history.takeFirst();
 
-	history << item;
-	currentItem = item;
+	history << content;
+	currentItem = content;
 }
 
 void HaveClip::updateHistoryContextMenu()
 {
-	QHashIterator<QAction*, HistoryItem*> i(historyHash);
+	QHashIterator<QAction*, ClipboardContent*> i(historyHash);
 
 	while(i.hasNext())
 	{
@@ -321,39 +218,19 @@ void HaveClip::updateHistoryContextMenu()
 
 	QAction *lastAction = 0;
 
-	foreach(HistoryItem *it, history)
+	foreach(ClipboardContent *c, history)
 	{
-		QString text;
+		QAction *act = new QAction(c->title, this);
 
-		switch(it->type)
-		{
-		case HaveClip::Text:
-		case HaveClip::Html:
-			text = it->data.toString().trimmed().left(30);
-			break;
-		case HaveClip::Urls:
-			text = it->data.toStringList().first().left(30);
-			break;
-		case HaveClip::ImageData:
-			text = tr("Image");
-
-			if(it->icon.isNull())
-				it->icon = QIcon( QPixmap::fromImage(it->data.value<QImage>()) );
-
-			break;
-		}
-
-		QAction *act = new QAction(text, this);
-
-		if(!it->icon.isNull())
-			act->setIcon(it->icon);
+		if(!c->icon.isNull())
+			act->setIcon(c->icon);
 
 		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 		signalMapper->setMapping(act, act);
 
 		menu->insertAction(lastAction ? lastAction : menuSeparator, act);
 
-		historyHash.insert(act, it);
+		historyHash.insert(act, c);
 
 		lastAction = act;
 	}
@@ -363,38 +240,7 @@ void HaveClip::updateToolTip()
 {
 #if defined Q_OS_LINUX
 	QString tip = "<p>%1</p>";
-
-	switch(currentItem->type)
-	{
-	case HaveClip::Text:
-	case HaveClip::Html: {
-		QString s = currentItem->data.toString();
-		tip += "<pre>" + Qt::escape(s.mid(0, 200)) + "</pre>";
-
-		if(s.size() > 200)
-			tip += "<br>...";
-		break;
-	}
-	case HaveClip::Urls: {
-		QStringList l = currentItem->data.toStringList();
-		tip += QStringList(l.mid(0, 10)).join("\n");
-
-		if(l.size() > 10)
-			tip += "<br>...";
-		break;
-	}
-	case HaveClip::ImageData: {
-		QString prop;
-
-		if(currentItem->preview->width > 400)
-			prop = QString("width=\"%1\"").arg(400);
-		else if(currentItem->preview->height > 400)
-			prop = QString("height=\"%1\"").arg(400);
-
-		tip += QString("<p><img src=\"%1\" %2></p>").arg(currentItem->preview->path).arg(prop);
-		break;
-	}
-	}
+	tip += "<p>" + currentItem->excerpt + "</p>";
 #else
 	QString tip = "%1";
 #endif
@@ -421,10 +267,10 @@ void HaveClip::historyActionClicked(QObject *obj)
 
 	if(historyHash.contains(act))
 	{
-		HistoryItem *it = historyHash[act];
+		ClipboardContent *c = historyHash[act];
 
-		currentItem = it;
-		updateClipboard(it->type, it->data, true);
+		currentItem = c;
+		updateClipboard(c, true);
 	}
 }
 
@@ -487,4 +333,28 @@ void HaveClip::showAbout()
 	AboutDialog *dlg = new AboutDialog;
 	dlg->exec();
 	dlg->deleteLater();
+}
+
+QMimeData* HaveClip::copyMimeData(const QMimeData *mimeReference)
+{
+	QMimeData *mimeCopy = new QMimeData();
+
+	foreach(QString format, mimeReference->formats())
+	{
+		// Retrieving data
+		QByteArray data = mimeReference->data(format);
+
+		// Checking for custom MIME types
+		if(format.startsWith("application/x-qt"))
+		{
+			// Retrieving true format name
+			int indexBegin = format.indexOf('"') + 1;
+			int indexEnd = format.indexOf('"', indexBegin);
+			format = format.mid(indexBegin, indexEnd - indexBegin);
+		}
+
+		mimeCopy->setData(format, data);
+	}
+
+	return mimeCopy;
 }

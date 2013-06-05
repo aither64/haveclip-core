@@ -19,8 +19,7 @@ Supports Windows, Linux and Mac OS X. Client for Android is planned.
 It should also be possible to create client for iOS and other mobile OSes.
 
 So far it is not possible to copy files over network with HaveClip. I would
-like to implement it though. HaveClip also does not support non-standard
-or application specific data in clipboard. These are ignored.
+like to implement it though.
 
 Build
 -----
@@ -52,6 +51,10 @@ IP address:port. For example:
 
 Now when you copy something into clipboard, it will be sent to all devices
 listed in Pool.
+
+It is also not recommended to use HaveClip over slow or paid network connections,
+since it can transfer a lot of data. For instance, image copied from GIMP
+is saved to clipboard in multiple formats, so the size can exceed a few tens of MB.
 
 License
 -------
