@@ -139,9 +139,11 @@ void HaveClip::clipboardChanged()
 		type = HaveClip::ImageData;
 		data = mimeData->imageData();
 
+#ifdef Q_OS_LINUX
 		QImage img = data.value<QImage>();
 
 		preview = createItemPreview(img);
+#endif
 	} else {
 		qDebug() << "Uknown MIME type, ignoring";
 		return;
@@ -221,7 +223,9 @@ void HaveClip::updateClipboard(HaveClip::MimeType t, QVariant data, bool fromHis
 		QImage img = data.value<QImage>();
 		clipboard->setImage(img);
 
+#ifdef Q_OS_LINUX
 		preview = createItemPreview(img);
+#endif
 		break;
 	}
 	default:break;
@@ -353,6 +357,7 @@ void HaveClip::updateHistoryContextMenu()
 
 void HaveClip::updateToolTip()
 {
+#if defined Q_OS_LINUX
 	QString tip = "<p>%1</p>";
 
 	switch(currentItem->type)
@@ -386,6 +391,9 @@ void HaveClip::updateToolTip()
 		break;
 	}
 	}
+#else
+	QString tip = "%1";
+#endif
 
 	trayIcon->setToolTip(tip.arg(tr("HaveClip")));
 }
