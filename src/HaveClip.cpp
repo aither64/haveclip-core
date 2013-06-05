@@ -11,6 +11,7 @@
 #include <QTemporaryFile>
 #include <QDir>
 #include <QTimer>
+#include <QTextDocument>
 
 #include "Client.h"
 #include "Distributor.h"
@@ -368,7 +369,7 @@ void HaveClip::updateToolTip()
 	case HaveClip::Text:
 	case HaveClip::Html: {
 		QString s = currentItem->data.toString();
-		tip += "<pre>" + s.mid(0, 200) + "</pre>";
+		tip += "<pre>" + Qt::escape(s.mid(0, 200)) + "</pre>";
 
 		if(s.size() > 200)
 			tip += "<br>...";
