@@ -240,7 +240,7 @@ void HaveClip::updateToolTip()
 {
 #if defined Q_OS_LINUX
 	QString tip = "<p>%1</p>";
-	tip += "<p>" + currentItem->excerpt + "</p>";
+	tip += "<pre>" + currentItem->excerpt + "</pre>";
 #else
 	QString tip = "%1";
 #endif

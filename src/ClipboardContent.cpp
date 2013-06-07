@@ -30,32 +30,46 @@ void ClipboardContent::init()
 {
 	QString tmp;
 
-	if(mimeData->hasHtml())
-	{
-		tmp = mimeData->html();
-		excerpt = Qt::escape(tmp.left(200));
-
-		if(tmp.count() > 200)
-			excerpt += "<br>...";
-
-	} else if(mimeData->hasText()) {
+	if(mimeData->hasText()) {
 		tmp = mimeData->text();
+
+#ifdef Q_OS_LINUX
 		excerpt = Qt::escape(tmp.left(200));
 
 		if(tmp.count() > 200)
 			excerpt += "<br>...";
+#endif
+
+		setTitle(tmp);
+
+	} else if(mimeData->hasHtml()) {
+		tmp = mimeData->html();
+
+#ifdef Q_OS_LINUX
+		excerpt = Qt::escape(tmp.left(200));
+
+		if(tmp.count() > 200)
+			excerpt += "<br>...";
+#endif
+
+		setTitle(tmp);
 
 	} else if(mimeData->hasUrls()) {
 		QList<QUrl> urls = mimeData->urls();
 
+#ifdef Q_OS_LINUX
 		foreach(QUrl u, urls.mid(0, 5))
 			excerpt += u.toString() + "<br>";
 
 		if(urls.size() > 5)
 			excerpt += "<br>...";
+#endif
 
 		if(urls.size() > 0)
 			tmp = urls.first().toString();
+		else tmp = QObject::tr("URLs");
+
+		setTitle(tmp);
 
 	} else if(mimeData->hasImage()) {
 		// For some reason, QMimeData::imageData().value<QImage>() does not work on copied QMimeData
@@ -63,7 +77,8 @@ void ClipboardContent::init()
 		QImage img;
 		img.loadFromData(mimeData->data("application/x-qt-image"));
 
-		excerpt = tmp = QObject::tr("Image");
+		excerpt = QObject::tr("Image");
+		setTitle(excerpt);
 		icon = QIcon( QPixmap::fromImage(img) );
 
 #ifdef Q_OS_LINUX
@@ -83,12 +98,8 @@ void ClipboardContent::init()
 #endif
 	} else {
 		tmp = QObject::tr("Unknown content");
+		setTitle(tmp);
 	}
-
-	if(mimeData->hasText())
-		title = mimeData->text().trimmed().left(30);
-	else
-		title = tmp.trimmed().left(30);
 }
 
 ClipboardContent::~ClipboardContent()
@@ -133,4 +144,31 @@ ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)
 	}
 
 	return preview;
+}
+
+void ClipboardContent::setTitle(QString &str)
+{
+	QString s = str.trimmed(), tmp;
+	int start = 0, end;
+
+	while((end = s.indexOf('\n', start)) != -1)
+	{
+		tmp = s.mid(start, end).trimmed().left(30);
+
+		if(!tmp.isEmpty())
+		{
+			title = tmp;
+			break;
+		}
+
+		start = end + 1;
+	}
+
+	if(title.isEmpty())
+		title = s.left(30);
+
+	title.replace("&", "&&");
+
+	if(str.count() > 30)
+		title += "...";
 }

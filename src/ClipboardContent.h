@@ -30,6 +30,7 @@ public:
 
 private:
 	Preview* createItemPreview(QImage &img);
+	void setTitle(QString &str);
 };
 
 #endif // CLIPBOARDCONTENT_H
