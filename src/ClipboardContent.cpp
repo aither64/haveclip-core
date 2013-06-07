@@ -81,6 +81,8 @@ void ClipboardContent::init()
 			excerpt += QString("<br><img src=\"%1\" %2>").arg(preview->path).arg(prop);
 		}
 #endif
+	} else {
+		tmp = QObject::tr("Unknown content");
 	}
 
 	if(mimeData->hasText())

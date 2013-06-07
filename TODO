@@ -1,0 +1,8 @@
+- save history to disk
+- implement some simple password mechanism
+- SSL support
+- show more history entries in submenu in context menu
+- add Nodes submenu to context menu to quickly enable/disable nodes in pool
+- copy files using FUSE
+- add an option to set global shortcut which would trigger clipboard sync,
+  so the clipboard would be synchronised on demand, not always

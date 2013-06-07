@@ -106,7 +106,7 @@ void HaveClip::clipboardChanged()
 
 	ClipboardContent *cnt = new ClipboardContent(mimeData);
 
-	if(currentItem && *currentItem == *cnt)
+	if((currentItem && *currentItem == *cnt) || cnt->formats.isEmpty())
 	{
 		delete cnt;
 		return;
@@ -160,7 +160,7 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 	qDebug() << "Update clipboard";
 
 	currentItem = content;
-	clipboard->setMimeData(content->mimeData, QClipboard::Clipboard);
+	clipboard->setMimeData(copyMimeData(content->mimeData), QClipboard::Clipboard);
 
 	if(fromHistory)
 	{

@@ -31,7 +31,8 @@ void Distributor::distribute(const ClipboardContent *content)
 	connectToHost(node->addr, node->port);
 
 	/**
-	  We cannot write data immediately due to a bug in Qt which will cause application to end up in infinite loop
+	  We cannot write data immediately due to a bug in Qt which will cause application to end up
+	  in infinite loop when connection fails.
 	  */
 }
 

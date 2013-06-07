@@ -21,6 +21,13 @@ It should also be possible to create client for iOS and other mobile OSes.
 So far it is not possible to copy files over network with HaveClip. I would
 like to implement it though.
 
+Requirements
+------------
+HaveClip for desktop is written in C++ using the Qt framework.
+
+ - Qt at least 4.7, it might for with older versions, but it's not tested
+   - modules core, gui, network and xml
+
 Build
 -----
   # tar -xzf HaveClip-0.1.0-src.tar.gz
@@ -42,8 +49,8 @@ Run with
 
 Usage
 -----
-Launch it. First thing you want to do is to setup devices, where the clipboard
-will be synced. Right click on the tray icon and select Settings. Go to tab Pool
+First thing you want to do is to setup devices, where the clipboard will be
+synced. Right click on the tray icon and select Settings. Go to tab Pool
 and add IP addresses of your devices. The format for each entry is
 IP address:port. For example:
 
@@ -52,9 +59,22 @@ IP address:port. For example:
 Now when you copy something into clipboard, it will be sent to all devices
 listed in Pool.
 
-It is also not recommended to use HaveClip over slow or paid network connections,
+It is not recommended to use HaveClip over slow or paid network connections,
 since it can transfer a lot of data. For instance, image copied from GIMP
 is saved to clipboard in multiple formats, so the size can exceed a few tens of MB.
+
+Features
+--------
+Where as the main functionality (clipboard syncing) is present on all platforms,
+not all other features are. The most equipped is the Linux version. It can
+show you a preview of clipboard contents in tooltip on tray icon. This is not
+possible to easily implement on other platforms.
+
+In Linux, when you copy something and then close the application, the copied data
+is lost. HaveClip prevents that. If the clipboard contents suddenly disappears,
+it will be reset.
+
+For planned features see TODO.
 
 License
 -------
@@ -64,7 +84,7 @@ WARNING
 -------
 Currently, there is *no* security in place. Contents of clipboard are sent
 in plaintext. It is meant for home and personal use only. Definitely do not use
-it unsecured over the Internet!
+it unsecured over the Internet or public network!
 
-However, I plan to implement SSL and some passwords, so no one would be able
-to easily inject something in your clipboard.
+However, I plan to implement SSL and some password mechanism, so no one would be
+able to easily inject something in your clipboard.

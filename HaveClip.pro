@@ -34,4 +34,5 @@ RESOURCES += \
     HaveClip.qrc
 
 OTHER_FILES += \
-    README
+    README \
+    TODO
