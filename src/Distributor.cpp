@@ -1,6 +1,7 @@
 #include <QBuffer>
 #include <QImage>
 #include <QDomDocument>
+#include <QTextCodec>
 
 #include "Distributor.h"
 
@@ -56,7 +57,21 @@ void Distributor::onConnect()
 		QDomElement mimedata = doc.createElement("mimedata");
 		mimedata.setAttribute("mimetype", mimetype);
 
-		QDomText text = doc.createTextNode(content->mimeData->data(mimetype).toBase64());
+		QDomText text;
+		QByteArray data;
+
+		if(mimetype == "text/html")
+		{
+			QByteArray tmp = content->mimeData->data("text/html");
+
+			QTextCodec *codec = QTextCodec::codecForHtml(tmp, QTextCodec::codecForName("utf-8"));
+			data = codec->toUnicode(tmp).toUtf8();
+		} else
+			data = content->mimeData->data(mimetype);
+
+//		qDebug() << mimetype << data;
+
+		text = doc.createTextNode(data.toBase64());
 		mimedata.appendChild(text);
 
 		clip.appendChild(mimedata);
