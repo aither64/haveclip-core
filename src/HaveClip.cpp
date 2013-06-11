@@ -56,8 +56,12 @@ HaveClip::HaveClip(QObject *parent) :
 	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/icon.png"), this);
 	trayIcon->setToolTip(tr("HaveClip"));
 
+	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+
+	historyMenu = new QMenu;
+	menuSeparator = historyMenu->addSeparator();
+
 	menu = new QMenu;
-	menuSeparator = menu->addSeparator();
 
 	QAction *a = menu->addAction(tr("&Enable clipboard synchronization"));
 	a->setCheckable(true);
@@ -95,6 +99,15 @@ HaveClip::~HaveClip()
 	qDeleteAll(pool);
 	qDeleteAll(history);
 	delete menu;
+	delete historyMenu;
+}
+
+void HaveClip::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+	if(reason != QSystemTrayIcon::Trigger)
+		return;
+
+	historyMenu->exec(trayIcon->geometry().bottomLeft());
 }
 
 /**
@@ -208,7 +221,7 @@ void HaveClip::updateHistoryContextMenu()
 		i.next();
 
 		signalMapper->removeMappings(i.key());
-		menu->removeAction(i.key());
+		historyMenu->removeAction(i.key());
 		historyHash.remove(i.key());
 		i.key()->deleteLater();
 	}
@@ -228,7 +241,7 @@ void HaveClip::updateHistoryContextMenu()
 		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 		signalMapper->setMapping(act, act);
 
-		menu->insertAction(lastAction ? lastAction : menuSeparator, act);
+		historyMenu->insertAction(lastAction ? lastAction : menuSeparator, act);
 
 		historyHash.insert(act, c);
 

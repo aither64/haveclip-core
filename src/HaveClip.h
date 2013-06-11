@@ -37,6 +37,7 @@ private:
 	QList<Node*> pool;
 	QSystemTrayIcon *trayIcon;
 	QMenu *menu;
+	QMenu *historyMenu;
 	QAction *menuSeparator;
 	QAction *clipSndAction;
 	QAction *clipRecvAction;
@@ -57,6 +58,7 @@ private:
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
 
 private slots:
+	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m);
 	void incomingConnection(int handle);
