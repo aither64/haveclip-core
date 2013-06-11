@@ -2,10 +2,10 @@
 #include <QImage>
 #include <QDomDocument>
 
-#include "Client.h"
-#include "Distributor.h"
+#include "Receiver.h"
+#include "Sender.h"
 
-Client::Client(QObject *parent) :
+Receiver::Receiver(QObject *parent) :
 	QTcpSocket(parent),
 	len(0),
 	dataRead(0)
@@ -14,12 +14,12 @@ Client::Client(QObject *parent) :
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 }
 
-void Client::communicate()
+void Receiver::communicate()
 {
 
 }
 
-void Client::onRead()
+void Receiver::onRead()
 {
 	QByteArray data;
 
@@ -31,7 +31,7 @@ void Client::onRead()
 	}
 }
 
-void Client::onDisconnect()
+void Receiver::onDisconnect()
 {
 	QDomDocument doc;
 

@@ -11,8 +11,8 @@
 #include <QTimer>
 #include <QTextDocument>
 
-#include "Client.h"
-#include "Distributor.h"
+#include "Receiver.h"
+#include "Sender.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
 
@@ -135,7 +135,7 @@ void HaveClip::clipboardChanged()
 	{
 		foreach(Node *n, pool)
 		{
-			Distributor *d = new Distributor(n, this);
+			Sender *d = new Sender(n, this);
 			d->distribute(cnt);
 		}
 	}
@@ -157,7 +157,7 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 
 void HaveClip::incomingConnection(int handle)
 {
-	Client *c = new Client(this);
+	Receiver *c = new Receiver(this);
 	c->setSocketDescriptor(handle);
 
 	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));

@@ -5,7 +5,7 @@
 #include <QMimeData>
 #include "HaveClip.h"
 
-class Distributor : public QTcpSocket
+class Sender : public QTcpSocket
 {
 	Q_OBJECT
 public:
@@ -13,7 +13,7 @@ public:
 		CLIPBOARD_SYNC=1
 	};
 
-	explicit Distributor(HaveClip::Node *node, QObject *parent = 0);
+	explicit Sender(HaveClip::Node *node, QObject *parent = 0);
 	
 signals:
 	

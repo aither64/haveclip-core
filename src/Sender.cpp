@@ -3,9 +3,9 @@
 #include <QDomDocument>
 #include <QTextCodec>
 
-#include "Distributor.h"
+#include "Sender.h"
 
-Distributor::Distributor(HaveClip::Node *node, QObject *parent) :
+Sender::Sender(HaveClip::Node *node, QObject *parent) :
 	QTcpSocket(parent),
 	node(node)
 {
@@ -14,7 +14,7 @@ Distributor::Distributor(HaveClip::Node *node, QObject *parent) :
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
 }
 
-void Distributor::distribute(const ClipboardContent *content)
+void Sender::distribute(const ClipboardContent *content)
 {
 	/**
 	  XML protocol
@@ -37,13 +37,13 @@ void Distributor::distribute(const ClipboardContent *content)
 	  */
 }
 
-void Distributor::onError(QAbstractSocket::SocketError socketError)
+void Sender::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Unable to reach" << node->addr << ":" << socketError;
 	this->deleteLater();
 }
 
-void Distributor::onConnect()
+void Sender::onConnect()
 {
 	QDomDocument doc;
 	QDomElement root = doc.createElement("haveclip");
@@ -85,7 +85,7 @@ void Distributor::onConnect()
 	disconnectFromHost();
 }
 
-void Distributor::onDisconnect()
+void Sender::onDisconnect()
 {
 	this->deleteLater();
 }

@@ -5,11 +5,11 @@
 #include "HaveClip.h"
 
 /* Represents client connecting to this instance of HaveClip */
-class Client : public QTcpSocket
+class Receiver : public QTcpSocket
 {
 	Q_OBJECT
 public:
-	explicit Client(QObject *parent = 0);
+	explicit Receiver(QObject *parent = 0);
 	void communicate();
 	
 signals:
