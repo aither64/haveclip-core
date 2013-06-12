@@ -1,16 +1,17 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <QTcpSocket>
+#include <QSslSocket>
 #include "HaveClip.h"
 
 /* Represents client connecting to this instance of HaveClip */
-class Receiver : public QTcpSocket
+class Receiver : public QSslSocket
 {
 	Q_OBJECT
 public:
-	explicit Receiver(QObject *parent = 0);
+	explicit Receiver(HaveClip::Encryption enc, QObject *parent = 0);
 	void communicate();
+	void setCertificateAndKey(QString cert, QString key);
 	
 signals:
 	void clipboardUpdated(ClipboardContent *content);
@@ -21,10 +22,14 @@ private:
 	QByteArray buffer;
 	quint64 len;
 	quint64 dataRead;
+	HaveClip::Encryption encryption;
+	QString certificate;
+	QString privateKey;
 
 private slots:
 	void onRead();
 	void onDisconnect();
+	void onSslError(const QList<QSslError> &errors);
 	
 };
 

@@ -5,18 +5,41 @@
 #include "Receiver.h"
 #include "Sender.h"
 
-Receiver::Receiver(QObject *parent) :
-	QTcpSocket(parent),
+Receiver::Receiver(HaveClip::Encryption enc, QObject *parent) :
+	QSslSocket(parent),
 	len(0),
-	dataRead(0)
+	dataRead(0),
+	encryption(enc)
 {
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+	connect(this, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
 }
 
 void Receiver::communicate()
 {
+	if(encryption != HaveClip::None)
+	{
+		switch(encryption)
+		{
+		case HaveClip::Ssl:
+			setProtocol(QSsl::SslV3);
+			break;
+		case HaveClip::Tls:
+			setProtocol(QSsl::TlsV1);
+			break;
+		}
 
+		setPeerVerifyMode(QSslSocket::VerifyNone);
+
+		startServerEncryption();
+	}
+}
+
+void Receiver::setCertificateAndKey(QString cert, QString key)
+{
+	setLocalCertificate(cert);
+	setPrivateKey(key);
 }
 
 void Receiver::onRead()
@@ -61,4 +84,11 @@ void Receiver::onDisconnect()
 
 	emit clipboardUpdated(content);
 	this->deleteLater();
+}
+
+void Receiver::onSslError(const QList<QSslError> &errors)
+{
+	qDebug() << "RECEIVER SSL error" << errors;
+
+	ignoreSslErrors();
 }

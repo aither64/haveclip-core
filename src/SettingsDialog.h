@@ -5,6 +5,8 @@
 #include <QSettings>
 #include <QListWidgetItem>
 
+#include "HaveClip.h"
+
 #define NODE_ADD_STR tr("IP address:port")
 
 namespace Ui {
@@ -24,6 +26,9 @@ public:
 	QString host();
 	int port();
 	QString password();
+	HaveClip::Encryption encryption();
+	QString certificate();
+	QString privateKey();
 	
 private:
 	Ui::SettingsDialog *ui;
@@ -33,6 +38,8 @@ private slots:
 	void editNode();
 	void deleteNode();
 	void nodeChange(QString str);
+	void setCertificatePath();
+	void setPrivateKeyPath();
 };
 
 #endif // SETTINGSDIALOG_H

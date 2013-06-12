@@ -50,6 +50,10 @@ HaveClip::HaveClip(QObject *parent) :
 	histEnabled = settings->value("History/Enable", true).toBool();
 	histSize = settings->value("History/Size", 10).toInt();
 
+	encryption = (HaveClip::Encryption) settings->value("Connection/Encryption", HaveClip::None).toInt();
+	certificate = settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
+	privateKey = settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
+
 	// Start server
 	startListening();
 
@@ -136,7 +140,7 @@ void HaveClip::clipboardChanged()
 	{
 		foreach(Node *n, pool)
 		{
-			Sender *d = new Sender(n, this);
+			Sender *d = new Sender(encryption, n, this);
 			d->distribute(cnt);
 		}
 	}
@@ -158,11 +162,12 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 
 void HaveClip::incomingConnection(int handle)
 {
-	Receiver *c = new Receiver(this);
+	Receiver *c = new Receiver(encryption, this);
 	c->setSocketDescriptor(handle);
 
 	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));
 
+	c->setCertificateAndKey(certificate, privateKey);
 	c->communicate();
 }
 
@@ -269,7 +274,7 @@ void HaveClip::loadNodes()
 	foreach(QString node, settings->value("Pool/Nodes").toStringList())
 	{
 		Node *n = new Node;
-		n->addr = node.section(':', 0, 0);
+		n->host = node.section(':', 0, 0);
 		n->port = node.section(':', 1, 1).toUShort();
 		pool << n;
 	}
@@ -353,6 +358,14 @@ void HaveClip::showSettings()
 
 			startListening();
 		}
+
+		encryption = dlg->encryption();
+		certificate = dlg->certificate();
+		privateKey = dlg->privateKey();
+
+		settings->setValue("Connection/Encryption", encryption);
+		settings->setValue("Connection/Certificate", certificate);
+		settings->setValue("Connection/PrivateKey", privateKey);
 	}
 
 	dlg->deleteLater();
@@ -406,6 +419,8 @@ void HaveClip::startListening(QHostAddress addr)
 		}
 
 		this->host = host;
+
+		qDebug() << "Listening on" << serverAddress() << serverPort();
 
 	} else {
 		QHostInfo::lookupHost(host, this, SLOT(listenOnHost(QHostInfo)));

@@ -21,8 +21,14 @@ class HaveClip : public QTcpServer
 	Q_OBJECT
 public:
 	struct Node {
-		QHostAddress addr;
+		QString host;
 		quint16 port;
+	};
+
+	enum Encryption {
+		None=0,
+		Ssl,
+		Tls
 	};
 
 	explicit HaveClip(QObject *parent = 0);
@@ -52,6 +58,9 @@ private:
 	bool histEnabled;
 	int histSize;
 	QString host;
+	Encryption encryption;
+	QString certificate;
+	QString privateKey;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();

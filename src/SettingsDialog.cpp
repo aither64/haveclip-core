@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QFileDialog>
 
 #include "SettingsDialog.h"
 #include "ui_SettingsDialog.h"
@@ -25,6 +26,14 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	// History
 	ui->historyGroupBox->setChecked( settings->value("History/Enable", true).toBool() );
 	ui->historySizeSpinBox->setValue( settings->value("History/Size", 10).toInt() );
+
+	// Encryption
+	ui->encryptionComboBox->setCurrentIndex(settings->value("Connection/Encryption", HaveClip::None).toInt());
+	ui->certificateLineEdit->setText(settings->value("Connection/Certificate", "certs/haveclip.crt").toString());
+	ui->keyLineEdit->setText(settings->value("Connection/PrivateKey", "certs/haveclip.key").toString());
+
+	connect(ui->certificateButton, SIGNAL(clicked()), this, SLOT(setCertificatePath()));
+	connect(ui->keyButton, SIGNAL(clicked()), this, SLOT(setPrivateKeyPath()));
 
 	// Connection
 	ui->hostLineEdit->setText( settings->value("Connection/Host", "0.0.0.0").toString() );
@@ -106,4 +115,35 @@ int SettingsDialog::port()
 QString SettingsDialog::password()
 {
 	return ui->passwordLineEdit->text();
+}
+
+HaveClip::Encryption SettingsDialog::encryption()
+{
+	return (HaveClip::Encryption) ui->encryptionComboBox->currentIndex();
+}
+
+void SettingsDialog::setCertificatePath()
+{
+	QString path = QFileDialog::getOpenFileName(this, tr("Select certificate file"), "", tr("Certificates (*.crt *.pem)"));
+
+	if(!path.isEmpty())
+		ui->certificateLineEdit->setText(path);
+}
+
+void SettingsDialog::setPrivateKeyPath()
+{
+	QString path = QFileDialog::getOpenFileName(this, tr("Select private key file"), "", tr("Private keys (*.key *.pem)"));
+
+	if(!path.isEmpty())
+		ui->keyLineEdit->setText(path);
+}
+
+QString SettingsDialog::certificate()
+{
+	return ui->certificateLineEdit->text();
+}
+
+QString SettingsDialog::privateKey()
+{
+	return ui->keyLineEdit->text();
 }

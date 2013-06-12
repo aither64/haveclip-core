@@ -5,13 +5,14 @@
 
 #include "Sender.h"
 
-Sender::Sender(HaveClip::Node *node, QObject *parent) :
-	QTcpSocket(parent),
-	node(node)
+Sender::Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent) :
+	QSslSocket(parent),
+	node(node),
+	encryption(enc)
 {
-	connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
+	connect(this, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
 }
 
 void Sender::distribute(const ClipboardContent *content)
@@ -29,7 +30,28 @@ void Sender::distribute(const ClipboardContent *content)
 
 	this->content = content;
 
-	connectToHost(node->addr, node->port);
+	if(encryption != HaveClip::None)
+	{
+		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
+
+		setPeerVerifyMode(QSslSocket::VerifyNone);
+
+		switch(encryption)
+		{
+		case HaveClip::Ssl:
+			setProtocol(QSsl::SslV3);
+			break;
+		case HaveClip::Tls:
+			setProtocol(QSsl::TlsV1);
+			break;
+		}
+
+		connectToHostEncrypted(node->host, node->port);
+	} else {
+		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
+
+		connectToHost(node->host, node->port);
+	}
 
 	/**
 	  We cannot write data immediately due to a bug in Qt which will cause application to end up
@@ -39,7 +61,7 @@ void Sender::distribute(const ClipboardContent *content)
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Unable to reach" << node->addr << ":" << socketError;
+	qDebug() << "Unable to reach" << node->host << ":" << socketError;
 	this->deleteLater();
 }
 
@@ -88,4 +110,11 @@ void Sender::onConnect()
 void Sender::onDisconnect()
 {
 	this->deleteLater();
+}
+
+void Sender::onSslError(const QList<QSslError> &errors)
+{
+	qDebug() << "SENDER SSL error" << errors;
+
+	ignoreSslErrors();
 }

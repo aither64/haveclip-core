@@ -1,11 +1,11 @@
 #ifndef DISTRIBUTOR_H
 #define DISTRIBUTOR_H
 
-#include <QTcpSocket>
+#include <QSslSocket>
 #include <QMimeData>
 #include "HaveClip.h"
 
-class Sender : public QTcpSocket
+class Sender : public QSslSocket
 {
 	Q_OBJECT
 public:
@@ -13,7 +13,7 @@ public:
 		CLIPBOARD_SYNC=1
 	};
 
-	explicit Sender(HaveClip::Node *node, QObject *parent = 0);
+	explicit Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent = 0);
 	
 signals:
 	
@@ -23,9 +23,11 @@ public slots:
 private:
 	HaveClip::Node *node;
 	const ClipboardContent *content;
+	HaveClip::Encryption encryption;
 
 private slots:
 	void onError(QAbstractSocket::SocketError socketError);
+	void onSslError(const QList<QSslError> &errors);
 	void onConnect();
 	void onDisconnect();
 	
