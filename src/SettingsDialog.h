@@ -21,6 +21,9 @@ public:
 	QStringList nodes();
 	bool historyEnabled();
 	int historySize();
+	QString host();
+	int port();
+	QString password();
 	
 private:
 	Ui::SettingsDialog *ui;

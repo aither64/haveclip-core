@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QTimer>
 #include <QTextDocument>
+#include <QMessageBox>
 
 #include "Receiver.h"
 #include "Sender.h"
@@ -50,7 +51,7 @@ HaveClip::HaveClip(QObject *parent) :
 	histSize = settings->value("History/Size", 10).toInt();
 
 	// Start server
-	listen(QHostAddress::Any, 9999);
+	startListening();
 
 	// Tray
 	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/icon.png"), this);
@@ -310,7 +311,7 @@ void HaveClip::toggleClipboardSending(bool enabled)
 void HaveClip::toggleClipboardReceiving(bool enabled)
 {
 	if(enabled && !clipRecv)
-		listen(QHostAddress::Any, 9999);
+		startListening();
 	else if(!enabled && clipRecv)
 		close();
 
@@ -336,6 +337,22 @@ void HaveClip::showSettings()
 
 		if(!histEnabled)
 			updateHistoryContextMenu();
+
+		QString oldHost = host;
+		host = dlg->host();
+		int port = dlg->port();
+
+		settings->setValue("Connection/Host", host);
+		settings->setValue("Connection/Port", port);
+		settings->setValue("AccessPolicy/Password", dlg->password());
+
+		if(host != oldHost || port != serverPort())
+		{
+			if(isListening())
+				close();
+
+			startListening();
+		}
 	}
 
 	dlg->deleteLater();
@@ -370,4 +387,45 @@ QMimeData* HaveClip::copyMimeData(const QMimeData *mimeReference)
 	}
 
 	return mimeCopy;
+}
+
+void HaveClip::startListening(QHostAddress addr)
+{
+	QString host = settings->value("Connection/Host", "0.0.0.0").toString();
+	this->host.clear();
+
+	if(addr.isNull())
+		addr.setAddress(host);
+
+	if(!addr.isNull())
+	{
+		if(!listen(addr, settings->value("Connection/Port", 9999).toInt()))
+		{
+			QMessageBox::warning(0, tr("Unable to start listening"), tr("Listening failed, clipboard receiving is not active!\n\n") + errorString());
+			return;
+		}
+
+		this->host = host;
+
+	} else {
+		QHostInfo::lookupHost(host, this, SLOT(listenOnHost(QHostInfo)));
+	}
+}
+
+void HaveClip::listenOnHost(const QHostInfo &host)
+{
+	if(host.error() != QHostInfo::NoError) {
+		QMessageBox::warning(0, tr("Unable to resolve hostname"), tr("Resolving failed: ") + host.errorString());
+		return;
+	}
+
+	QList<QHostAddress> addrs = host.addresses();
+
+	if(addrs.size() == 0)
+	{
+		QMessageBox::warning(0, tr("Hostname has no IP address"), tr("Hostname has no IP addresses. Clipboard receiving is not active."));
+		return;
+	}
+
+	startListening(addrs.first());
 }

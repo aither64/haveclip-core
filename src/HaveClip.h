@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QSignalMapper>
 #include <QIcon>
+#include <QHostInfo>
 
 #include "ClipboardContent.h"
 
@@ -50,12 +51,14 @@ private:
 	bool clipRecv;
 	bool histEnabled;
 	int histSize;
+	QString host;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
 	void updateToolTip();
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
+	void startListening(QHostAddress addr = QHostAddress::Null);
 
 private slots:
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -69,6 +72,7 @@ private slots:
 	void toggleClipboardReceiving(bool enabled);
 	void showSettings();
 	void showAbout();
+	void listenOnHost(const QHostInfo &host);
 };
 
 #endif // HAVECLIP_H
