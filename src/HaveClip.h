@@ -1,7 +1,7 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
-#define VERSION "0.2.0"
+#define VERSION "0.3.0"
 
 #include <QTcpServer>
 #include <QClipboard>
