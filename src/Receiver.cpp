@@ -42,6 +42,11 @@ void Receiver::setCertificateAndKey(QString cert, QString key)
 	setPrivateKey(key);
 }
 
+void Receiver::setAcceptPassword(QString password)
+{
+	this->password = password;
+}
+
 void Receiver::onRead()
 {
 	QByteArray data;
@@ -65,6 +70,19 @@ void Receiver::onDisconnect()
 	}
 
 	QDomElement root = doc.documentElement();
+
+	if(!password.isEmpty())
+	{
+		QDomElement passwd = root.firstChildElement("password");
+
+		if(passwd.text() != password)
+		{
+			qDebug() << "Password does not match! Ignore";
+			this->deleteLater();
+			return;
+		}
+	}
+
 	QDomElement clipboard = root.firstChildElement("clipboard");
 	QDomNode n = clipboard.firstChild();
 	QMimeData *mimedata = new QMimeData();

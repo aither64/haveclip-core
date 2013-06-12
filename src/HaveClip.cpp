@@ -54,6 +54,8 @@ HaveClip::HaveClip(QObject *parent) :
 	certificate = settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
 	privateKey = settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
 
+	password = settings->value("AccessPolicy/Password").toString();
+
 	// Start server
 	startListening();
 
@@ -141,7 +143,7 @@ void HaveClip::clipboardChanged()
 		foreach(Node *n, pool)
 		{
 			Sender *d = new Sender(encryption, n, this);
-			d->distribute(cnt);
+			d->distribute(cnt, password);
 		}
 	}
 }
@@ -168,6 +170,7 @@ void HaveClip::incomingConnection(int handle)
 	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));
 
 	c->setCertificateAndKey(certificate, privateKey);
+	c->setAcceptPassword(password);
 	c->communicate();
 }
 
@@ -349,7 +352,9 @@ void HaveClip::showSettings()
 
 		settings->setValue("Connection/Host", host);
 		settings->setValue("Connection/Port", port);
-		settings->setValue("AccessPolicy/Password", dlg->password());
+
+		password = dlg->password();
+		settings->setValue("AccessPolicy/Password", password);
 
 		if(host != oldHost || port != serverPort())
 		{

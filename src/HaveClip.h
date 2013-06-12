@@ -61,6 +61,7 @@ private:
 	Encryption encryption;
 	QString certificate;
 	QString privateKey;
+	QString password;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();

@@ -15,7 +15,7 @@ Sender::Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent) 
 	connect(this, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
 }
 
-void Sender::distribute(const ClipboardContent *content)
+void Sender::distribute(const ClipboardContent *content, QString password)
 {
 	/**
 	  XML protocol
@@ -29,6 +29,7 @@ void Sender::distribute(const ClipboardContent *content)
 	  */
 
 	this->content = content;
+	this->password = password;
 
 	if(encryption != HaveClip::None)
 	{
@@ -70,6 +71,12 @@ void Sender::onConnect()
 	QDomDocument doc;
 	QDomElement root = doc.createElement("haveclip");
 	doc.appendChild(root);
+
+	QDomElement passEl = doc.createElement("password");
+	QDomText pass = doc.createTextNode(password);
+
+	passEl.appendChild(pass);
+	root.appendChild(passEl);
 
 	QDomElement clip = doc.createElement("clipboard");
 	root.appendChild(clip);

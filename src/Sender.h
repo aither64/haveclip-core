@@ -18,12 +18,13 @@ public:
 signals:
 	
 public slots:
-	void distribute(const ClipboardContent *content);
+	void distribute(const ClipboardContent *content, QString password);
 
 private:
 	HaveClip::Node *node;
 	const ClipboardContent *content;
 	HaveClip::Encryption encryption;
+	QString password;
 
 private slots:
 	void onError(QAbstractSocket::SocketError socketError);

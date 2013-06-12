@@ -12,6 +12,7 @@ public:
 	explicit Receiver(HaveClip::Encryption enc, QObject *parent = 0);
 	void communicate();
 	void setCertificateAndKey(QString cert, QString key);
+	void setAcceptPassword(QString password);
 	
 signals:
 	void clipboardUpdated(ClipboardContent *content);
@@ -25,6 +26,7 @@ private:
 	HaveClip::Encryption encryption;
 	QString certificate;
 	QString privateKey;
+	QString password;
 
 private slots:
 	void onRead();
