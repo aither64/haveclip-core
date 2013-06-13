@@ -3,6 +3,7 @@
 
 #include "SettingsDialog.h"
 #include "ui_SettingsDialog.h"
+#include "CertificateTrustDialog.h"
 
 SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
         QDialog(parent),
@@ -34,6 +35,9 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 
 	connect(ui->certificateButton, SIGNAL(clicked()), this, SLOT(setCertificatePath()));
 	connect(ui->keyButton, SIGNAL(clicked()), this, SLOT(setPrivateKeyPath()));
+	connect(ui->certificateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(setFingerprint()));
+
+	setFingerprint();
 
 	// Connection
 	ui->hostLineEdit->setText( settings->value("Connection/Host", "0.0.0.0").toString() );
@@ -146,4 +150,19 @@ QString SettingsDialog::certificate()
 QString SettingsDialog::privateKey()
 {
 	return ui->keyLineEdit->text();
+}
+
+void SettingsDialog::setFingerprint()
+{
+	QString path = ui->certificateLineEdit->text();
+
+	if(!QFile::exists(path))
+		return;
+
+	QList<QSslCertificate> certs = QSslCertificate::fromPath(path);
+
+	if(certs.isEmpty())
+		ui->shaFingerLabel->setText(tr("Certificate does not exist or is not valid"));
+	else
+		ui->shaFingerLabel->setText(CertificateTrustDialog::formatDigest(certs.first().digest(QCryptographicHash::Sha1)));
 }

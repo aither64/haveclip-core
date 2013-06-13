@@ -14,14 +14,17 @@ public:
 	};
 
 	explicit Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent = 0);
+	HaveClip::Node *node();
 	
 signals:
+	void untrustedCertificateError(HaveClip::Node *node, const QList<QSslError> errors);
+	void sslFatalError(const QList<QSslError> errors);
 	
 public slots:
 	void distribute(const ClipboardContent *content, QString password);
 
 private:
-	HaveClip::Node *node;
+	HaveClip::Node *m_node;
 	const ClipboardContent *content;
 	HaveClip::Encryption encryption;
 	QString password;

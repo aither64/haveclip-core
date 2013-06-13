@@ -18,17 +18,20 @@ SOURCES +=\
     src/SettingsDialog.cpp \
     src/ClipboardContent.cpp \
     src/Sender.cpp \
-    src/Receiver.cpp
+    src/Receiver.cpp \
+    src/CertificateTrustDialog.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
     src/SettingsDialog.h \
     src/ClipboardContent.h \
     src/Sender.h \
-    src/Receiver.h
+    src/Receiver.h \
+    src/CertificateTrustDialog.h
 
 FORMS    += src/AboutDialog.ui \
-    src/SettingsDialog.ui
+    src/SettingsDialog.ui \
+    src/CertificateTrustDialog.ui
 
 RESOURCES += \
     HaveClip.qrc

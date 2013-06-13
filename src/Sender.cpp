@@ -2,12 +2,14 @@
 #include <QImage>
 #include <QDomDocument>
 #include <QTextCodec>
+#include <QDateTime>
+#include <QMessageBox>
 
 #include "Sender.h"
 
 Sender::Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent) :
 	QSslSocket(parent),
-	node(node),
+	m_node(node),
 	encryption(enc)
 {
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
@@ -33,9 +35,9 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 
 	if(encryption != HaveClip::None)
 	{
-		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
-
 		setPeerVerifyMode(QSslSocket::VerifyNone);
+
+		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
 
 		switch(encryption)
 		{
@@ -47,11 +49,12 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 			break;
 		}
 
-		connectToHostEncrypted(node->host, node->port);
+		connectToHostEncrypted(m_node->host, m_node->port);
+
 	} else {
 		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
 
-		connectToHost(node->host, node->port);
+		connectToHost(m_node->host, m_node->port);
 	}
 
 	/**
@@ -62,7 +65,7 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Unable to reach" << node->host << ":" << socketError;
+	qDebug() << "Unable to reach" << m_node->host << ":" << socketError;
 	this->deleteLater();
 }
 
@@ -121,7 +124,40 @@ void Sender::onDisconnect()
 
 void Sender::onSslError(const QList<QSslError> &errors)
 {
-	qDebug() << "SENDER SSL error" << errors;
+	QList<QSslError::SslError> recoverable;
+	recoverable << QSslError::SelfSignedCertificate
+		<< QSslError::CertificateUntrusted
+		<< QSslError::HostNameMismatch;
 
-	ignoreSslErrors();
+	bool exception = true;
+
+	foreach(QSslError e, errors)
+	{
+		if(!recoverable.contains(e.error()))
+		{
+			qDebug() << "Unrecoverable SSL error" << e;
+			emit sslFatalError(errors);
+			return;
+		}
+
+		if(e.certificate() != m_node->certificate)
+		{
+			exception = false;
+			break;
+		}
+	}
+
+	if(exception)
+	{
+		qDebug() << "SSL errors ignored because of exception";
+		ignoreSslErrors();
+
+	} else {
+		emit untrustedCertificateError(m_node, errors);
+	}
+}
+
+HaveClip::Node* Sender::node()
+{
+	return m_node;
 }

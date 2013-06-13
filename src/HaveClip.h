@@ -13,6 +13,7 @@
 #include <QSignalMapper>
 #include <QIcon>
 #include <QHostInfo>
+#include <QSslError>
 
 #include "ClipboardContent.h"
 
@@ -23,6 +24,9 @@ public:
 	struct Node {
 		QString host;
 		quint16 port;
+		QSslCertificate certificate;
+
+		QString toString();
 	};
 
 	enum Encryption {
@@ -83,6 +87,8 @@ private slots:
 	void showSettings();
 	void showAbout();
 	void listenOnHost(const QHostInfo &host);
+	void determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors);
+	void sslFatalError(const QList<QSslError> errors);
 };
 
 #endif // HAVECLIP_H

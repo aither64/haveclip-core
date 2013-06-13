@@ -40,6 +40,7 @@ private slots:
 	void nodeChange(QString str);
 	void setCertificatePath();
 	void setPrivateKeyPath();
+	void setFingerprint();
 };
 
 #endif // SETTINGSDIALOG_H

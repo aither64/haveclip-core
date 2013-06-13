@@ -11,11 +11,18 @@
 #include <QTimer>
 #include <QTextDocument>
 #include <QMessageBox>
+#include <QFileInfo>
 
 #include "Receiver.h"
 #include "Sender.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
+#include "CertificateTrustDialog.h"
+
+QString HaveClip::Node::toString()
+{
+	return host + ":" + QString::number(port);
+}
 
 HaveClip::HaveClip(QObject *parent) :
 	QTcpServer(parent),
@@ -143,6 +150,10 @@ void HaveClip::clipboardChanged()
 		foreach(Node *n, pool)
 		{
 			Sender *d = new Sender(encryption, n, this);
+
+			connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
+			connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
+
 			d->distribute(cnt, password);
 		}
 	}
@@ -279,6 +290,12 @@ void HaveClip::loadNodes()
 		Node *n = new Node;
 		n->host = node.section(':', 0, 0);
 		n->port = node.section(':', 1, 1).toUShort();
+
+		QByteArray cert = settings->value("Node:" + n->toString() + "/Certificate").toString().toAscii();
+
+		if(!cert.isEmpty())
+			n->certificate = QSslCertificate::fromData(cert).first();
+
 		pool << n;
 	}
 }
@@ -448,4 +465,38 @@ void HaveClip::listenOnHost(const QHostInfo &host)
 	}
 
 	startListening(addrs.first());
+}
+
+void HaveClip::determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors)
+{
+	CertificateTrustDialog *dlg = new CertificateTrustDialog(node, errors);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		QSslCertificate cert = errors.first().certificate();
+		node->certificate = cert;
+
+		if(dlg->remember())
+			settings->setValue("Node:" + node->toString() + "/Certificate", QString(cert.toPem()));
+
+		// It is easier to just create new instance. We would have to wait for the current one to fail.
+		Sender *d = new Sender(encryption, node, this);
+
+		connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
+		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
+
+		d->distribute(currentItem, password);
+	}
+
+	dlg->deleteLater();
+}
+
+void HaveClip::sslFatalError(const QList<QSslError> errors)
+{
+	QString errs;
+
+	foreach(QSslError e, errors)
+		errs += e.errorString() + "\n";
+
+	QMessageBox::warning(0, tr("SSL fatal error"), tr("Unable to establish secure connection:\n\n") + errs);
 }
