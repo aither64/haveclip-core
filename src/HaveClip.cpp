@@ -19,6 +19,9 @@
 #include "AboutDialog.h"
 #include "CertificateTrustDialog.h"
 
+#include "PasteServices/PasteDialog.h"
+#include "PasteServices/Stikked/Stikked.h"
+
 QString HaveClip::Node::toString()
 {
 	return host + ":" + QString::number(port);
@@ -26,7 +29,8 @@ QString HaveClip::Node::toString()
 
 HaveClip::HaveClip(QObject *parent) :
 	QTcpServer(parent),
-	currentItem(0)
+	currentItem(0),
+	pasteService(0)
 {
 	clipboard = QApplication::clipboard();
 	signalMapper = new QSignalMapper(this);
@@ -73,7 +77,7 @@ HaveClip::HaveClip(QObject *parent) :
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 
 	historyMenu = new QMenu;
-	menuSeparator = historyMenu->addSeparator();
+	historySeparator = historyMenu->addSeparator();
 
 	menu = new QMenu;
 
@@ -95,6 +99,13 @@ HaveClip::HaveClip(QObject *parent) :
 	connect(clipRecvAction, SIGNAL(toggled(bool)), this, SLOT(toggleClipboardReceiving(bool)));
 
 	menu->addSeparator();
+	menuSeparator = menu->addSeparator();
+
+	setPasteService(
+		settings->value("PasteServices/Enable", false).toBool(),
+		(BasePasteService::PasteService) settings->value("PasteServices/Service", BasePasteService::Stikked).toInt()
+	);
+
 	menu->addAction(tr("&Settings"), this, SLOT(showSettings()));
 	menu->addAction(tr("&About..."), this, SLOT(showAbout()));
 	menu->addAction(tr("&Quit"), qApp, SLOT(quit()));
@@ -261,7 +272,7 @@ void HaveClip::updateHistoryContextMenu()
 		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 		signalMapper->setMapping(act, act);
 
-		historyMenu->insertAction(lastAction ? lastAction : menuSeparator, act);
+		historyMenu->insertAction(lastAction ? lastAction : historySeparator, act);
 
 		historyHash.insert(act, c);
 
@@ -388,6 +399,15 @@ void HaveClip::showSettings()
 		settings->setValue("Connection/Encryption", encryption);
 		settings->setValue("Connection/Certificate", certificate);
 		settings->setValue("Connection/PrivateKey", privateKey);
+
+		// Paste services
+		settings->setValue("PasteServices/Enable", dlg->pasteServiceEnabled());
+		settings->setValue("PasteServices/Service", dlg->pasteServiceType());
+
+		setPasteService(dlg->pasteServiceEnabled(), dlg->pasteServiceType());
+
+		if(pasteService)
+			pasteService->applySettings(dlg->pasteServiceSettings());
 	}
 
 	dlg->deleteLater();
@@ -499,4 +519,90 @@ void HaveClip::sslFatalError(const QList<QSslError> errors)
 		errs += e.errorString() + "\n";
 
 	QMessageBox::warning(0, tr("SSL fatal error"), tr("Unable to establish secure connection:\n\n") + errs);
+}
+
+void HaveClip::setPasteService(bool enabled, BasePasteService::PasteService type)
+{
+	if(enabled && !pasteService)
+	{
+		createPasteService( (BasePasteService::PasteService) settings->value("PasteServices/Service", BasePasteService::Stikked).toInt() );
+
+	} else if(!enabled && pasteService) {
+		removePasteService();
+
+	} else if(enabled && pasteService && pasteService->type() != type) {
+		removePasteService();
+		createPasteService(type);
+	}
+}
+
+void HaveClip::createPasteService(BasePasteService::PasteService type)
+{
+	switch(type)
+	{
+	case BasePasteService::Stikked:
+		pasteService = new Stikked(settings, this);
+		break;
+	default:
+		return;
+	}
+
+	connect(pasteService, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
+
+	pasteAction = new QAction(tr("Paste to %1").arg(pasteService->label()), this);
+	connect(pasteAction, SIGNAL(triggered()), this, SLOT(simplePaste()));
+
+	pasteAdvancedAction = new QAction(tr("Advanced paste to %1").arg(pasteService->label()), this);
+	connect(pasteAdvancedAction, SIGNAL(triggered()), this, SLOT(advancedPaste()));
+
+	menu->insertAction(menuSeparator, pasteAction);
+	menu->insertAction(menuSeparator, pasteAdvancedAction);
+}
+
+void HaveClip::removePasteService()
+{
+	menu->removeAction(pasteAction);
+	menu->removeAction(pasteAdvancedAction);
+
+	pasteAction->deleteLater();
+	pasteAdvancedAction->deleteLater();
+
+	pasteService->deleteLater();
+	pasteService = 0;
+}
+
+void HaveClip::simplePaste()
+{
+	switch(pasteService->type())
+	{
+	case BasePasteService::Stikked:
+
+		break;
+	}
+
+	pasteService->paste(currentItem->toPlainText());
+}
+
+void HaveClip::advancedPaste()
+{
+	PasteDialog *dlg = new PasteDialog(currentItem->mimeData->text(), pasteService);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		pasteService->paste(dlg->pasteServiceSettings(), currentItem->toPlainText());
+	}
+
+	dlg->deleteLater();
+}
+
+void HaveClip::receivePasteUrl(QUrl url)
+{
+	QMimeData *mime = new QMimeData;
+	QList<QUrl> urls;
+	urls << url;
+
+	mime->setUrls(urls);
+	mime->setText(url.toString());
+
+	clipboard->setMimeData(mime);
 }

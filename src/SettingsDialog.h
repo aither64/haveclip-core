@@ -4,8 +4,10 @@
 #include <QDialog>
 #include <QSettings>
 #include <QListWidgetItem>
+#include <QHash>
 
 #include "HaveClip.h"
+#include "PasteServices/BasePasteService.h"
 
 #define NODE_ADD_STR tr("IP address:port")
 
@@ -29,6 +31,9 @@ public:
 	HaveClip::Encryption encryption();
 	QString certificate();
 	QString privateKey();
+	bool pasteServiceEnabled();
+	BasePasteService::PasteService pasteServiceType();
+	QHash<QString, QVariant> pasteServiceSettings();
 	
 private:
 	Ui::SettingsDialog *ui;

@@ -5,6 +5,10 @@
 #include "ui_SettingsDialog.h"
 #include "CertificateTrustDialog.h"
 
+#include "PasteServices/BasePasteService.h"
+#include "PasteServices/BasePasteServiceWidget.h"
+#include "PasteServices/Stikked/StikkedSettings.h"
+
 SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
         QDialog(parent),
         ui(new Ui::SettingsDialog)
@@ -44,6 +48,24 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	ui->portSpinBox->setValue( settings->value("Connection/Port", 9999).toInt() );
 
 	ui->passwordLineEdit->setText( settings->value("AccessPolicy/Password").toString() );
+
+	// Paste services
+	ui->enablePasteCheckBox->setChecked(settings->value("PasteServices/Enable", false).toBool());
+
+	for(int i = 0; i < BasePasteService::PasteServiceCount; i++)
+	{
+		BasePasteServiceWidget *w;
+
+		switch(i)
+		{
+		case BasePasteService::Stikked:
+			w = new StikkedSettings(BasePasteServiceWidget::Settings, this);
+			w->load(settings);
+			break;
+		}
+
+		ui->pasteStackedWidget->addWidget(w);
+	}
 }
 
 SettingsDialog::~SettingsDialog()
@@ -165,4 +187,19 @@ void SettingsDialog::setFingerprint()
 		ui->shaFingerLabel->setText(tr("Certificate does not exist or is not valid"));
 	else
 		ui->shaFingerLabel->setText(CertificateTrustDialog::formatDigest(certs.first().digest(QCryptographicHash::Sha1)));
+}
+
+bool SettingsDialog::pasteServiceEnabled()
+{
+	return ui->enablePasteCheckBox->isChecked();
+}
+
+BasePasteService::PasteService SettingsDialog::pasteServiceType()
+{
+	return (BasePasteService::PasteService) ui->pasteServiceComboBox->currentIndex();
+}
+
+QHash<QString, QVariant> SettingsDialog::pasteServiceSettings()
+{
+	return static_cast<BasePasteServiceWidget*>(ui->pasteStackedWidget->currentWidget())->settings();
 }

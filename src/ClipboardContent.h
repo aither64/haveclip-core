@@ -26,6 +26,7 @@ public:
 	ClipboardContent(QMimeData *data);
 	~ClipboardContent();
 	void init();
+	QString toPlainText();
 	bool operator==(const ClipboardContent &other) const;
 
 private:

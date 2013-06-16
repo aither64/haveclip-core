@@ -110,6 +110,24 @@ ClipboardContent::~ClipboardContent()
 	delete mimeData;
 }
 
+QString ClipboardContent::toPlainText()
+{
+	QString ret;
+
+	if(mimeData->hasText())
+		ret = mimeData->text();
+
+	else if(mimeData->hasHtml())
+		ret = mimeData->html();
+
+	else if(mimeData->hasUrls()) {
+		foreach(QUrl u, mimeData->urls())
+			ret += u.toString() + "\n";
+	}
+
+	return ret;
+}
+
 bool ClipboardContent::operator==(const ClipboardContent &other) const
 {
 	if(formats != other.formats)

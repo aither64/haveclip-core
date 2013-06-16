@@ -1,7 +1,7 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
-#define VERSION "0.3.0"
+#define VERSION "0.4.0"
 
 #include <QTcpServer>
 #include <QClipboard>
@@ -15,6 +15,7 @@
 #include <QHostInfo>
 #include <QSslError>
 
+#include "PasteServices/BasePasteService.h"
 #include "ClipboardContent.h"
 
 class HaveClip : public QTcpServer
@@ -49,6 +50,7 @@ private:
 	QSystemTrayIcon *trayIcon;
 	QMenu *menu;
 	QMenu *historyMenu;
+	QAction *historySeparator;
 	QAction *menuSeparator;
 	QAction *clipSndAction;
 	QAction *clipRecvAction;
@@ -66,6 +68,10 @@ private:
 	QString certificate;
 	QString privateKey;
 	QString password;
+	BasePasteService *pasteService;
+	QAction *pasteAction;
+	QAction *pasteAdvancedAction;
+	QAction *pasteSeparator;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
@@ -73,6 +79,8 @@ private:
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
 	void startListening(QHostAddress addr = QHostAddress::Null);
+	void createPasteService(BasePasteService::PasteService type);
+	void removePasteService();
 
 private slots:
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -89,6 +97,10 @@ private slots:
 	void listenOnHost(const QHostInfo &host);
 	void determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
+	void simplePaste();
+	void advancedPaste();
+	void setPasteService(bool enabled, BasePasteService::PasteService type);
+	void receivePasteUrl(QUrl url);
 };
 
 #endif // HAVECLIP_H
