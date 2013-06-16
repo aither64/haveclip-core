@@ -46,6 +46,7 @@ private slots:
 	void setCertificatePath();
 	void setPrivateKeyPath();
 	void setFingerprint();
+	void pasteServiceToggle(bool enable);
 };
 
 #endif // SETTINGSDIALOG_H

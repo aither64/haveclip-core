@@ -51,6 +51,9 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 
 	// Paste services
 	ui->enablePasteCheckBox->setChecked(settings->value("PasteServices/Enable", false).toBool());
+	pasteServiceToggle(ui->enablePasteCheckBox->isChecked());
+
+	connect(ui->enablePasteCheckBox, SIGNAL(toggled(bool)), this, SLOT(pasteServiceToggle(bool)));
 
 	for(int i = 0; i < BasePasteService::PasteServiceCount; i++)
 	{
@@ -202,4 +205,10 @@ BasePasteService::PasteService SettingsDialog::pasteServiceType()
 QHash<QString, QVariant> SettingsDialog::pasteServiceSettings()
 {
 	return static_cast<BasePasteServiceWidget*>(ui->pasteStackedWidget->currentWidget())->settings();
+}
+
+void SettingsDialog::pasteServiceToggle(bool enable)
+{
+	ui->pasteServiceComboBox->setEnabled(enable);
+	ui->pasteStackedWidget->setEnabled(enable);
 }

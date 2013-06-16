@@ -276,7 +276,7 @@
        <item>
         <widget class="QCheckBox" name="enablePasteCheckBox">
          <property name="text">
-          <string>Enable paste services</string>
+          <string>Enable paste service</string>
          </property>
         </widget>
        </item>
