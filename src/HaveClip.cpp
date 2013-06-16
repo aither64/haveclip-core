@@ -598,11 +598,20 @@ void HaveClip::advancedPaste()
 void HaveClip::receivePasteUrl(QUrl url)
 {
 	QMimeData *mime = new QMimeData;
+
 	QList<QUrl> urls;
 	urls << url;
 
+	QString html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
+			"<html><head>"
+			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+			"</head><body>"
+			"<a href=\"%1\">%1</a>"
+			"</body></html>";
+
 	mime->setUrls(urls);
 	mime->setText(url.toString());
+	mime->setHtml(html.arg(url.toString()));
 
 	clipboard->setMimeData(mime);
 }
