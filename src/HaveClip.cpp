@@ -144,9 +144,13 @@ void HaveClip::clipboardChanged()
 
 	ClipboardContent *cnt = new ClipboardContent(mimeData);
 
-	if((currentItem && *currentItem == *cnt) || cnt->formats.isEmpty())
+	if(currentItem && *currentItem == *cnt)
 	{
 		delete cnt;
+		return;
+
+	} else if(cnt->formats.isEmpty()) { // empty clipboard, restore last content
+		updateClipboard(currentItem, true);
 		return;
 	}
 
