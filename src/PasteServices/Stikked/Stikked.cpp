@@ -337,22 +337,14 @@ void Stikked::requestFinished(QNetworkReply *reply)
 
 QByteArray Stikked::buildPostData(QHash<QString, QString> &data)
 {
-	QString ret;
-
+	QUrl post;
 	QHashIterator<QString, QString> i(data);
-	bool first = true;
 
 	while(i.hasNext())
 	{
-	    i.next();
-
-	    if(first)
-		    first = false;
-	    else
-		    ret += "&";
-
-	    ret += i.key() + "=" + i.value();
+		i.next();
+		post.addQueryItem(i.key(), i.value());
 	}
 
-	return ret.toUtf8();
+	return post.encodedQuery();
 }

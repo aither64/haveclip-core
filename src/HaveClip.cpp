@@ -149,7 +149,7 @@ void HaveClip::clipboardChanged()
 		delete cnt;
 		return;
 
-	} else if(cnt->formats.isEmpty()) { // empty clipboard, restore last content
+	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
 		updateClipboard(currentItem, true);
 		return;
 	}
