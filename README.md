@@ -8,12 +8,13 @@ Pastebin, or will you copy it by hand?
 HaveClip is the solution. Ctrl+C on one computer, Ctrl+V on another. Simple.
 
 Main features are:
+
  - synchronize clipboard on multiple devices
  - save clipboard history, easily get overwritten data
  - integration with paste services like Pastebin.com
 
 Clipboard is instantly synchronized across all your devices. It can handle all
-forms of text and images.
+forms of text, images and even application-specific data.
 
 HaveClip is multiplatform. Copy something in one OS, paste in another.
 Supports Windows, Linux and Mac OS X. Client for Android is a work in progress.
@@ -31,34 +32,38 @@ HaveClip for desktop is written in C++ using the Qt framework.
 
 Build
 -----
-  # tar -xzf HaveClip-0.5.0-src.tar.gz
-  # cd HaveClip-0.5.0-src
-  # qmake
-  # make
+    # tar -xzf HaveClip-0.5.0-src.tar.gz
+    # cd HaveClip-0.5.0-src
+    # qmake
+    # make
 
 Installation
 ------------
 You can copy it to /usr/local/bin
 
-  # cp HaveClip /usr/local/bin/
+    # cp HaveClip /usr/local/bin/
 
 or wherever you want.
 
 Run with
 
-  # ./HaveClip
+    # ./HaveClip
 
 Usage
 -----
 HaveClip runs in background. There is no window when you launch it, only tray
 icon will show up.
 
+If you left-click the tray icon, menu with clipboard history will pop up.
+Right-click triggers menu with options and pasting. These two menus are merged
+in one in OS X.
+
 First thing you want to do is to setup devices where the clipboard will be
 synced. Right-click on the tray icon and select Settings. Go to tab Pool
 and add IP addresses of your devices. The format for each entry is
 IP address:port. For example:
 
-  1.2.3.4:9999
+    1.2.3.4:9999
 
 Now when you copy something into clipboard, it will be sent to all devices
 listed in Pool.
@@ -75,15 +80,16 @@ not all other features are. The most equipped is the Linux version. It can
 show you a preview of clipboard contents in tooltip of tray icon. This is not
 possible to easily implement on other platforms.
 
-HaveClip can be handy even if not used for clipboard synchronising. It saves
+HaveClip can be handy even if not used for clipboard syncing. It saves
 clipboard history, allowing you to jump back and forth. It has integrated
 support for paste services. With HaveClip you can easily create pastes from
 the contents of clipboard. Support of specific application you work in is not
 required.
 
 Currently, HaveClip supports these paste services:
- - Stikked - https://github.com/claudehohl/Stikked
- - Pastebin.com - http://pastebin.com
+
+ - Stikked - [https://github.com/claudehohl/Stikked](https://github.com/claudehohl/Stikked)
+ - Pastebin.com - [http://pastebin.com](http://pastebin.com)
 
 In Linux, when you copy something and then close the application, the copied
 data is lost. HaveClip prevents that. If the clipboard contents suddenly

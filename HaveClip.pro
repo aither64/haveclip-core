@@ -55,7 +55,8 @@ RESOURCES += \
     HaveClip.qrc
 
 OTHER_FILES += \
-    README \
     TODO \
     utils/stikked_lang_generator.php \
-    utils/pastebin_lang_generator.py
+    utils/pastebin_lang_generator.py \
+    LICENSE \
+    README.md
