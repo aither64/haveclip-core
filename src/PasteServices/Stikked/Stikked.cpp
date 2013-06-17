@@ -322,6 +322,7 @@ void Stikked::requestFinished(QNetworkReply *reply)
 	if(reply->error() != QNetworkReply::NoError)
 	{
 		qDebug() << "Error pasting to stikked" << reply->error();
+		emit errorOccured(reply->errorString());
 		return;
 	}
 

@@ -378,6 +378,7 @@ void Pastebin::requestFinished(QNetworkReply *reply)
 	if(reply->error() != QNetworkReply::NoError)
 	{
 		qDebug() << "Error pasting to pastebin" << reply->error();
+		emit errorOccured(reply->errorString());
 		return;
 	}
 
@@ -393,8 +394,7 @@ void Pastebin::requestFinished(QNetworkReply *reply)
 		if(loggingIn)
 			emit authenticationRequired(loginUsername, true, ret.mid(ret.indexOf(',')+1, -1).trimmed());
 		else
-			; // FIXME: report error
-
+			emit errorOccured(reply->errorString());
 		return;
 	}
 

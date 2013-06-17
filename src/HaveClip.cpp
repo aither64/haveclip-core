@@ -569,6 +569,7 @@ void HaveClip::createPasteService(BasePasteService::PasteService type)
 
 	connect(pasteService, SIGNAL(authenticationRequired(QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(QString,bool,QString)));
 	connect(pasteService, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
+	connect(pasteService, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
 
 	pasteAction = new QAction(tr("Paste to %1").arg(pasteService->label()), this);
 	connect(pasteAction, SIGNAL(triggered()), this, SLOT(simplePaste()));
@@ -646,4 +647,9 @@ void HaveClip::pasteServiceRequiresAuthentication(QString username, bool failed,
 	}
 
 	dlg->deleteLater();
+}
+
+void HaveClip::pasteServiceError(QString error)
+{
+	QMessageBox::warning(0, tr("Unable to paste"), tr("Paste failed.\n\nError occured: %1").arg(error));
 }

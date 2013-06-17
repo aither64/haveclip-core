@@ -34,6 +34,7 @@ signals:
 	void authenticationRequired(QString username, bool failed, QString msg);
 	void pasteFailed(QString error);
 	void pasted(QUrl url);
+	void errorOccured(QString error);
 	
 public slots:
 	virtual void provideAuthentication(QString username, QString password);
