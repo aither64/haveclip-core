@@ -7,12 +7,7 @@ class Stikked : public BasePasteService
 {
 	Q_OBJECT
 public:
-	struct Language {
-		const char *name;
-		const char *label;
-	};
-
-	static Language languages[];
+	static Language m_languages[];
 
 	explicit Stikked(QSettings *settings, QObject *parent = 0);
 	PasteService type();
@@ -42,8 +37,6 @@ private:
 	bool m_privatePaste;
 	QString m_lang;
 	int m_expire;
-
-	QByteArray buildPostData(QHash<QString, QString> &post);
 
 private slots:
 	void paste(QHash<QString, QString> &data);

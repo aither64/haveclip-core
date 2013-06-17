@@ -18,9 +18,11 @@
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
 #include "CertificateTrustDialog.h"
+#include "LoginDialog.h"
 
 #include "PasteServices/PasteDialog.h"
 #include "PasteServices/Stikked/Stikked.h"
+#include "PasteServices/Pastebin/Pastebin.h"
 
 QString HaveClip::Node::toString()
 {
@@ -535,6 +537,7 @@ void HaveClip::setPasteService(bool enabled, BasePasteService::PasteService type
 		removePasteService();
 
 	} else if(enabled && pasteService && pasteService->type() != type) {
+		qDebug() << "Replacing paste service";
 		removePasteService();
 		createPasteService(type);
 	}
@@ -547,10 +550,14 @@ void HaveClip::createPasteService(BasePasteService::PasteService type)
 	case BasePasteService::Stikked:
 		pasteService = new Stikked(settings, this);
 		break;
+	case BasePasteService::Pastebin:
+		pasteService = new Pastebin(settings, this);
+		break;
 	default:
 		return;
 	}
 
+	connect(pasteService, SIGNAL(authenticationRequired(QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(QString,bool,QString)));
 	connect(pasteService, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
 
 	pasteAction = new QAction(tr("Paste to %1").arg(pasteService->label()), this);
@@ -618,4 +625,19 @@ void HaveClip::receivePasteUrl(QUrl url)
 	mime->setHtml(html.arg(url.toString()));
 
 	clipboard->setMimeData(mime);
+}
+
+void HaveClip::pasteServiceRequiresAuthentication(QString username, bool failed, QString msg)
+{
+	LoginDialog *dlg = new LoginDialog(username);
+
+	if(failed)
+		dlg->setError(tr("Login failed: %1").arg(msg));
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		pasteService->provideAuthentication(dlg->username(), dlg->password());
+	}
+
+	dlg->deleteLater();
 }

@@ -8,6 +8,7 @@
 #include "PasteServices/BasePasteService.h"
 #include "PasteServices/BasePasteServiceWidget.h"
 #include "PasteServices/Stikked/StikkedSettings.h"
+#include "PasteServices/Pastebin/PastebinSettings.h"
 
 SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
         QDialog(parent),
@@ -51,6 +52,7 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 
 	// Paste services
 	ui->enablePasteCheckBox->setChecked(settings->value("PasteServices/Enable", false).toBool());
+	ui->pasteServiceComboBox->setCurrentIndex(settings->value("PasteServices/Service", BasePasteService::Stikked).toInt());
 	pasteServiceToggle(ui->enablePasteCheckBox->isChecked());
 
 	connect(ui->enablePasteCheckBox, SIGNAL(toggled(bool)), this, SLOT(pasteServiceToggle(bool)));
@@ -65,10 +67,18 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 			w = new StikkedSettings(BasePasteServiceWidget::Settings, this);
 			w->load(settings);
 			break;
+		case BasePasteService::Pastebin:
+			w = new PastebinSettings(BasePasteServiceWidget::Settings, this);
+			w->load(settings);
+			break;
+		default:
+			continue;
 		}
 
 		ui->pasteStackedWidget->addWidget(w);
 	}
+
+	ui->pasteStackedWidget->setCurrentIndex(ui->pasteServiceComboBox->currentIndex());
 }
 
 SettingsDialog::~SettingsDialog()

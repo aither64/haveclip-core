@@ -25,7 +25,6 @@ public slots:
 private:
 	Ui::StikkedSettings *ui;
 	
-	int langIndexFromName(QString name);
 	int expireIndexFromDuration(int d);
 };
 

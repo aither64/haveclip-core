@@ -101,6 +101,7 @@ private slots:
 	void advancedPaste();
 	void setPasteService(bool enabled, BasePasteService::PasteService type);
 	void receivePasteUrl(QUrl url);
+	void pasteServiceRequiresAuthentication(QString username, bool failed, QString msg);
 };
 
 #endif // HAVECLIP_H

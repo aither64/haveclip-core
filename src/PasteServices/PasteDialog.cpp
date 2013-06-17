@@ -3,6 +3,8 @@
 
 #include "Stikked/Stikked.h"
 #include "Stikked/StikkedSettings.h"
+#include "Pastebin/Pastebin.h"
+#include "Pastebin/PastebinSettings.h"
 
 PasteDialog::PasteDialog(QString data, BasePasteService *service, QWidget *parent) :
         QDialog(parent),
@@ -17,6 +19,12 @@ PasteDialog::PasteDialog(QString data, BasePasteService *service, QWidget *paren
 		serviceWidget = new StikkedSettings(BasePasteServiceWidget::Paste, this);
 		serviceWidget->load(service);
 		break;
+	case BasePasteService::Pastebin:
+		serviceWidget = new PastebinSettings(BasePasteServiceWidget::Paste, this);
+		serviceWidget->load(service);
+		break;
+	default:
+		return;
 	}
 
 	ui->pasteOptionsVerticalLayout->addWidget(serviceWidget);

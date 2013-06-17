@@ -19,8 +19,8 @@ StikkedSettings::StikkedSettings(BasePasteServiceWidget::Mode mode, QWidget *par
 		break;
 	}
 
-	for(int i = 0; Stikked::languages[i].name != 0; i++)
-		ui->langComboBox->addItem(Stikked::languages[i].label, Stikked::languages[i].name);
+	for(int i = 0; Stikked::m_languages[i].name != 0; i++)
+		ui->langComboBox->addItem(Stikked::m_languages[i].label);
 }
 
 StikkedSettings::~StikkedSettings()
@@ -37,7 +37,7 @@ void StikkedSettings::load(QSettings *settings)
 	ui->nameLineEdit->setText(settings->value("Name").toString());
 	ui->titleLineEdit->setText(settings->value("Title").toString());
 	ui->privateCheckBox->setChecked(settings->value("Private", true).toBool());
-	ui->langComboBox->setCurrentIndex(langIndexFromName(settings->value("Language", "text").toString()));
+	ui->langComboBox->setCurrentIndex(Stikked::langIndexFromName(Stikked::m_languages, settings->value("Language", "text").toString()));
 	ui->expirationComboBox->setCurrentIndex(expireIndexFromDuration(settings->value("Expiration", 0).toInt()));
 
 	settings->endGroup();
@@ -51,7 +51,7 @@ void StikkedSettings::load(BasePasteService *service)
 	ui->nameLineEdit->setText(stikked->name());
 	ui->titleLineEdit->setText(stikked->title());
 	ui->privateCheckBox->setChecked(stikked->isPrivate());
-	ui->langComboBox->setCurrentIndex(langIndexFromName(stikked->lang()));
+	ui->langComboBox->setCurrentIndex(Stikked::langIndexFromName(Stikked::m_languages, stikked->lang()));
 	ui->expirationComboBox->setCurrentIndex(expireIndexFromDuration(stikked->expiration()));
 }
 
@@ -63,7 +63,7 @@ QHash<QString, QVariant> StikkedSettings::settings()
 	s["Name"] = ui->nameLineEdit->text();
 	s["Title"] = ui->titleLineEdit->text();
 	s["Private"] = ui->privateCheckBox->isChecked();
-	s["Lang"] = Stikked::languages[ui->langComboBox->currentIndex()].name;
+	s["Lang"] = Stikked::m_languages[ui->langComboBox->currentIndex()].name;
 
 	int e;
 
@@ -100,15 +100,6 @@ QHash<QString, QVariant> StikkedSettings::settings()
 	s["Expire"] = e;
 
 	return s;
-}
-
-int StikkedSettings::langIndexFromName(QString name)
-{
-	for(int i = 0; Stikked::languages[i].name != 0; i++)
-		if(Stikked::languages[i].name == name)
-			return i;
-
-	return -1;
 }
 
 int StikkedSettings::expireIndexFromDuration(int d)

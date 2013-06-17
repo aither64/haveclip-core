@@ -2,7 +2,7 @@
 
 #include "Stikked.h"
 
-Stikked::Language Stikked::languages[] = {
+Stikked::Language Stikked::m_languages[] = {
 	{"html5", "HTML5"},
 	{"css", "CSS"},
 	{"javascript", "JavaScript"},
@@ -333,18 +333,4 @@ void Stikked::requestFinished(QNetworkReply *reply)
 		emit pasted(QUrl(ret));
 
 	reply->deleteLater();
-}
-
-QByteArray Stikked::buildPostData(QHash<QString, QString> &data)
-{
-	QUrl post;
-	QHashIterator<QString, QString> i(data);
-
-	while(i.hasNext())
-	{
-		i.next();
-		post.addQueryItem(i.key(), i.value());
-	}
-
-	return post.encodedQuery();
 }

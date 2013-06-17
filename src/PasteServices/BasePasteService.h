@@ -11,8 +11,14 @@ class BasePasteService : public QObject
 {
 	Q_OBJECT
 public:
+	struct Language {
+		const char *name;
+		const char *label;
+	};
+
 	enum PasteService {
 		Stikked=0,
+		Pastebin,
 		PasteServiceCount,
 		None
 	};
@@ -22,11 +28,15 @@ public:
 	virtual QString internalName() = 0;
 	virtual QString label() = 0;
 	virtual void applySettings(QHash<QString, QVariant> s) = 0;
+	static int langIndexFromName(Language *lang, QString name);
 
 signals:
+	void authenticationRequired(QString username, bool failed, QString msg);
+	void pasteFailed(QString error);
 	void pasted(QUrl url);
 	
 public slots:
+	virtual void provideAuthentication(QString username, QString password);
 	virtual void paste(QString data) = 0;
 	virtual void paste(QHash<QString, QVariant> settings, QString data) = 0;
 
@@ -36,6 +46,8 @@ protected slots:
 protected:
 	QSettings *settings;
 	QNetworkAccessManager *manager;
+
+	QByteArray buildPostData(QHash<QString, QString> &post);
 };
 
 #endif // BASEPASTESERVICE_H
