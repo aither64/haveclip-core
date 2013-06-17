@@ -8,8 +8,6 @@ QT       += core gui network xml
 
 TARGET = HaveClip
 TEMPLATE = app
-CONFIG  += qxt
-QXT     += core gui
 
 SOURCES +=\
     src/HaveClip.cpp \
