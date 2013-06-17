@@ -76,12 +76,19 @@ HaveClip::HaveClip(QObject *parent) :
 	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/icon.png"), this);
 	trayIcon->setToolTip(tr("HaveClip"));
 
+#ifndef Q_OS_MAC
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+#endif
 
-	historyMenu = new QMenu;
+	historyMenu = new QMenu(tr("History"));
 	historySeparator = historyMenu->addSeparator();
 
 	menu = new QMenu;
+
+#if defined Q_OS_MAC
+	menu->addMenu(historyMenu);
+	menu->addSeparator();
+#endif
 
 	QAction *a = menu->addAction(tr("&Enable clipboard synchronization"));
 	a->setCheckable(true);
