@@ -58,4 +58,6 @@ RESOURCES += \
 
 OTHER_FILES += \
     README \
-    TODO
+    TODO \
+    utils/stikked_lang_generator.php \
+    utils/pastebin_lang_generator.py

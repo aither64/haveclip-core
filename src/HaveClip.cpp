@@ -239,7 +239,10 @@ void HaveClip::addToHistory(ClipboardContent *content)
 	foreach(ClipboardContent *c, history)
 	{
 		if(*c == *content)
+		{
+			currentItem = content;
 			return;
+		}
 	}
 
 	if(history.size() >= histSize)
