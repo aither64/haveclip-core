@@ -119,7 +119,7 @@
    <item>
     <widget class="QGroupBox" name="loginGroupBox">
      <property name="title">
-      <string>Paste as user</string>
+      <string>Paste as registered user</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
