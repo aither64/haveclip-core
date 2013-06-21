@@ -92,7 +92,7 @@ HaveClip::HaveClip(QObject *parent) :
 	startListening();
 
 	// Tray
-	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/icon.png"), this);
+	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/HaveClip_128.png"), this);
 	trayIcon->setToolTip(tr("HaveClip"));
 
 #ifndef Q_OS_MAC
@@ -142,6 +142,7 @@ HaveClip::HaveClip(QObject *parent) :
 	trayIcon->show();
 
 	qApp->setQuitOnLastWindowClosed(false);
+	qApp->setWindowIcon(QIcon(":/gfx/HaveClip_128.png"));
 
 	// Load contents of clipboard
 	clipboardChanged();

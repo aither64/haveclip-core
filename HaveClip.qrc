@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>gfx/icon.png</file>
+        <file>gfx/HaveClip_128.png</file>
     </qresource>
 </RCC>

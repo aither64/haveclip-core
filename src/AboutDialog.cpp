@@ -31,7 +31,9 @@ AboutDialog::AboutDialog(QWidget *parent) :
 		"<h1>HaveClip</h1>"
 		"<p>Version %1</p>"
 		"<p>A simple clipboard synchronization tool.</p>"
-		"<p>© 2013 Jakub Skokan &lt;<a href=\"mailto:aither@havefun.cz\">aither@havefun.cz</a>&gt;</p>"
+		"<h2>Authors:</h2>"
+		"<ul><li>Developed by Jakub Skokan &lt;<a href=\"mailto:aither@havefun.cz\">aither@havefun.cz</a>&gt;</li>"
+		"<li>Icon created by Aleš Kocur &lt;<a href=\"mailto:kafe@havefun.cz\">kafe@havefun.cz</a>&gt;</li></ul>"
 	).arg(VERSION));
 }
 

@@ -11,7 +11,6 @@ TEMPLATE = app
 
 SOURCES +=\
     src/HaveClip.cpp \
-    src/main.cpp \
     src/AboutDialog.cpp \
     src/SettingsDialog.cpp \
     src/ClipboardContent.cpp \
@@ -25,7 +24,8 @@ SOURCES +=\
     src/PasteServices/Stikked/StikkedSettings.cpp \
     src/PasteServices/Pastebin/PastebinSettings.cpp \
     src/PasteServices/Pastebin/Pastebin.cpp \
-    src/LoginDialog.cpp
+    src/LoginDialog.cpp \
+    src/Main.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -59,4 +59,7 @@ OTHER_FILES += \
     utils/stikked_lang_generator.php \
     utils/pastebin_lang_generator.py \
     LICENSE \
-    README.md
+    README.md \
+    src/HaveClip.rc
+
+win32:RC_FILE = src/HaveClip.rc
