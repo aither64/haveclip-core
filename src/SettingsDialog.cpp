@@ -38,7 +38,6 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	connect(ui->nodeAddButton, SIGNAL(clicked()), this, SLOT(addNode()));
 	connect(ui->nodeEditButton, SIGNAL(clicked()), this, SLOT(editNode()));
 	connect(ui->nodeRemoveButton, SIGNAL(clicked()), this, SLOT(deleteNode()));
-	connect(ui->nodeListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(nodeChange(QString)));
 
 	// Pool
 	foreach(QString n, settings->value("Pool/Nodes").toStringList())
@@ -131,6 +130,7 @@ void SettingsDialog::addNode()
 	it->setFlags(it->flags() | Qt::ItemIsEditable);
 	ui->nodeListWidget->addItem(it);
 	ui->nodeListWidget->editItem(it);
+	it->setSelected(true);
 }
 
 void SettingsDialog::editNode()
@@ -145,19 +145,6 @@ void SettingsDialog::deleteNode()
 {
 	foreach(QListWidgetItem *it, ui->nodeListWidget->selectedItems())
 		delete ui->nodeListWidget->takeItem( ui->nodeListWidget->row(it) );
-}
-
-void SettingsDialog::nodeChange(QString str)
-{
-	int cnt = ui->nodeListWidget->count();
-
-	for(int i = 0; i < cnt; i++)
-	{
-		QListWidgetItem *it = ui->nodeListWidget->item(i);
-
-		if(it->text().isEmpty() || it->text() == NODE_ADD_STR)
-			delete ui->nodeListWidget->takeItem( ui->nodeListWidget->row(it) );
-	}
 }
 
 QString SettingsDialog::host()

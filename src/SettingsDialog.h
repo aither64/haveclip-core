@@ -61,7 +61,6 @@ private slots:
 	void addNode();
 	void editNode();
 	void deleteNode();
-	void nodeChange(QString str);
 	void setCertificatePath();
 	void setPrivateKeyPath();
 	void setFingerprint();
