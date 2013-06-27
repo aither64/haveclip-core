@@ -75,6 +75,8 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	connect(ui->pasteEditButton, SIGNAL(clicked()), this, SLOT(editPasteService()));
 	connect(ui->pasteRemoveButton, SIGNAL(clicked()), this, SLOT(deletePasteService()));
 	connect(ui->pasteServiceListWidget, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(editPasteService()));
+	connect(ui->pasteDownButton, SIGNAL(clicked()), this, SLOT(moveDown()));
+	connect(ui->pasteUpButton, SIGNAL(clicked()), this, SLOT(moveUp()));
 
 	settings->beginGroup("PasteServices");
 
@@ -293,4 +295,30 @@ void SettingsDialog::deletePasteService()
 	int i = ui->pasteServiceListWidget->currentRow();
 	delete ui->pasteServiceListWidget->item(i);
 	delete m_services.takeAt(i);
+}
+
+void SettingsDialog::moveUp()
+{
+	int current = ui->pasteServiceListWidget->currentRow();
+
+	if(current == 0)
+		return;
+
+	ui->pasteServiceListWidget->insertItem(current-1, ui->pasteServiceListWidget->takeItem(current));
+	m_services.insert(current-1, m_services.takeAt(current));
+
+	ui->pasteServiceListWidget->setCurrentRow(current-1);
+}
+
+void SettingsDialog::moveDown()
+{
+	int current = ui->pasteServiceListWidget->currentRow();
+
+	if(current+1 == ui->pasteServiceListWidget->count())
+		return;
+
+	ui->pasteServiceListWidget->insertItem(current+1, ui->pasteServiceListWidget->takeItem(current));
+	m_services.insert(current+1, m_services.takeAt(current));
+
+	ui->pasteServiceListWidget->setCurrentRow(current-1);
 }

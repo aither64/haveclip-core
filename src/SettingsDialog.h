@@ -67,6 +67,8 @@ private slots:
 	void addPasteService();
 	void editPasteService();
 	void deletePasteService();
+	void moveUp();
+	void moveDown();
 };
 
 #endif // SETTINGSDIALOG_H
