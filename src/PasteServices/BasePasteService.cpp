@@ -20,6 +20,12 @@
 #include <QDebug>
 #include "BasePasteService.h"
 
+BasePasteService::BasePasteService(QObject *parent) :
+	QObject(parent)
+{
+
+}
+
 BasePasteService::BasePasteService(QSettings *settings, QObject *parent) :
 	QObject(parent),
 	settings(settings)
@@ -27,6 +33,24 @@ BasePasteService::BasePasteService(QSettings *settings, QObject *parent) :
 	manager = new QNetworkAccessManager(this);
 
 	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestFinished(QNetworkReply*)));
+
+	m_label = settings->value("Label").toString();
+}
+
+QString BasePasteService::label()
+{
+	return m_label;
+}
+
+void BasePasteService::applySettings(QHash<QString, QVariant> s)
+{
+	m_label = s["Label"].toString();
+}
+
+void BasePasteService::saveSettings()
+{
+	settings->setValue("Type", type());
+	settings->setValue("Label", m_label);
 }
 
 void BasePasteService::requestFinished(QNetworkReply *reply)

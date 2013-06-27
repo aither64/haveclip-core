@@ -49,17 +49,12 @@ StikkedSettings::~StikkedSettings()
 
 void StikkedSettings::load(QSettings *settings)
 {
-	settings->beginGroup("PasteServices/Stikked");
-
-	// FIXME: defaults
 	ui->apiUrlLineEdit->setText(settings->value("Url", "http://your.sticked/api/create").toString());
 	ui->nameLineEdit->setText(settings->value("Name").toString());
 	ui->titleLineEdit->setText(settings->value("Title").toString());
 	ui->privateCheckBox->setChecked(settings->value("Private", true).toBool());
 	ui->langComboBox->setCurrentIndex(Stikked::langIndexFromName(Stikked::m_languages, settings->value("Language", "text").toString()));
 	ui->expirationComboBox->setCurrentIndex(expireIndexFromDuration(settings->value("Expiration", 0).toInt()));
-
-	settings->endGroup();
 }
 
 void StikkedSettings::load(BasePasteService *service)

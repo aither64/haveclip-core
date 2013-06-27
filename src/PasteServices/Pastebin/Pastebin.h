@@ -38,11 +38,12 @@ public:
 
 	static Language m_languages[];
 
+	explicit Pastebin(QObject *parent = 0);
 	explicit Pastebin(QSettings *settings, QObject *parent = 0);
 	PasteService type();
 	QString internalName();
-	QString label();
 	void applySettings(QHash<QString, QVariant> s);
+	void saveSettings();
 	QString name();
 	Exposure exposure();
 	QString lang();

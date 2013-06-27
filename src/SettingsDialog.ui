@@ -272,45 +272,47 @@
       <attribute name="title">
        <string>Paste services</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QCheckBox" name="enablePasteCheckBox">
-         <property name="text">
-          <string>Enable paste service</string>
-         </property>
-        </widget>
+        <widget class="QListWidget" name="pasteServiceListWidget"/>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <widget class="QLabel" name="label_3">
+          <widget class="QPushButton" name="pasteAddButton">
            <property name="text">
-            <string>Service</string>
+            <string>&amp;Add</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="pasteServiceComboBox">
-           <item>
-            <property name="text">
-             <string>Stikked</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Pastebin.com</string>
-            </property>
-           </item>
+          <widget class="QPushButton" name="pasteEditButton">
+           <property name="text">
+            <string>&amp;Edit</string>
+           </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="pasteRemoveButton">
+           <property name="text">
+            <string>&amp;Remove</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
-       </item>
-       <item>
-        <widget class="QStackedWidget" name="pasteStackedWidget">
-         <property name="currentIndex">
-          <number>-1</number>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -361,22 +363,6 @@
     <hint type="destinationlabel">
      <x>286</x>
      <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pasteServiceComboBox</sender>
-   <signal>currentIndexChanged(int)</signal>
-   <receiver>pasteStackedWidget</receiver>
-   <slot>setCurrentIndex(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>340</x>
-     <y>83</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>232</x>
-     <y>225</y>
     </hint>
    </hints>
   </connection>

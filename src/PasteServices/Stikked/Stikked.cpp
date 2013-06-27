@@ -221,19 +221,21 @@ Stikked::Language Stikked::m_languages[] = {
 	{0, 0}
 };
 
+Stikked::Stikked(QObject *parent) :
+	BasePasteService(parent)
+{
+
+}
+
 Stikked::Stikked(QSettings *settings, QObject *parent) :
 	BasePasteService(settings, parent)
 {
-	settings->beginGroup("PasteServices/Stikked");
-
 	m_url = settings->value("Url").toString();
 	m_name = settings->value("Name").toString();
 	m_title = settings->value("Title").toString();
 	m_privatePaste = settings->value("Private", true).toBool();
 	m_lang = settings->value("Language", "text").toString();
 	m_expire = settings->value("Expiration", 0).toInt();
-
-	settings->endGroup();
 }
 
 BasePasteService::PasteService Stikked::type()
@@ -246,14 +248,9 @@ QString Stikked::internalName()
 	return "Stikked";
 }
 
-QString Stikked::label()
-{
-	return internalName();
-}
-
 void Stikked::applySettings(QHash<QString, QVariant> s)
 {
-	settings->beginGroup("PasteServices/Stikked");
+	BasePasteService::applySettings(s);
 
 	m_url = s["Url"].toString();
 	m_name = s["Name"].toString();
@@ -261,6 +258,11 @@ void Stikked::applySettings(QHash<QString, QVariant> s)
 	m_privatePaste = s["Private"].toBool();
 	m_lang = s["Lang"].toString();
 	m_expire = s["Expire"].toInt();
+}
+
+void Stikked::saveSettings()
+{
+	BasePasteService::saveSettings();
 
 	settings->setValue("Url", m_url);
 	settings->setValue("Name", m_name);
@@ -268,8 +270,6 @@ void Stikked::applySettings(QHash<QString, QVariant> s)
 	settings->setValue("Private", m_privatePaste);
 	settings->setValue("Language", m_lang);
 	settings->setValue("Expiration", m_expire);
-
-	settings->endGroup();
 }
 
 QString Stikked::url()

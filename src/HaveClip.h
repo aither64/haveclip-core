@@ -76,7 +76,9 @@ private:
 	QList<ClipboardContent*> history;
 	QHash<QAction*, ClipboardContent*> historyHash;
 	ClipboardContent *currentItem;
-	QSignalMapper *signalMapper;
+	QSignalMapper *historySignalMapper;
+	QSignalMapper *pasteSignalMapper;
+	QSignalMapper *pasteAdvSignalMapper;
 	bool clipSync;
 	bool clipSnd;
 	bool clipRecv;
@@ -87,10 +89,7 @@ private:
 	QString certificate;
 	QString privateKey;
 	QString password;
-	BasePasteService *pasteService;
-	QAction *pasteAction;
-	QAction *pasteAdvancedAction;
-	QAction *pasteSeparator;
+	QList<QAction*> pasteActions;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
@@ -98,8 +97,8 @@ private:
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
 	void startListening(QHostAddress addr = QHostAddress::Null);
-	void createPasteService(BasePasteService::PasteService type);
-	void removePasteService();
+	void loadPasteServices();
+	void clearPasteServices();
 
 private slots:
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -116,11 +115,11 @@ private slots:
 	void listenOnHost(const QHostInfo &host);
 	void determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
-	void simplePaste();
-	void advancedPaste();
-	void setPasteService(bool enabled, BasePasteService::PasteService type);
+	void simplePaste(QObject *obj);
+	void advancedPaste(QObject *obj);
+//	void setPasteService(bool enabled, BasePasteService::PasteService type);
 	void receivePasteUrl(QUrl url);
-	void pasteServiceRequiresAuthentication(QString username, bool failed, QString msg);
+	void pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteServiceError(QString error);
 };
 

@@ -47,17 +47,12 @@ PastebinSettings::~PastebinSettings()
 
 void PastebinSettings::load(QSettings *settings)
 {
-	settings->beginGroup("PasteServices/Pastebin");
-
-	// FIXME: defaults
 	ui->nameTitleLineEdit->setText(settings->value("Name").toString());
 	ui->exposureComboBox->setCurrentIndex(settings->value("Exposure", Pastebin::Unlisted).toInt());
 	ui->languageComboBox->setCurrentIndex(Pastebin::langIndexFromName(Pastebin::m_languages, settings->value("Language", "text").toString()));
 	ui->expirationComboBox->setCurrentIndex( expireIndexFromCode(settings->value("Expiration", "1H").toString()) );
 	ui->loginGroupBox->setChecked(settings->value("Login", false).toBool());
 	ui->usernameLineEdit->setText(settings->value("Username").toString());
-
-	settings->endGroup();
 }
 
 void PastebinSettings::load(BasePasteService *service)

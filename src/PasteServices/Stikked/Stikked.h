@@ -28,11 +28,12 @@ class Stikked : public BasePasteService
 public:
 	static Language m_languages[];
 
+	explicit Stikked(QObject *parent = 0);
 	explicit Stikked(QSettings *settings, QObject *parent = 0);
 	PasteService type();
 	QString internalName();
-	QString label();
 	void applySettings(QHash<QString, QVariant> s);
+	void saveSettings();
 	QString url();
 	QString name();
 	QString title();

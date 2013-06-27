@@ -50,13 +50,16 @@ QString HaveClip::Node::toString()
 
 HaveClip::HaveClip(QObject *parent) :
 	QTcpServer(parent),
-	currentItem(0),
-	pasteService(0)
+	currentItem(0)
 {
 	clipboard = QApplication::clipboard();
-	signalMapper = new QSignalMapper(this);
+	historySignalMapper = new QSignalMapper(this);
+	pasteSignalMapper = new QSignalMapper(this);
+	pasteAdvSignalMapper = new QSignalMapper(this);
 
-	connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(historyActionClicked(QObject*)));
+	connect(historySignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(historyActionClicked(QObject*)));
+	connect(pasteSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(simplePaste(QObject*)));
+	connect(pasteAdvSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(advancedPaste(QObject*)));
 
 #if defined Q_OS_LINUX
 	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
@@ -129,10 +132,7 @@ HaveClip::HaveClip(QObject *parent) :
 	menu->addSeparator();
 	menuSeparator = menu->addSeparator();
 
-	setPasteService(
-		settings->value("PasteServices/Enable", false).toBool(),
-		(BasePasteService::PasteService) settings->value("PasteServices/Service", BasePasteService::Stikked).toInt()
-	);
+	loadPasteServices();
 
 	menu->addAction(tr("&Settings"), this, SLOT(showSettings()));
 	menu->addAction(tr("&About..."), this, SLOT(showAbout()));
@@ -287,7 +287,7 @@ void HaveClip::updateHistoryContextMenu()
 	{
 		i.next();
 
-		signalMapper->removeMappings(i.key());
+		historySignalMapper->removeMappings(i.key());
 		historyMenu->removeAction(i.key());
 		historyHash.remove(i.key());
 		i.key()->deleteLater();
@@ -305,8 +305,8 @@ void HaveClip::updateHistoryContextMenu()
 		if(!c->icon.isNull())
 			act->setIcon(c->icon);
 
-		connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
-		signalMapper->setMapping(act, act);
+		connect(act, SIGNAL(triggered()), historySignalMapper, SLOT(map()));
+		historySignalMapper->setMapping(act, act);
 
 		historyMenu->insertAction(lastAction ? lastAction : historySeparator, act);
 
@@ -437,13 +437,24 @@ void HaveClip::showSettings()
 		settings->setValue("Connection/PrivateKey", privateKey);
 
 		// Paste services
-		settings->setValue("PasteServices/Enable", dlg->pasteServiceEnabled());
-		settings->setValue("PasteServices/Service", dlg->pasteServiceType());
+		settings->beginGroup("PasteServices");
+		settings->remove("");
 
-		setPasteService(dlg->pasteServiceEnabled(), dlg->pasteServiceType());
+		int i = 0;
 
-		if(pasteService)
-			pasteService->applySettings(dlg->pasteServiceSettings());
+		foreach(BasePasteService *s, dlg->pasteServices())
+		{
+			settings->beginGroup(QString::number(i++));
+
+			s->saveSettings();
+
+			settings->endGroup();
+		}
+
+		settings->endGroup();
+
+		clearPasteServices();
+		loadPasteServices();
 	}
 
 	dlg->deleteLater();
@@ -557,81 +568,98 @@ void HaveClip::sslFatalError(const QList<QSslError> errors)
 	QMessageBox::warning(0, tr("SSL fatal error"), tr("Unable to establish secure connection:\n\n") + errs);
 }
 
-void HaveClip::setPasteService(bool enabled, BasePasteService::PasteService type)
+void HaveClip::loadPasteServices()
 {
-	if(enabled && !pasteService)
+	settings->beginGroup("PasteServices");
+
+	foreach(QString i, settings->childGroups())
 	{
-		createPasteService( (BasePasteService::PasteService) settings->value("PasteServices/Service", BasePasteService::Stikked).toInt() );
+		settings->beginGroup(i);
 
-	} else if(!enabled && pasteService) {
-		removePasteService();
+		BasePasteService *s;
 
-	} else if(enabled && pasteService && pasteService->type() != type) {
-		qDebug() << "Replacing paste service";
-		removePasteService();
-		createPasteService(type);
+		switch(settings->value("Type").toInt())
+		{
+		case BasePasteService::Stikked:
+			s = new Stikked(settings, this);
+			break;
+		case BasePasteService::Pastebin:
+			s = new Pastebin(settings, this);
+			break;
+		default:
+			settings->endGroup();
+			continue;
+		}
+
+		connect(s, SIGNAL(authenticationRequired(BasePasteService*,QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(BasePasteService*,QString,bool,QString)));
+		connect(s, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
+		connect(s, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
+
+		// Simple paste
+		QAction *a = new QAction(tr("Paste to %1").arg(s->label()), this);
+
+		pasteSignalMapper->setMapping(a, s);
+		connect(a, SIGNAL(triggered()), pasteSignalMapper, SLOT(map()));
+
+		menu->insertAction(menuSeparator, a);
+		pasteActions << a;
+
+		// Advanced paste
+		a = new QAction(tr("Advanced paste to %1").arg(s->label()), this);
+
+		pasteAdvSignalMapper->setMapping(a, s);
+		connect(a, SIGNAL(triggered()), pasteAdvSignalMapper, SLOT(map()));
+
+		menu->insertAction(menuSeparator, a);
+		pasteActions << a;
+
+		a = new QAction(this);
+		a->setSeparator(true);
+		menu->insertAction(menuSeparator, a);
+		pasteActions << a;
+
+		settings->endGroup();
 	}
+
+	settings->endGroup();
 }
 
-void HaveClip::createPasteService(BasePasteService::PasteService type)
+void HaveClip::clearPasteServices()
 {
-	switch(type)
+	foreach(QAction *a, pasteActions)
+	{
+		menu->removeAction(a);
+		pasteSignalMapper->removeMappings(a);
+		pasteAdvSignalMapper->removeMappings(a);
+		a->deleteLater();
+	}
+
+	pasteActions.clear();
+}
+
+void HaveClip::simplePaste(QObject *obj)
+{
+	BasePasteService *service = static_cast<BasePasteService*>(obj);
+
+	switch(service->type())
 	{
 	case BasePasteService::Stikked:
-		pasteService = new Stikked(settings, this);
-		break;
-	case BasePasteService::Pastebin:
-		pasteService = new Pastebin(settings, this);
-		break;
-	default:
-		return;
-	}
-
-	connect(pasteService, SIGNAL(authenticationRequired(QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(QString,bool,QString)));
-	connect(pasteService, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
-	connect(pasteService, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
-
-	pasteAction = new QAction(tr("Paste to %1").arg(pasteService->label()), this);
-	connect(pasteAction, SIGNAL(triggered()), this, SLOT(simplePaste()));
-
-	pasteAdvancedAction = new QAction(tr("Advanced paste to %1").arg(pasteService->label()), this);
-	connect(pasteAdvancedAction, SIGNAL(triggered()), this, SLOT(advancedPaste()));
-
-	menu->insertAction(menuSeparator, pasteAction);
-	menu->insertAction(menuSeparator, pasteAdvancedAction);
-}
-
-void HaveClip::removePasteService()
-{
-	menu->removeAction(pasteAction);
-	menu->removeAction(pasteAdvancedAction);
-
-	pasteAction->deleteLater();
-	pasteAdvancedAction->deleteLater();
-
-	pasteService->deleteLater();
-	pasteService = 0;
-}
-
-void HaveClip::simplePaste()
-{
-	switch(pasteService->type())
-	{
-	case BasePasteService::Stikked:
 
 		break;
 	}
 
-	pasteService->paste(currentItem->toPlainText());
+	service->paste(currentItem->toPlainText());
 }
 
-void HaveClip::advancedPaste()
+void HaveClip::advancedPaste(QObject *obj)
 {
-	PasteDialog *dlg = new PasteDialog(currentItem->mimeData->text(), pasteService);
+	BasePasteService *service = static_cast<BasePasteService*>(obj);
+
+	PasteDialog *dlg = new PasteDialog(currentItem->mimeData->text(), service);
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
-		pasteService->paste(dlg->pasteServiceSettings(), currentItem->toPlainText());
+		service->paste(dlg->pasteServiceSettings(), currentItem->toPlainText());
 	}
 
 	dlg->deleteLater();
@@ -654,7 +682,7 @@ void HaveClip::receivePasteUrl(QUrl url)
 	clipboard->setMimeData(mime);
 }
 
-void HaveClip::pasteServiceRequiresAuthentication(QString username, bool failed, QString msg)
+void HaveClip::pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg)
 {
 	LoginDialog *dlg = new LoginDialog(username);
 
@@ -663,7 +691,7 @@ void HaveClip::pasteServiceRequiresAuthentication(QString username, bool failed,
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
-		pasteService->provideAuthentication(dlg->username(), dlg->password());
+		service->provideAuthentication(dlg->username(), dlg->password());
 	}
 
 	dlg->deleteLater();

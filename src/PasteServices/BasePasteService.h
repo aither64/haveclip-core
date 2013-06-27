@@ -42,15 +42,17 @@ public:
 		None
 	};
 
+	explicit BasePasteService(QObject *parent = 0);
 	explicit BasePasteService(QSettings *settings, QObject *parent = 0);
 	virtual PasteService type() = 0;
 	virtual QString internalName() = 0;
-	virtual QString label() = 0;
-	virtual void applySettings(QHash<QString, QVariant> s) = 0;
+	QString label();
+	virtual void applySettings(QHash<QString, QVariant> s);
+	virtual void saveSettings();
 	static int langIndexFromName(Language *lang, QString name);
 
 signals:
-	void authenticationRequired(QString username, bool failed, QString msg);
+	void authenticationRequired(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteFailed(QString error);
 	void pasted(QUrl url);
 	void errorOccured(QString error);
@@ -66,6 +68,7 @@ protected slots:
 protected:
 	QSettings *settings;
 	QNetworkAccessManager *manager;
+	QString m_label;
 
 	QByteArray buildPostData(QHash<QString, QString> &post);
 };

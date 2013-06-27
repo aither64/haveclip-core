@@ -245,12 +245,16 @@ BasePasteService::Language Pastebin::m_languages[] = {
 	{0, 0}
 };
 
+Pastebin::Pastebin(QObject *parent) :
+	BasePasteService(parent)
+{
+
+}
+
 Pastebin::Pastebin(QSettings *settings, QObject *parent) :
 	BasePasteService(settings, parent),
 	loggingIn(false)
 {
-	settings->beginGroup("PasteServices/Pastebin");
-
 	m_name = settings->value("Name").toString();
 	m_exposure = (Pastebin::Exposure) settings->value("Exposure", Pastebin::Unlisted).toInt();
 	m_lang = settings->value("Language", "text").toString();
@@ -258,8 +262,6 @@ Pastebin::Pastebin(QSettings *settings, QObject *parent) :
 	m_login = settings->value("Login", false).toBool();
 	m_username = settings->value("Username").toString();
 	m_userKey = settings->value("UserKey").toString();
-
-	settings->endGroup();
 }
 
 BasePasteService::PasteService Pastebin::type()
@@ -272,14 +274,9 @@ QString Pastebin::internalName()
 	return "Pastebin";
 }
 
-QString Pastebin::label()
-{
-	return "Pastebin.com";
-}
-
 void Pastebin::applySettings(QHash<QString, QVariant> s)
 {
-	settings->beginGroup("PasteServices/Pastebin");
+	BasePasteService::applySettings(s);
 
 	m_name = s["Name"].toString();
 	m_exposure = (Pastebin::Exposure) s["Exposure"].toInt();
@@ -287,6 +284,11 @@ void Pastebin::applySettings(QHash<QString, QVariant> s)
 	m_expire = s["Expire"].toString();
 	m_login = s["Login"].toBool();
 	m_username = s["Username"].toString();
+}
+
+void Pastebin::saveSettings()
+{
+	BasePasteService::saveSettings();
 
 	settings->setValue("Name", m_name);
 	settings->setValue("Exposure", m_exposure);
@@ -294,8 +296,6 @@ void Pastebin::applySettings(QHash<QString, QVariant> s)
 	settings->setValue("Expiration", m_expire);
 	settings->setValue("Login", m_login);
 	settings->setValue("Username", m_username);
-
-	settings->endGroup();
 }
 
 QString Pastebin::name()
@@ -379,7 +379,7 @@ void Pastebin::paste(QHash<QString, QString> &post, bool login, QString username
 		{
 			preparedPost = post;
 			loginUsername = username;
-			emit authenticationRequired(username, false, "");
+			emit authenticationRequired(this, username, false, "");
 			return;
 		}
 
@@ -411,7 +411,7 @@ void Pastebin::requestFinished(QNetworkReply *reply)
 		qDebug() << "Error" << ret;
 
 		if(loggingIn)
-			emit authenticationRequired(loginUsername, true, ret.mid(ret.indexOf(',')+1, -1).trimmed());
+			emit authenticationRequired(this, loginUsername, true, ret.mid(ret.indexOf(',')+1, -1).trimmed());
 		else
 			emit errorOccured(reply->errorString());
 		return;

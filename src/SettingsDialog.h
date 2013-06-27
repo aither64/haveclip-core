@@ -50,12 +50,12 @@ public:
 	HaveClip::Encryption encryption();
 	QString certificate();
 	QString privateKey();
-	bool pasteServiceEnabled();
-	BasePasteService::PasteService pasteServiceType();
-	QHash<QString, QVariant> pasteServiceSettings();
+	QList<BasePasteService*> pasteServices();
 	
 private:
 	Ui::SettingsDialog *ui;
+	QSettings *settings;
+	QList<BasePasteService*> m_services;
 
 private slots:
 	void addNode();
@@ -64,7 +64,9 @@ private slots:
 	void setCertificatePath();
 	void setPrivateKeyPath();
 	void setFingerprint();
-	void pasteServiceToggle(bool enable);
+	void addPasteService();
+	void editPasteService();
+	void deletePasteService();
 };
 
 #endif // SETTINGSDIALOG_H

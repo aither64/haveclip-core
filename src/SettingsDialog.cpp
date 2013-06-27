@@ -25,13 +25,15 @@
 #include "CertificateTrustDialog.h"
 
 #include "PasteServices/BasePasteService.h"
-#include "PasteServices/BasePasteServiceWidget.h"
-#include "PasteServices/Stikked/StikkedSettings.h"
-#include "PasteServices/Pastebin/PastebinSettings.h"
+#include "PasteServices/PasteServiceEditDialog.h"
+
+#include "PasteServices/Stikked/Stikked.h"
+#include "PasteServices/Pastebin/Pastebin.h"
 
 SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
         QDialog(parent),
-        ui(new Ui::SettingsDialog)
+	ui(new Ui::SettingsDialog),
+	settings(settings)
 {
 	ui->setupUi(this);
 
@@ -69,39 +71,47 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	ui->passwordLineEdit->setText( settings->value("AccessPolicy/Password").toString() );
 
 	// Paste services
-	ui->enablePasteCheckBox->setChecked(settings->value("PasteServices/Enable", false).toBool());
-	ui->pasteServiceComboBox->setCurrentIndex(settings->value("PasteServices/Service", BasePasteService::Stikked).toInt());
-	pasteServiceToggle(ui->enablePasteCheckBox->isChecked());
+	connect(ui->pasteAddButton, SIGNAL(clicked()), this, SLOT(addPasteService()));
+	connect(ui->pasteEditButton, SIGNAL(clicked()), this, SLOT(editPasteService()));
+	connect(ui->pasteRemoveButton, SIGNAL(clicked()), this, SLOT(deletePasteService()));
+	connect(ui->pasteServiceListWidget, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(editPasteService()));
 
-	connect(ui->enablePasteCheckBox, SIGNAL(toggled(bool)), this, SLOT(pasteServiceToggle(bool)));
+	settings->beginGroup("PasteServices");
 
-	for(int i = 0; i < BasePasteService::PasteServiceCount; i++)
+	foreach(QString index, settings->childGroups())
 	{
-		BasePasteServiceWidget *w;
+		settings->beginGroup(index);
 
-		switch(i)
+		BasePasteService *s;
+
+		switch(settings->value("Type").toInt())
 		{
 		case BasePasteService::Stikked:
-			w = new StikkedSettings(BasePasteServiceWidget::Settings, this);
-			w->load(settings);
+			s = new Stikked(settings, this);
 			break;
 		case BasePasteService::Pastebin:
-			w = new PastebinSettings(BasePasteServiceWidget::Settings, this);
-			w->load(settings);
+			s = new Pastebin(settings, this);
 			break;
 		default:
 			continue;
 		}
 
-		ui->pasteStackedWidget->addWidget(w);
+		m_services << s;
+
+		ui->pasteServiceListWidget->addItem(settings->value("Label").toString());
+
+		settings->endGroup();
 	}
 
-	ui->pasteStackedWidget->setCurrentIndex(ui->pasteServiceComboBox->currentIndex());
+	settings->endGroup();
+
 }
 
 SettingsDialog::~SettingsDialog()
 {
 	delete ui;
+
+	qDeleteAll(m_services);
 }
 
 QStringList SettingsDialog::nodes()
@@ -208,23 +218,79 @@ void SettingsDialog::setFingerprint()
 		ui->shaFingerLabel->setText(CertificateTrustDialog::formatDigest(certs.first().digest(QCryptographicHash::Sha1)));
 }
 
-bool SettingsDialog::pasteServiceEnabled()
+QList<BasePasteService*> SettingsDialog::pasteServices()
 {
-	return ui->enablePasteCheckBox->isChecked();
+	return m_services;
 }
 
-BasePasteService::PasteService SettingsDialog::pasteServiceType()
+void SettingsDialog::addPasteService()
 {
-	return (BasePasteService::PasteService) ui->pasteServiceComboBox->currentIndex();
+	PasteServiceEditDialog *dlg = new PasteServiceEditDialog(PasteServiceEditDialog::Add, 0, this);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		BasePasteService *s;
+
+		switch(dlg->type())
+		{
+		case BasePasteService::Stikked:
+			s = new Stikked(settings);
+			break;
+		case BasePasteService::Pastebin:
+			s = new Pastebin(settings);
+			break;
+		default:
+			return;
+		}
+
+		s->applySettings(dlg->settings());
+
+		ui->pasteServiceListWidget->addItem(s->label());
+		m_services << s;
+	}
+
+	dlg->deleteLater();
 }
 
-QHash<QString, QVariant> SettingsDialog::pasteServiceSettings()
+void SettingsDialog::editPasteService()
 {
-	return static_cast<BasePasteServiceWidget*>(ui->pasteStackedWidget->currentWidget())->settings();
+	int i = ui->pasteServiceListWidget->currentRow();
+	PasteServiceEditDialog *dlg = new PasteServiceEditDialog(PasteServiceEditDialog::Edit, m_services[i], this);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		if(m_services[i]->type() == dlg->type()) {
+			m_services[i]->applySettings(dlg->settings());
+			ui->pasteServiceListWidget->item(i)->setText(m_services[i]->label());
+
+		} else {
+			BasePasteService *s;
+
+			switch(dlg->type())
+			{
+			case BasePasteService::Stikked:
+				s = new Stikked();
+				break;
+			case BasePasteService::Pastebin:
+				s = new Pastebin();
+				break;
+			default:
+				return;
+			}
+
+			s->applySettings(dlg->settings());
+
+			delete m_services[i];
+			m_services[i] = s;
+		}
+	}
+
+	dlg->deleteLater();
 }
 
-void SettingsDialog::pasteServiceToggle(bool enable)
+void SettingsDialog::deletePasteService()
 {
-	ui->pasteServiceComboBox->setEnabled(enable);
-	ui->pasteStackedWidget->setEnabled(enable);
+	int i = ui->pasteServiceListWidget->currentRow();
+	delete ui->pasteServiceListWidget->item(i);
+	delete m_services.takeAt(i);
 }
