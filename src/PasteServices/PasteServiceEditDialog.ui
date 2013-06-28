@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Paste service</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../../HaveClip.qrc">
+    <normaloff>:/gfx/HaveClip_128.png</normaloff>:/gfx/HaveClip_128.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -68,7 +72,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../HaveClip.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
