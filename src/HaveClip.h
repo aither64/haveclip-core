@@ -90,6 +90,7 @@ private:
 	QString privateKey;
 	QString password;
 	QList<QAction*> pasteActions;
+	QList<BasePasteService*> pasteServices;
 
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
@@ -114,6 +115,7 @@ private slots:
 	void showAbout();
 	void listenOnHost(const QHostInfo &host);
 	void determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors);
+	void determineCertificateTrust(BasePasteService *service, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void simplePaste(QObject *obj);
 	void advancedPaste(QObject *obj);

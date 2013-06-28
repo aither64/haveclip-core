@@ -25,6 +25,7 @@
 #include <QHash>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QSslError>
 
 class BasePasteService : public QObject
 {
@@ -50,8 +51,10 @@ public:
 	virtual void applySettings(QHash<QString, QVariant> s);
 	virtual void saveSettings();
 	static int langIndexFromName(Language *lang, QString name);
+	void setCertificate(QSslCertificate cert);
 
 signals:
+	void untrustedCertificateError(BasePasteService *service, const QList<QSslError> errors);
 	void authenticationRequired(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteFailed(QString error);
 	void pasted(QUrl url);
@@ -61,14 +64,17 @@ public slots:
 	virtual void provideAuthentication(QString username, QString password);
 	virtual void paste(QString data) = 0;
 	virtual void paste(QHash<QString, QVariant> settings, QString data) = 0;
+	virtual void retryPaste();
 
 protected slots:
 	virtual void requestFinished(QNetworkReply *reply);
+	virtual void onSslError(QNetworkReply *reply, const QList<QSslError> &errors);
 
 protected:
 	QSettings *settings;
 	QNetworkAccessManager *manager;
 	QString m_label;
+	QSslCertificate certificate;
 
 	QByteArray buildPostData(QHash<QString, QString> &post);
 };

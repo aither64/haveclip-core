@@ -34,7 +34,9 @@ class CertificateTrustDialog : public QDialog
 	Q_OBJECT
 	
 public:
+	explicit CertificateTrustDialog(QString to, const QList<QSslError> &errors, QWidget *parent = 0);
 	explicit CertificateTrustDialog(HaveClip::Node *node, const QList<QSslError> &errors, QWidget *parent = 0);
+	explicit CertificateTrustDialog(BasePasteService *service, const QList<QSslError> &errors, QWidget *parent = 0);
 	~CertificateTrustDialog();
 	bool remember();
 	static QString formatDigest(QByteArray raw);

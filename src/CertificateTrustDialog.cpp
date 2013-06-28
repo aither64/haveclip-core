@@ -22,13 +22,13 @@
 #include "CertificateTrustDialog.h"
 #include "ui_CertificateTrustDialog.h"
 
-CertificateTrustDialog::CertificateTrustDialog(HaveClip::Node *node, const QList<QSslError> &errors, QWidget *parent) :
-        QDialog(parent),
-        ui(new Ui::CertificateTrustDialog)
+CertificateTrustDialog::CertificateTrustDialog(QString to, const QList<QSslError> &errors, QWidget *parent) :
+	QDialog(parent),
+	ui(new Ui::CertificateTrustDialog)
 {
 	ui->setupUi(this);
 
-	QString errStr = ui->errorLabel->text().arg(node->toString());
+	QString errStr = ui->errorLabel->text().arg(to);
 	errStr += "<br><br>";
 
 	foreach(QSslError e, errors)
@@ -56,6 +56,18 @@ CertificateTrustDialog::CertificateTrustDialog(HaveClip::Node *node, const QList
 	// fingerprints
 	ui->sha1FingerLabel->setText( formatDigest(cert.digest(QCryptographicHash::Sha1)) );
 	ui->md5FingerLabel->setText( formatDigest(cert.digest(QCryptographicHash::Md5)) );
+}
+
+CertificateTrustDialog::CertificateTrustDialog(HaveClip::Node *node, const QList<QSslError> &errors, QWidget *parent) :
+	CertificateTrustDialog(node->toString(), errors, parent)
+{
+
+}
+
+CertificateTrustDialog::CertificateTrustDialog(BasePasteService *service, const QList<QSslError> &errors, QWidget *parent) :
+	CertificateTrustDialog(service->label(), errors, parent)
+{
+
 }
 
 CertificateTrustDialog::~CertificateTrustDialog()

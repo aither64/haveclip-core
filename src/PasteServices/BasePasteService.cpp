@@ -33,8 +33,14 @@ BasePasteService::BasePasteService(QSettings *settings, QObject *parent) :
 	manager = new QNetworkAccessManager(this);
 
 	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestFinished(QNetworkReply*)));
+	connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(onSslError(QNetworkReply*,QList<QSslError>)));
 
 	m_label = settings->value("Label").toString();
+
+	QByteArray cert = settings->value("Certificate").toString().toAscii();
+
+	if(!cert.isEmpty())
+		certificate = QSslCertificate::fromData(cert).first();
 }
 
 QString BasePasteService::label()
@@ -51,6 +57,14 @@ void BasePasteService::saveSettings()
 {
 	settings->setValue("Type", type());
 	settings->setValue("Label", m_label);
+
+	if(!certificate.isNull())
+		settings->setValue("Certificate", QString(certificate.toPem()));
+}
+
+void BasePasteService::retryPaste()
+{
+
 }
 
 void BasePasteService::requestFinished(QNetworkReply *reply)
@@ -61,6 +75,41 @@ void BasePasteService::requestFinished(QNetworkReply *reply)
 void BasePasteService::provideAuthentication(QString username, QString password)
 {
 
+}
+
+void BasePasteService::onSslError(QNetworkReply *reply, const QList<QSslError> &errors)
+{
+	QList<QSslError::SslError> recoverable;
+	recoverable << QSslError::SelfSignedCertificate
+		<< QSslError::CertificateUntrusted
+		<< QSslError::HostNameMismatch
+		<< QSslError::CertificateExpired;
+
+	bool exception = true;
+
+	foreach(QSslError e, errors)
+	{
+		if(!recoverable.contains(e.error()))
+		{
+			qDebug() << "Unrecoverable SSL error" << e;
+			return;
+		}
+
+		if(e.certificate() != certificate)
+		{
+			exception = false;
+			break;
+		}
+	}
+
+	if(exception)
+	{
+		qDebug() << "SSL errors ignored because of exception";
+		reply->ignoreSslErrors();
+
+	} else {
+		emit untrustedCertificateError(this, errors);
+	}
 }
 
 QByteArray BasePasteService::buildPostData(QHash<QString, QString> &data)
@@ -87,4 +136,9 @@ int BasePasteService::langIndexFromName(Language* langs, QString name)
 			return i;
 
 	return -1;
+}
+
+void BasePasteService::setCertificate(QSslCertificate cert)
+{
+	certificate = cert;
 }

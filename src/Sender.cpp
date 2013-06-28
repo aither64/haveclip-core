@@ -146,7 +146,8 @@ void Sender::onSslError(const QList<QSslError> &errors)
 	QList<QSslError::SslError> recoverable;
 	recoverable << QSslError::SelfSignedCertificate
 		<< QSslError::CertificateUntrusted
-		<< QSslError::HostNameMismatch;
+		<< QSslError::HostNameMismatch
+		<< QSslError::CertificateExpired;
 
 	bool exception = true;
 

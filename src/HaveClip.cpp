@@ -594,6 +594,7 @@ void HaveClip::loadPasteServices()
 		connect(s, SIGNAL(authenticationRequired(BasePasteService*,QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(BasePasteService*,QString,bool,QString)));
 		connect(s, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
 		connect(s, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
+		connect(s, SIGNAL(untrustedCertificateError(BasePasteService*,QList<QSslError>)), this, SLOT(determineCertificateTrust(BasePasteService*,QList<QSslError>)));
 
 		// Simple paste
 		QAction *a = new QAction(tr("Paste to %1").arg(s->label()), this);
@@ -618,6 +619,8 @@ void HaveClip::loadPasteServices()
 		menu->insertAction(menuSeparator, a);
 		pasteActions << a;
 
+		pasteServices << s;
+
 		settings->endGroup();
 	}
 
@@ -635,6 +638,9 @@ void HaveClip::clearPasteServices()
 	}
 
 	pasteActions.clear();
+
+	qDeleteAll(pasteServices);
+	pasteServices.clear();
 }
 
 void HaveClip::simplePaste(QObject *obj)
@@ -659,7 +665,7 @@ void HaveClip::advancedPaste(QObject *obj)
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
-		service->paste(dlg->pasteServiceSettings(), currentItem->toPlainText());
+		service->paste(dlg->pasteServiceSettings(), dlg->dataToPaste());
 	}
 
 	dlg->deleteLater();
@@ -700,4 +706,29 @@ void HaveClip::pasteServiceRequiresAuthentication(BasePasteService *service, QSt
 void HaveClip::pasteServiceError(QString error)
 {
 	QMessageBox::warning(0, tr("Unable to paste"), tr("Paste failed.\n\nError occured: %1").arg(error));
+}
+
+void HaveClip::determineCertificateTrust(BasePasteService *service, const QList<QSslError> errors)
+{
+	CertificateTrustDialog *dlg = new CertificateTrustDialog(service, errors);
+
+	if(dlg->exec() == QDialog::Accepted)
+	{
+		service->setCertificate(errors.first().certificate());
+
+		if(dlg->remember())
+		{
+			int i = pasteServices.indexOf(service);
+
+			settings->beginGroup(QString("PasteServices/%1").arg(i));
+
+			service->saveSettings();
+
+			settings->endGroup();
+		}
+
+		service->retryPaste();
+	}
+
+	dlg->deleteLater();
 }

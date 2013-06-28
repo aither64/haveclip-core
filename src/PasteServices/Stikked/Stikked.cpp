@@ -330,10 +330,17 @@ void Stikked::paste(QHash<QString, QVariant> settings, QString data)
 
 void Stikked::paste(QHash<QString, QString> &post)
 {
+	lastPaste = buildPostData(post);
+
+	retryPaste();
+}
+
+void Stikked::retryPaste()
+{
 	QNetworkRequest request(m_url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
 
-	manager->post(request, buildPostData(post));
+	manager->post(request, lastPaste);
 }
 
 void Stikked::requestFinished(QNetworkReply *reply)
@@ -342,15 +349,23 @@ void Stikked::requestFinished(QNetworkReply *reply)
 	{
 		qDebug() << "Error pasting to stikked" << reply->error();
 		emit errorOccured(reply->errorString());
+		reply->deleteLater();
 		return;
 	}
 
 	QString ret = QString(reply->readAll()).trimmed();
 
-	qDebug() << "Paste link" << ret;
+	if(ret.isEmpty() || ret.startsWith("Error"))
+	{
+		emit errorOccured(tr("Bad response from %1").arg(label()));
 
-	if(!ret.startsWith("Error"))
-		emit pasted(QUrl(ret));
+	} else {
+
+		qDebug() << "Paste link" << ret;
+
+		if(!ret.startsWith("Error"))
+			emit pasted(QUrl(ret));
+	}
 
 	reply->deleteLater();
 }

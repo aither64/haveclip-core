@@ -46,6 +46,7 @@ signals:
 public slots:
 	void paste(QString data);
 	void paste(QHash<QString, QVariant> settings, QString data);
+	void retryPaste();
 
 protected slots:
 	void requestFinished(QNetworkReply *reply);
@@ -57,6 +58,7 @@ private:
 	bool m_privatePaste;
 	QString m_lang;
 	int m_expire;
+	QByteArray lastPaste;
 
 private slots:
 	void paste(QHash<QString, QString> &data);
