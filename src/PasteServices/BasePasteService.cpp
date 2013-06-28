@@ -120,10 +120,11 @@ QByteArray BasePasteService::buildPostData(QHash<QString, QString> &data)
 	while(i.hasNext())
 	{
 		i.next();
+
 		post.addQueryItem(i.key(), i.value());
 	}
 
-	return post.encodedQuery();
+	return post.encodedQuery().replace('+', "%2B");
 }
 
 int BasePasteService::langIndexFromName(Language* langs, QString name)
