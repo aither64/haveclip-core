@@ -6,7 +6,7 @@
 
 QT       += core gui network xml
 
-TARGET = HaveClip
+TARGET = bin/HaveClip
 TEMPLATE = app
 
 SOURCES +=\
