@@ -301,7 +301,7 @@ void SettingsDialog::moveUp()
 {
 	int current = ui->pasteServiceListWidget->currentRow();
 
-	if(current == 0)
+	if(current <= 0)
 		return;
 
 	ui->pasteServiceListWidget->insertItem(current-1, ui->pasteServiceListWidget->takeItem(current));
@@ -314,7 +314,7 @@ void SettingsDialog::moveDown()
 {
 	int current = ui->pasteServiceListWidget->currentRow();
 
-	if(current+1 == ui->pasteServiceListWidget->count())
+	if(current == -1 || current+1 == ui->pasteServiceListWidget->count())
 		return;
 
 	ui->pasteServiceListWidget->insertItem(current+1, ui->pasteServiceListWidget->takeItem(current));
