@@ -50,6 +50,7 @@ public:
 	QString toPlainText();
 	bool operator==(const ClipboardContent &other) const;
 	bool operator!=(const ClipboardContent &other) const;
+	static bool compareMimeData(const QMimeData *data1, const QMimeData *data2);
 
 private:
 	Preview* createItemPreview(QImage &img);

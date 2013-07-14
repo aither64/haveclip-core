@@ -167,6 +167,28 @@ bool ClipboardContent::operator!=(const ClipboardContent &other) const
 	return !(*this == other);
 }
 
+bool ClipboardContent::compareMimeData(const QMimeData *data1, const QMimeData *data2)
+{
+	QStringList formats1, formats2;
+
+	foreach(QString f, data1->formats())
+		if(f.indexOf('/') != -1)
+			formats1 << f;
+
+	foreach(QString f, data2->formats())
+		if(f.indexOf('/') != -1)
+			formats2 << f;
+
+	if(formats1 != formats2)
+		return false;
+
+	foreach(QString f, formats1)
+		if(data1->data(f) != data2->data(f))
+			return false;
+
+	return true;
+}
+
 ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)
 {
 	Preview *preview = 0;

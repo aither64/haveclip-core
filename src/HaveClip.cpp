@@ -186,9 +186,24 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 		return;
 	}
 
-	QMimeData *mimeData = copyMimeData(clipboard->mimeData(m));
+	const QMimeData *mimeData = clipboard->mimeData(m);
+	QMimeData *copiedMimeData;
 
-	ClipboardContent *cnt = new ClipboardContent(m, mimeData);
+	if(m == QClipboard::Selection) // Selection has only text and html
+	{
+		copiedMimeData = new QMimeData();
+
+		if(mimeData->hasText())
+			copiedMimeData->setText(mimeData->text());
+
+		if(mimeData->hasHtml())
+			copiedMimeData->setHtml(mimeData->html());
+
+		qDebug() << "created mimedata with" << copiedMimeData->formats();
+	} else
+		copiedMimeData = copyMimeData(mimeData);
+
+	ClipboardContent *cnt = new ClipboardContent(m, copiedMimeData);
 
 	if(currentItem && *currentItem == *cnt)
 	{
@@ -197,6 +212,7 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 
 	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
 		updateClipboard(currentItem, true);
+		delete cnt;
 		return;
 	}
 
@@ -267,19 +283,19 @@ void HaveClip::uniteClipboards(ClipboardContent *content)
 
 	ensureClipboardContent(content, QClipboard::Selection);
 	ensureClipboardContent(content, QClipboard::Clipboard);
+
+	qDebug() << "Unite done";
 }
 
 void HaveClip::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
 {
-	ClipboardContent *current = new ClipboardContent(mode, copyMimeData(clipboard->mimeData(mode)));
-
-	if(*current != *content)
+	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode)))
 	{
 		qDebug() << "Update" << mode;
 		clipboard->setMimeData(copyMimeData(content->mimeData), mode);
+	} else {
+		qDebug() << "No need to update" << mode;
 	}
-
-	delete current;
 }
 
 void HaveClip::addToHistory(ClipboardContent *content)
@@ -510,6 +526,9 @@ QMimeData* HaveClip::copyMimeData(const QMimeData *mimeReference)
 
 	foreach(QString format, mimeReference->formats())
 	{
+		if(format.indexOf('/') == -1)
+			continue;
+
 		// Retrieving data
 		QByteArray data = mimeReference->data(format);
 
@@ -521,6 +540,7 @@ QMimeData* HaveClip::copyMimeData(const QMimeData *mimeReference)
 			int indexEnd = format.indexOf('"', indexBegin);
 			format = format.mid(indexBegin, indexEnd - indexBegin);
 		}
+
 
 		mimeCopy->setData(format, data);
 	}
