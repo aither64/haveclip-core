@@ -34,8 +34,9 @@ ClipboardContent::Preview::~Preview()
 	QFile::remove(path);
 }
 
-ClipboardContent::ClipboardContent(QMimeData *data) :
+ClipboardContent::ClipboardContent(QClipboard::Mode m, QMimeData *data) :
 	preview(0),
+	mode(m),
 	mimeData(data)
 {
 	foreach(QString f, mimeData->formats())
@@ -159,6 +160,11 @@ bool ClipboardContent::operator==(const ClipboardContent &other) const
 	}
 
 	return true;
+}
+
+bool ClipboardContent::operator!=(const ClipboardContent &other) const
+{
+	return !(*this == other);
 }
 
 ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)

@@ -20,6 +20,7 @@
 #ifndef CLIPBOARDCONTENT_H
 #define CLIPBOARDCONTENT_H
 
+#include <QClipboard>
 #include <QMimeData>
 #include <QIcon>
 
@@ -35,6 +36,7 @@ public:
 		~Preview();
 	};
 
+	QClipboard::Mode mode;
 	QMimeData *mimeData;
 	QString title;
 	QString excerpt;
@@ -42,11 +44,12 @@ public:
 	Preview *preview;
 	QStringList formats;
 
-	ClipboardContent(QMimeData *data);
+	ClipboardContent(QClipboard::Mode m, QMimeData *data);
 	~ClipboardContent();
 	void init();
 	QString toPlainText();
 	bool operator==(const ClipboardContent &other) const;
+	bool operator!=(const ClipboardContent &other) const;
 
 private:
 	Preview* createItemPreview(QImage &img);

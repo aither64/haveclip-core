@@ -19,6 +19,7 @@
 
 #include <QDebug>
 #include <QFileDialog>
+#include <QClipboard>
 
 #include "SettingsDialog.h"
 #include "ui_SettingsDialog.h"
@@ -52,6 +53,20 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	// History
 	ui->historyGroupBox->setChecked( settings->value("History/Enable", true).toBool() );
 	ui->historySizeSpinBox->setValue( settings->value("History/Size", 10).toInt() );
+
+	if(qApp->clipboard()->supportsSelection())
+	{
+		if( (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt() == HaveClip::Separate)
+			ui->keepSelectionSeparateRadioButton->setChecked(true);
+		else
+			ui->uniteSelectionRadioButton->setChecked(true);
+
+		ui->synchronizeComboBox->setCurrentIndex(settings->value("Sync/Synchronize", HaveClip::Both).toInt());
+
+	} else {
+		ui->selectionGroupBox->hide();
+		ui->syncGroupBox->hide();
+	}
 
 	// Encryption
 	ui->encryptionComboBox->setCurrentIndex(settings->value("Connection/Encryption", HaveClip::None).toInt());
@@ -134,6 +149,16 @@ bool SettingsDialog::historyEnabled()
 int SettingsDialog::historySize()
 {
 	return ui->historySizeSpinBox->value();
+}
+
+HaveClip::SelectionMode SettingsDialog::selectionMode()
+{
+	return ui->keepSelectionSeparateRadioButton->isChecked() ? HaveClip::Separate : HaveClip::United;
+}
+
+HaveClip::SynchronizeMode SettingsDialog::synchronizationMode()
+{
+	return (HaveClip::SynchronizeMode) ui->synchronizeComboBox->currentIndex();
 }
 
 void SettingsDialog::addNode()

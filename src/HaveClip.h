@@ -55,6 +55,17 @@ public:
 		Tls
 	};
 
+	enum SelectionMode {
+		Separate,
+		United
+	};
+
+	enum SynchronizeMode {
+		Selection,
+		Clipboard,
+		Both
+	};
+
 	explicit HaveClip(QObject *parent = 0);
 	~HaveClip();
 	
@@ -84,6 +95,8 @@ private:
 	bool clipRecv;
 	bool histEnabled;
 	int histSize;
+	SelectionMode selectionMode;
+	SynchronizeMode syncMode;
 	QString host;
 	Encryption encryption;
 	QString certificate;
@@ -92,6 +105,8 @@ private:
 	QList<QAction*> pasteActions;
 	QList<BasePasteService*> pasteServices;
 
+	void uniteClipboards(ClipboardContent *content);
+	void ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode);
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
 	void updateToolTip();

@@ -44,6 +44,8 @@ public:
 	QStringList nodes();
 	bool historyEnabled();
 	int historySize();
+	HaveClip::SelectionMode selectionMode();
+	HaveClip::SynchronizeMode synchronizationMode();
 	QString host();
 	int port();
 	QString password();

@@ -85,6 +85,9 @@ HaveClip::HaveClip(QObject *parent) :
 	histEnabled = settings->value("History/Enable", true).toBool();
 	histSize = settings->value("History/Size", 10).toInt();
 
+	selectionMode = (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt();
+	syncMode = (HaveClip::SynchronizeMode) settings->value("Sync/Synchronize", HaveClip::Both).toInt();
+
 	encryption = (HaveClip::Encryption) settings->value("Connection/Encryption", HaveClip::None).toInt();
 	certificate = settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
 	privateKey = settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
@@ -169,9 +172,23 @@ void HaveClip::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
   */
 void HaveClip::clipboardChanged()
 {
-	QMimeData *mimeData = copyMimeData(clipboard->mimeData(QClipboard::Clipboard));
+	clipboardChanged(QClipboard::Clipboard);
+}
 
-	ClipboardContent *cnt = new ClipboardContent(mimeData);
+void HaveClip::clipboardChanged(QClipboard::Mode m)
+{
+	if((m != QClipboard::Clipboard && m != QClipboard::Selection)
+			|| (syncMode != HaveClip::Both
+			    && ((m == QClipboard::Selection && syncMode == HaveClip::Clipboard) || (m == QClipboard::Clipboard && syncMode == HaveClip::Selection)))
+	)
+	{
+		qDebug() << "Ignoring this clipboard";
+		return;
+	}
+
+	QMimeData *mimeData = copyMimeData(clipboard->mimeData(m));
+
+	ClipboardContent *cnt = new ClipboardContent(m, mimeData);
 
 	if(currentItem && *currentItem == *cnt)
 	{
@@ -189,6 +206,9 @@ void HaveClip::clipboardChanged()
 	updateToolTip();
 	updateHistoryContextMenu();
 
+	if(selectionMode == HaveClip::United)
+		uniteClipboards(cnt);
+
 	if(clipSnd)
 	{
 		foreach(Node *n, pool)
@@ -201,19 +221,6 @@ void HaveClip::clipboardChanged()
 			d->distribute(cnt, password);
 		}
 	}
-}
-
-void HaveClip::clipboardChanged(QClipboard::Mode m)
-{
-//	qDebug() << "Clipboard changed";
-
-	if(m != QClipboard::Clipboard)
-	{
-//		qDebug() << "Not a clipboard, ignoring";
-		return;
-	}
-
-	clipboardChanged();
 }
 
 
@@ -237,7 +244,12 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 	qDebug() << "Update clipboard";
 
 	currentItem = content;
-	clipboard->setMimeData(copyMimeData(content->mimeData), QClipboard::Clipboard);
+
+	if(selectionMode == HaveClip::United)
+	{
+		uniteClipboards(content);
+	} else
+		clipboard->setMimeData(copyMimeData(content->mimeData), content->mode);
 
 	if(fromHistory)
 	{
@@ -249,7 +261,26 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 	}
 }
 
+void HaveClip::uniteClipboards(ClipboardContent *content)
+{
+	qDebug() << "Unite clipboards";
 
+	ensureClipboardContent(content, QClipboard::Selection);
+	ensureClipboardContent(content, QClipboard::Clipboard);
+}
+
+void HaveClip::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
+{
+	ClipboardContent *current = new ClipboardContent(mode, copyMimeData(clipboard->mimeData(mode)));
+
+	if(*current != *content)
+	{
+		qDebug() << "Update" << mode;
+		clipboard->setMimeData(copyMimeData(content->mimeData), mode);
+	}
+
+	delete current;
+}
 
 void HaveClip::addToHistory(ClipboardContent *content)
 {
@@ -406,6 +437,12 @@ void HaveClip::showSettings()
 
 		settings->setValue("History/Enable", histEnabled);
 		settings->setValue("History/Size", histSize);
+
+		selectionMode = dlg->selectionMode();
+		syncMode = dlg->synchronizationMode();
+
+		settings->setValue("Selection/Mode", selectionMode);
+		settings->setValue("Sync/Synchronize", syncMode);
 
 		if(!histEnabled)
 			updateHistoryContextMenu();
