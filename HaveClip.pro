@@ -94,3 +94,6 @@ OTHER_FILES += \
     android/AndroidManifest.xml
 
 win32:RC_FILE = src/HaveClip.rc
+
+unix: CONFIG += link_pkgconfig
+unix: PKGCONFIG += x11

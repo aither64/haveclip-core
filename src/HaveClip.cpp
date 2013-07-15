@@ -43,6 +43,13 @@
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
 
+#ifdef Q_WS_X11
+#include <QX11Info>
+extern "C" {
+	#include <X11/Xlib.h>
+}
+#endif
+
 QString HaveClip::Node::toString()
 {
 	return host + ":" + QString::number(port);
@@ -73,6 +80,13 @@ HaveClip::HaveClip(QObject *parent) :
 	timer->start(300);
 #endif
 
+#ifdef Q_WS_X11
+	selectionTimer = new QTimer(this);
+	selectionTimer->setSingleShot(true);
+
+	connect(selectionTimer, SIGNAL(timeout()), this, SLOT(checkSelection()));
+#endif
+
 	// Load settings
 	settings = new QSettings(this);
 
@@ -88,7 +102,7 @@ HaveClip::HaveClip(QObject *parent) :
 	selectionMode = (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt();
 	syncMode = (HaveClip::SynchronizeMode) settings->value("Sync/Synchronize", HaveClip::Both).toInt();
 
-	encryption = (HaveClip::Encryption) settings->value("Connection/Encryption", HaveClip::None).toInt();
+	encryption = (HaveClip::Encryption) settings->value("Connection/Encryption", 0).toInt();
 	certificate = settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
 	privateKey = settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
 
@@ -186,6 +200,11 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 		return;
 	}
 
+#ifdef Q_WS_X11
+	if(m == QClipboard::Selection && isUserSelecting())
+		return;
+#endif
+
 	const QMimeData *mimeData = clipboard->mimeData(m);
 	QMimeData *copiedMimeData;
 
@@ -198,8 +217,6 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 
 		if(mimeData->hasHtml())
 			copiedMimeData->setHtml(mimeData->html());
-
-		qDebug() << "created mimedata with" << copiedMimeData->formats();
 	} else
 		copiedMimeData = copyMimeData(mimeData);
 
@@ -239,6 +256,26 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	}
 }
 
+#ifdef Q_WS_X11
+bool HaveClip::isUserSelecting()
+{
+	Window root, child;
+	int root_x, root_y, win_x, win_y;
+	unsigned int state;
+
+	XQueryPointer(QX11Info::display(), QX11Info::appRootWindow(), &root, &child, &root_x, &root_y, &win_x, &win_y, &state);
+
+	if((state & Button1Mask) == Button1Mask || (state & ShiftMask) == ShiftMask)
+	{
+		if(!selectionTimer->isActive())
+			selectionTimer->start(100);
+
+		return true;
+	}
+
+	return false;
+}
+#endif
 
 void HaveClip::incomingConnection(int handle)
 {
@@ -279,12 +316,8 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 
 void HaveClip::uniteClipboards(ClipboardContent *content)
 {
-	qDebug() << "Unite clipboards";
-
 	ensureClipboardContent(content, QClipboard::Selection);
 	ensureClipboardContent(content, QClipboard::Clipboard);
-
-	qDebug() << "Unite done";
 }
 
 void HaveClip::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
@@ -788,4 +821,13 @@ void HaveClip::determineCertificateTrust(BasePasteService *service, const QList<
 	}
 
 	dlg->deleteLater();
+}
+
+void HaveClip::checkSelection()
+{
+	if(!isUserSelecting())
+	{
+		qDebug() << "User stopped selecting";
+		clipboardChanged(QClipboard::Selection); // FIXME: user selections is then double checked in clipboardChanged again
+	}
 }

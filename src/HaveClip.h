@@ -20,7 +20,7 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
-#define VERSION "0.7.0"
+#define VERSION "0.8.0-dev"
 
 #include <QTcpServer>
 #include <QClipboard>
@@ -104,7 +104,11 @@ private:
 	QString password;
 	QList<QAction*> pasteActions;
 	QList<BasePasteService*> pasteServices;
+	QTimer *selectionTimer;
 
+#ifdef Q_WS_X11
+	bool isUserSelecting();
+#endif
 	void uniteClipboards(ClipboardContent *content);
 	void ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode);
 	void addToHistory(ClipboardContent *content);
@@ -138,6 +142,7 @@ private slots:
 	void receivePasteUrl(QUrl url);
 	void pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteServiceError(QString error);
+	void checkSelection();
 };
 
 #endif // HAVECLIP_H
