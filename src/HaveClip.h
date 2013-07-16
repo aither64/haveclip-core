@@ -105,6 +105,8 @@ private:
 	QList<QAction*> pasteActions;
 	QList<BasePasteService*> pasteServices;
 	QTimer *selectionTimer;
+	bool clipboardChangedCalled;
+	bool uniteCalled;
 
 #ifdef Q_WS_X11
 	bool isUserSelecting();

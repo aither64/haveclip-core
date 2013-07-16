@@ -150,16 +150,22 @@ QString ClipboardContent::toPlainText()
 
 bool ClipboardContent::operator==(const ClipboardContent &other) const
 {
-	if(formats != other.formats)
-		return false;
-
-	foreach(QString f, formats)
+	if(mode == QClipboard::Selection || other.mode == QClipboard::Selection)
 	{
-		if(mimeData->data(f) != other.mimeData->data(f))
-			return false;
-	}
+		return compareMimeData(mimeData, other.mimeData, true);
 
-	return true;
+	} else {
+		if(formats != other.formats)
+			return false;
+
+		foreach(QString f, formats)
+		{
+			if(mimeData->data(f) != other.mimeData->data(f))
+				return false;
+		}
+
+		return true;
+	}
 }
 
 bool ClipboardContent::operator!=(const ClipboardContent &other) const
@@ -167,26 +173,38 @@ bool ClipboardContent::operator!=(const ClipboardContent &other) const
 	return !(*this == other);
 }
 
-bool ClipboardContent::compareMimeData(const QMimeData *data1, const QMimeData *data2)
+bool ClipboardContent::compareMimeData(const QMimeData *data1, const QMimeData *data2, bool isSelection)
 {
-	QStringList formats1, formats2;
-
-	foreach(QString f, data1->formats())
-		if(f.indexOf('/') != -1)
-			formats1 << f;
-
-	foreach(QString f, data2->formats())
-		if(f.indexOf('/') != -1)
-			formats2 << f;
-
-	if(formats1 != formats2)
-		return false;
-
-	foreach(QString f, formats1)
-		if(data1->data(f) != data2->data(f))
+	if(isSelection)
+	{
+		if(data1->hasText() != data2->hasText())
 			return false;
 
-	return true;
+		if(data1->hasText() && data1->text() != data2->text())
+			return false;
+
+		return true;
+
+	} else {
+		QStringList formats1, formats2;
+
+		foreach(QString f, data1->formats())
+			if(f.indexOf('/') != -1)
+				formats1 << f;
+
+		foreach(QString f, data2->formats())
+			if(f.indexOf('/') != -1)
+				formats2 << f;
+
+		if(formats1 != formats2)
+			return false;
+
+		foreach(QString f, formats1)
+			if(data1->data(f) != data2->data(f))
+				return false;
+
+		return true;
+	}
 }
 
 ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)

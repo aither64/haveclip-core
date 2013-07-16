@@ -57,7 +57,9 @@ QString HaveClip::Node::toString()
 
 HaveClip::HaveClip(QObject *parent) :
 	QTcpServer(parent),
-	currentItem(0)
+	currentItem(0),
+	clipboardChangedCalled(false),
+	uniteCalled(false)
 {
 	clipboard = QApplication::clipboard();
 	historySignalMapper = new QSignalMapper(this);
@@ -191,18 +193,30 @@ void HaveClip::clipboardChanged()
 
 void HaveClip::clipboardChanged(QClipboard::Mode m)
 {
+	if(clipboardChangedCalled)
+	{
+		qDebug() << "ClipboardChanged already called, end";
+		return;
+	}
+
+	clipboardChangedCalled = true;
+
 	if((m != QClipboard::Clipboard && m != QClipboard::Selection)
 			|| (syncMode != HaveClip::Both
 			    && ((m == QClipboard::Selection && syncMode == HaveClip::Clipboard) || (m == QClipboard::Clipboard && syncMode == HaveClip::Selection)))
 	)
 	{
 		qDebug() << "Ignoring this clipboard";
+		clipboardChangedCalled = false;
 		return;
 	}
 
 #ifdef Q_WS_X11
 	if(m == QClipboard::Selection && isUserSelecting())
+	{
+		clipboardChangedCalled = false;
 		return;
+	}
 #endif
 
 	const QMimeData *mimeData = clipboard->mimeData(m);
@@ -225,11 +239,14 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	if(currentItem && *currentItem == *cnt)
 	{
 		delete cnt;
+		clipboardChangedCalled = false;
 		return;
 
 	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
+		qDebug() << "Clipboard is empty, reset";
 		updateClipboard(currentItem, true);
 		delete cnt;
+		clipboardChangedCalled = false;
 		return;
 	}
 
@@ -254,6 +271,8 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 			d->distribute(cnt, password);
 		}
 	}
+
+	clipboardChangedCalled = false;
 }
 
 #ifdef Q_WS_X11
@@ -312,17 +331,29 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 		updateToolTip();
 		updateHistoryContextMenu();
 	}
+
+	qDebug() << "Update clipboard end";
 }
 
 void HaveClip::uniteClipboards(ClipboardContent *content)
 {
+	if(uniteCalled)
+	{
+		qDebug() << "Unite has already been called, end";
+		return;
+	}
+
+	uniteCalled = true;
+
 	ensureClipboardContent(content, QClipboard::Selection);
 	ensureClipboardContent(content, QClipboard::Clipboard);
+
+	uniteCalled = false;
 }
 
 void HaveClip::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
 {
-	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode)))
+	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
 	{
 		qDebug() << "Update" << mode;
 		clipboard->setMimeData(copyMimeData(content->mimeData), mode);
