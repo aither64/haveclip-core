@@ -240,11 +240,10 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	{
 		if(currentItem->mode != cnt->mode)
 			distributeClipboard(cnt, true);
-		else {
+		else
 			delete cnt;
-			clipboardChangedCalled = false;
-		}
 
+		clipboardChangedCalled = false;
 		return;
 
 	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
