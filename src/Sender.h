@@ -41,12 +41,14 @@ signals:
 	
 public slots:
 	void distribute(const ClipboardContent *content, QString password);
+	void setDeleteContentOnSent(bool del);
 
 private:
 	HaveClip::Node *m_node;
 	const ClipboardContent *content;
 	HaveClip::Encryption encryption;
 	QString password;
+	bool deleteContent;
 
 private slots:
 	void onError(QAbstractSocket::SocketError socketError);

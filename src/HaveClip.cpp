@@ -238,8 +238,13 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 
 	if(currentItem && *currentItem == *cnt)
 	{
-		delete cnt;
-		clipboardChangedCalled = false;
+		if(currentItem->mode != cnt->mode)
+			distributeClipboard(cnt, true);
+		else {
+			delete cnt;
+			clipboardChangedCalled = false;
+		}
+
 		return;
 
 	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
@@ -260,19 +265,23 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 		uniteClipboards(cnt);
 
 	if(clipSnd)
-	{
-		foreach(Node *n, pool)
-		{
-			Sender *d = new Sender(encryption, n, this);
-
-			connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
-			connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
-
-			d->distribute(cnt, password);
-		}
-	}
+		distributeClipboard(cnt);
 
 	clipboardChangedCalled = false;
+}
+
+void HaveClip::distributeClipboard(ClipboardContent *content, bool deleteLater)
+{
+	foreach(Node *n, pool)
+	{
+		Sender *d = new Sender(encryption, n, this);
+		d->setDeleteContentOnSent(deleteLater);
+
+		connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
+		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
+
+		d->distribute(content, password);
+	}
 }
 
 #ifdef Q_WS_X11

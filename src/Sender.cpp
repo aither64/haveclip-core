@@ -29,7 +29,8 @@
 Sender::Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent) :
 	QSslSocket(parent),
 	m_node(node),
-	encryption(enc)
+	encryption(enc),
+	deleteContent(false)
 {
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
@@ -83,6 +84,11 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 	  */
 }
 
+void Sender::setDeleteContentOnSent(bool del)
+{
+	deleteContent = del;
+}
+
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Unable to reach" << m_node->host << ":" << socketError;
@@ -133,6 +139,7 @@ void Sender::onConnect()
 	QByteArray ba = doc.toByteArray();
 
 	qDebug() << "Distributing" << ba.size() << "bytes";
+
 	write(ba);
 
 	disconnectFromHost();
@@ -140,6 +147,9 @@ void Sender::onConnect()
 
 void Sender::onDisconnect()
 {
+	if(deleteContent)
+		delete content;
+
 	this->deleteLater();
 }
 

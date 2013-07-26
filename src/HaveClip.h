@@ -113,6 +113,7 @@ private:
 #endif
 	void uniteClipboards(ClipboardContent *content);
 	void ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode);
+	void distributeClipboard(ClipboardContent *content, bool deleteLater = false);
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
 	void updateToolTip();
