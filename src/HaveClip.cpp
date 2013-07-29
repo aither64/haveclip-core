@@ -31,6 +31,8 @@
 #include <QTextDocument>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QDesktopServices>
+#include <QDir>
 
 #include "Receiver.h"
 #include "Sender.h"
@@ -70,6 +72,8 @@ HaveClip::HaveClip(QObject *parent) :
 	connect(pasteSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(simplePaste(QObject*)));
 	connect(pasteAdvSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(advancedPaste(QObject*)));
 
+	connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(saveHistory()));
+
 #if defined Q_OS_LINUX
 	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
 #elif defined Q_OS_WIN32
@@ -100,6 +104,7 @@ HaveClip::HaveClip(QObject *parent) :
 
 	histEnabled = settings->value("History/Enable", true).toBool();
 	histSize = settings->value("History/Size", 10).toInt();
+	histSave = settings->value("History/Save", true).toBool();
 
 	selectionMode = (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt();
 	syncMode = (HaveClip::SynchronizeMode) settings->value("Sync/Synchronize", HaveClip::Both).toInt();
@@ -162,6 +167,12 @@ HaveClip::HaveClip(QObject *parent) :
 
 	qApp->setQuitOnLastWindowClosed(false);
 	qApp->setWindowIcon(QIcon(":/gfx/HaveClip_128.png"));
+
+	// Load history
+	if(histSave)
+		loadHistory();
+	else
+		deleteHistoryFile();
 
 	// Load contents of clipboard
 	clipboardChanged();
@@ -435,6 +446,16 @@ void HaveClip::updateHistoryContextMenu()
 	}
 }
 
+QString HaveClip::historyFilePath()
+{
+	return QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/history.dat";
+}
+
+void HaveClip::deleteHistoryFile()
+{
+	QFile::remove(historyFilePath());
+}
+
 void HaveClip::updateToolTip()
 {
 #if defined Q_OS_LINUX
@@ -522,9 +543,14 @@ void HaveClip::showSettings()
 
 		histEnabled = dlg->historyEnabled();
 		histSize = dlg->historySize();
+		histSave = dlg->saveHistory();
 
 		settings->setValue("History/Enable", histEnabled);
 		settings->setValue("History/Size", histSize);
+		settings->setValue("History/Save", histSave);
+
+		if(!histSave)
+			deleteHistoryFile();
 
 		selectionMode = dlg->selectionMode();
 		syncMode = dlg->synchronizationMode();
@@ -869,4 +895,72 @@ void HaveClip::checkSelection()
 		qDebug() << "User stopped selecting";
 		clipboardChanged(QClipboard::Selection); // FIXME: user selections is then double checked in clipboardChanged again
 	}
+}
+
+void HaveClip::loadHistory()
+{
+	QFile file(historyFilePath());
+
+	if(!file.open(QIODevice::ReadOnly))
+	{
+		qDebug() << "Unable to open history file for reading";
+		return;
+	}
+
+	QDataStream ds(&file);
+
+	quint32 magic;
+	qint32 version;
+	ClipboardContent *cnt;
+
+	ds >> magic;
+
+	if(magic != HISTORY_MAGIC_NUMBER)
+	{
+		qDebug() << "Bad file format: magic number does not match";
+		return;
+	}
+
+	ds >> version;
+
+	while(!ds.atEnd())
+	{
+		cnt = ClipboardContent::load(ds);
+		cnt->init();
+
+		history << cnt;
+	}
+
+	file.close();
+}
+
+void HaveClip::saveHistory()
+{
+	if(!histSave)
+		return;
+
+	QFileInfo fi(historyFilePath());
+	QDir d;
+	d.mkpath(fi.absolutePath());
+
+	qDebug() << "Save history to" << fi.absoluteFilePath();
+
+	QFile file(fi.absoluteFilePath());
+
+	if(!file.open(QIODevice::WriteOnly))
+	{
+		qDebug() << "Unable to open history file for writing";
+		return;
+	}
+
+	QDataStream ds(&file);
+
+	ds << (quint32) HISTORY_MAGIC_NUMBER;
+	ds << (qint32) HISTORY_VERSION;
+
+	// Saved from oldest to newest
+	foreach(ClipboardContent *cnt, history)
+		ds << *cnt;
+
+	file.close();
 }

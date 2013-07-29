@@ -207,6 +207,34 @@ bool ClipboardContent::compareMimeData(const QMimeData *data1, const QMimeData *
 	}
 }
 
+void ClipboardContent::save(QDataStream &ds) const
+{
+	ds << (qint32) mode;
+	ds << formats;
+
+	foreach(QString f, formats)
+		ds << mimeData->data(f);
+}
+
+ClipboardContent* ClipboardContent::load(QDataStream &ds)
+{
+	qint32 mode;
+	QStringList formats;
+	QMimeData *md = new QMimeData();
+	QByteArray data;
+
+	ds >> mode;
+	ds >> formats;
+
+	foreach(QString f, formats)
+	{
+		ds >> data;
+		md->setData(f, data);
+	}
+
+	return new ClipboardContent((QClipboard::Mode) mode, md);
+}
+
 ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)
 {
 	Preview *preview = 0;

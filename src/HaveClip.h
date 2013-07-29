@@ -21,6 +21,8 @@
 #define HAVECLIP_H
 
 #define VERSION "0.8.0-dev"
+#define HISTORY_MAGIC_NUMBER 0x84D3C117
+#define HISTORY_VERSION 1
 
 #include <QTcpServer>
 #include <QClipboard>
@@ -95,6 +97,7 @@ private:
 	bool clipRecv;
 	bool histEnabled;
 	int histSize;
+	bool histSave;
 	SelectionMode selectionMode;
 	SynchronizeMode syncMode;
 	QString host;
@@ -116,6 +119,8 @@ private:
 	void distributeClipboard(ClipboardContent *content, bool deleteLater = false);
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
+	QString historyFilePath();
+	void deleteHistoryFile();
 	void updateToolTip();
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
@@ -146,6 +151,8 @@ private slots:
 	void pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteServiceError(QString error);
 	void checkSelection();
+	void loadHistory();
+	void saveHistory();
 };
 
 #endif // HAVECLIP_H

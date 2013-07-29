@@ -51,10 +51,19 @@ public:
 	bool operator==(const ClipboardContent &other) const;
 	bool operator!=(const ClipboardContent &other) const;
 	static bool compareMimeData(const QMimeData *data1, const QMimeData *data2, bool isSelection);
+	void save(QDataStream &ds) const;
+	static ClipboardContent* load(QDataStream &ds);
 
 private:
 	Preview* createItemPreview(QImage &img);
 	void setTitle(QString &str);
 };
+
+inline QDataStream& operator<<(QDataStream &ds, const ClipboardContent &cnt)
+{
+	cnt.save(ds);
+
+	return ds;
+}
 
 #endif // CLIPBOARDCONTENT_H

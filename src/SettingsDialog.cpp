@@ -53,6 +53,7 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	// History
 	ui->historyGroupBox->setChecked( settings->value("History/Enable", true).toBool() );
 	ui->historySizeSpinBox->setValue( settings->value("History/Size", 10).toInt() );
+	ui->historySaveCheckBox->setChecked( settings->value("History/Save", true).toBool() );
 
 	if(qApp->clipboard()->supportsSelection())
 	{
@@ -149,6 +150,11 @@ bool SettingsDialog::historyEnabled()
 int SettingsDialog::historySize()
 {
 	return ui->historySizeSpinBox->value();
+}
+
+bool SettingsDialog::saveHistory()
+{
+	return ui->historySaveCheckBox->isChecked();
 }
 
 HaveClip::SelectionMode SettingsDialog::selectionMode()
