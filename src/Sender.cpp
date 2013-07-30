@@ -108,7 +108,22 @@ void Sender::onConnect()
 	root.appendChild(passEl);
 
 	QDomElement clip = doc.createElement("clipboard");
-	clip.setAttribute("mode", content->mode == ClipboardContent::Selection ? "selection" : "clipboard");
+	QString mode;
+
+	switch(content->mode)
+	{
+	case ClipboardContent::Selection:
+		mode = "selection";
+		break;
+	case ClipboardContent::Clipboard:
+		mode = "clipboard";
+		break;
+	case ClipboardContent::ClipboardAndSelection:
+		mode = "all";
+		break;
+	}
+
+	clip.setAttribute("mode", mode);
 	root.appendChild(clip);
 
 	foreach(QString mimetype, content->mimeData->formats())

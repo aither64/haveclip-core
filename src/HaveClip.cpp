@@ -253,10 +253,10 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 		if(currentItem->mode != ClipboardContent::ClipboardAndSelection && currentItem->mode != cnt->mode)
 		{
 			currentItem->mode = ClipboardContent::ClipboardAndSelection;
-			distributeClipboard(cnt, true);
-		} else
-			delete cnt;
+			distributeClipboard(currentItem);
+		}
 
+		delete cnt;
 		clipboardChangedCalled = false;
 		return;
 
