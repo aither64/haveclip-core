@@ -275,10 +275,10 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	updateHistoryContextMenu();
 
 	if(selectionMode == HaveClip::United)
-		uniteClipboards(cnt);
+		uniteClipboards(currentItem);
 
 	if(clipSnd)
-		distributeClipboard(cnt);
+		distributeClipboard(currentItem);
 
 	clipboardChangedCalled = false;
 }
@@ -400,7 +400,14 @@ void HaveClip::addToHistory(ClipboardContent *content)
 	{
 		if(*c == *content)
 		{
-			currentItem = content;
+			currentItem = c;
+
+			if(currentItem->mode != content->mode)
+				currentItem->mode = ClipboardContent::ClipboardAndSelection;
+
+			if(c != content)
+				delete content;
+
 			popToFront(currentItem);
 			return;
 		}

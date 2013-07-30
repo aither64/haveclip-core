@@ -91,7 +91,8 @@ OTHER_FILES += \
     android/res/values-pt-rBR/strings.xml \
     android/res/values-nl/strings.xml \
     android/version.xml \
-    android/AndroidManifest.xml
+    android/AndroidManifest.xml \
+    CHANGELOG
 
 win32:RC_FILE = src/HaveClip.rc
 
