@@ -119,6 +119,7 @@ private:
 	void distributeClipboard(ClipboardContent *content, bool deleteLater = false);
 	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
+	void popToFront(ClipboardContent *content);
 	QString historyFilePath();
 	void deleteHistoryFile();
 	void updateToolTip();

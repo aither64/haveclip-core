@@ -401,6 +401,7 @@ void HaveClip::addToHistory(ClipboardContent *content)
 		if(*c == *content)
 		{
 			currentItem = content;
+			popToFront(currentItem);
 			return;
 		}
 	}
@@ -447,6 +448,12 @@ void HaveClip::updateHistoryContextMenu()
 
 		lastAction = act;
 	}
+}
+
+void HaveClip::popToFront(ClipboardContent *content)
+{
+	history.removeOne(content);
+	history << content;
 }
 
 QString HaveClip::historyFilePath()
@@ -499,7 +506,9 @@ void HaveClip::historyActionClicked(QObject *obj)
 		ClipboardContent *c = historyHash[act];
 
 		currentItem = c;
+		popToFront(currentItem);
 		updateClipboard(c, true);
+		updateHistoryContextMenu();
 	}
 }
 
