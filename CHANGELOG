@@ -1,0 +1,9 @@
+* Tue Jul 30 2013 - version 0.8.0
+- Sync also primary selection on X11
+- Option to unite selection and clipboard
+- Save history to disk
+- Fix clipboard distribution when restored from history
+- Pop used history items to front
+
+* Fri Jun 28 2013 - version 0.7.0
+- Initial release
