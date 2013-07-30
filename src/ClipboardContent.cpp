@@ -34,7 +34,7 @@ ClipboardContent::Preview::~Preview()
 	QFile::remove(path);
 }
 
-ClipboardContent::ClipboardContent(QClipboard::Mode m, QMimeData *data) :
+ClipboardContent::ClipboardContent(ClipboardContent::Mode m, QMimeData *data) :
 	preview(0),
 	mode(m),
 	mimeData(data)
@@ -150,7 +150,7 @@ QString ClipboardContent::toPlainText()
 
 bool ClipboardContent::operator==(const ClipboardContent &other) const
 {
-	if(mode == QClipboard::Selection || other.mode == QClipboard::Selection)
+	if(mode == ClipboardContent::Selection || other.mode == ClipboardContent::Selection)
 	{
 		return compareMimeData(mimeData, other.mimeData, true);
 
@@ -232,7 +232,35 @@ ClipboardContent* ClipboardContent::load(QDataStream &ds)
 		md->setData(f, data);
 	}
 
-	return new ClipboardContent((QClipboard::Mode) mode, md);
+	return new ClipboardContent((ClipboardContent::Mode) mode, md);
+}
+
+ClipboardContent::Mode ClipboardContent::qtModeToOwn(QClipboard::Mode m)
+{
+	switch(m)
+	{
+	case QClipboard::Selection:
+		return Selection;
+	case QClipboard::Clipboard:
+		return Clipboard;
+	case QClipboard::FindBuffer:
+		return FindBuffer;
+	}
+}
+
+QClipboard::Mode ClipboardContent::ownModeToQt(Mode m)
+{
+	switch(m)
+	{
+	case Selection:
+		return QClipboard::Selection;
+	case Clipboard:
+		return QClipboard::Clipboard;
+	case FindBuffer:
+		return QClipboard::FindBuffer;
+	default:
+		return QClipboard::Clipboard;
+	}
 }
 
 ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)

@@ -230,6 +230,7 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	}
 #endif
 
+	ClipboardContent::Mode mode = ClipboardContent::qtModeToOwn(m);
 	const QMimeData *mimeData = clipboard->mimeData(m);
 	QMimeData *copiedMimeData;
 
@@ -245,13 +246,15 @@ void HaveClip::clipboardChanged(QClipboard::Mode m)
 	} else
 		copiedMimeData = copyMimeData(mimeData);
 
-	ClipboardContent *cnt = new ClipboardContent(m, copiedMimeData);
+	ClipboardContent *cnt = new ClipboardContent(mode, copiedMimeData);
 
 	if(currentItem && *currentItem == *cnt)
 	{
-		if(currentItem->mode != cnt->mode)
+		if(currentItem->mode != ClipboardContent::ClipboardAndSelection && currentItem->mode != cnt->mode)
+		{
+			currentItem->mode = ClipboardContent::ClipboardAndSelection;
 			distributeClipboard(cnt, true);
-		else
+		} else
 			delete cnt;
 
 		clipboardChangedCalled = false;
@@ -336,11 +339,11 @@ void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
 
 	currentItem = content;
 
-	if(selectionMode == HaveClip::United)
+	if(selectionMode == HaveClip::United || content->mode == ClipboardContent::ClipboardAndSelection)
 	{
 		uniteClipboards(content);
 	} else
-		clipboard->setMimeData(copyMimeData(content->mimeData), content->mode);
+		clipboard->setMimeData(copyMimeData(content->mimeData), ClipboardContent::ownModeToQt(content->mode));
 
 	if(fromHistory)
 	{

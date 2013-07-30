@@ -1,4 +1,3 @@
-- save history to disk
 - add Nodes submenu to context menu to quickly enable/disable nodes in pool
 - copy files using FUSE
 - add an option to set global shortcut which would trigger clipboard sync,

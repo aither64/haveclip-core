@@ -27,6 +27,13 @@
 class ClipboardContent
 {
 public:
+	enum Mode {
+		Selection,
+		Clipboard,
+		FindBuffer,
+		ClipboardAndSelection
+	};
+
 	struct Preview
 	{
 		QString path;
@@ -36,7 +43,7 @@ public:
 		~Preview();
 	};
 
-	QClipboard::Mode mode;
+	Mode mode;
 	QMimeData *mimeData;
 	QString title;
 	QString excerpt;
@@ -44,7 +51,7 @@ public:
 	Preview *preview;
 	QStringList formats;
 
-	ClipboardContent(QClipboard::Mode m, QMimeData *data);
+	ClipboardContent(Mode m, QMimeData *data);
 	~ClipboardContent();
 	void init();
 	QString toPlainText();
@@ -53,6 +60,8 @@ public:
 	static bool compareMimeData(const QMimeData *data1, const QMimeData *data2, bool isSelection);
 	void save(QDataStream &ds) const;
 	static ClipboardContent* load(QDataStream &ds);
+	static Mode qtModeToOwn(QClipboard::Mode m);
+	static QClipboard::Mode ownModeToQt(Mode m);
 
 private:
 	Preview* createItemPreview(QImage &img);

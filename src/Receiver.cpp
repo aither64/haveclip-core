@@ -119,7 +119,7 @@ void Receiver::onDisconnect()
 	qDebug() << "clipboard.mode" << clipboard.attribute("mode");
 
 	ClipboardContent *content = new ClipboardContent(
-		clipboard.attribute("mode") == "selection" ? QClipboard::Selection : QClipboard::Clipboard,
+		clipboard.attribute("mode") == "selection" ? ClipboardContent::Selection : ClipboardContent::Clipboard,
 		mimedata
 	);
 	content->init();
