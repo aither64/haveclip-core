@@ -509,6 +509,7 @@ void HaveClip::historyActionClicked(QObject *obj)
 		popToFront(currentItem);
 		updateClipboard(c, true);
 		updateHistoryContextMenu();
+		distributeClipboard(currentItem);
 	}
 }
 
