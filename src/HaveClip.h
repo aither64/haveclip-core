@@ -20,7 +20,7 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
-#define VERSION "0.8.0-dev"
+#define VERSION "0.8.0"
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
 #define HISTORY_VERSION 1
 
@@ -151,7 +151,9 @@ private slots:
 	void receivePasteUrl(QUrl url);
 	void pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteServiceError(QString error);
+#ifdef Q_WS_X11
 	void checkSelection();
+#endif
 	void loadHistory();
 	void saveHistory();
 };

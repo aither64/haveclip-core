@@ -908,6 +908,7 @@ void HaveClip::determineCertificateTrust(BasePasteService *service, const QList<
 	dlg->deleteLater();
 }
 
+#ifdef Q_WS_X11
 void HaveClip::checkSelection()
 {
 	if(!isUserSelecting())
@@ -916,6 +917,7 @@ void HaveClip::checkSelection()
 		clipboardChanged(QClipboard::Selection); // FIXME: user selections is then double checked in clipboardChanged again
 	}
 }
+#endif
 
 void HaveClip::loadHistory()
 {
