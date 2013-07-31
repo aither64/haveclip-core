@@ -32,13 +32,12 @@ HaveClip for desktop is written in C++ using the Qt framework.
 
 Download
 --------
- - Source: [https://secure.havefun.cz/~aither/pub/releases/HaveClip-0.7.0-src.tar.gz](https://secure.havefun.cz/~aither/pub/releases/HaveClip-0.6.0-src.tar.gz)
- - Windows 32-bit: [https://secure.havefun.cz/~aither/pub/releases/HaveClip-0.7.0-win32.zip](https://secure.havefun.cz/~aither/pub/releases/HaveClip-0.6.0-win32.zip)
+[https://sourceforge.net/projects/haveclip/files/](https://sourceforge.net/projects/haveclip/files/)
 
 Build
 -----
-    # tar -xzf HaveClip-0.7.0-src.tar.gz
-    # cd HaveClip-0.7.0-src
+    # tar -xzf HaveClip-0.8.0-src.tar.gz
+    # cd HaveClip-0.8.0-src
     # qmake
     # make
 
