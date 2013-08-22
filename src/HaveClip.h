@@ -20,12 +20,6 @@
 #ifndef HAVECLIP_H
 #define HAVECLIP_H
 
-#define VERSION "0.8.0"
-#define HISTORY_MAGIC_NUMBER 0x84D3C117
-#define HISTORY_VERSION 1
-
-#include <QTcpServer>
-#include <QClipboard>
 #include <QSettings>
 #include <QList>
 #include <QSystemTrayIcon>
@@ -33,52 +27,27 @@
 #include <QHash>
 #include <QSignalMapper>
 #include <QIcon>
-#include <QHostInfo>
 #include <QSslError>
 
+#include "ClipboardManager.h"
 #include "PasteServices/BasePasteService.h"
 #include "ClipboardContent.h"
 
-class HaveClip : public QTcpServer
+class HaveClip : public QObject
 {
 	Q_OBJECT
 public:
-	struct Node {
-		QString host;
-		quint16 port;
-		QSslCertificate certificate;
-
-		QString toString();
-	};
-
-	enum Encryption {
-		None=0,
-		Ssl,
-		Tls
-	};
-
-	enum SelectionMode {
-		Separate,
-		United
-	};
-
-	enum SynchronizeMode {
-		Selection,
-		Clipboard,
-		Both
-	};
-
 	explicit HaveClip(QObject *parent = 0);
 	~HaveClip();
 	
 signals:
 	
 public slots:
+	void updateHistory();
 
 private:
+	ClipboardManager *manager;
 	QSettings *settings;
-	QClipboard *clipboard;
-	QList<Node*> pool;
 	QSystemTrayIcon *trayIcon;
 	QMenu *menu;
 	QMenu *historyMenu;
@@ -88,74 +57,29 @@ private:
 	QAction *clipRecvAction;
 	QList<ClipboardContent*> history;
 	QHash<QAction*, ClipboardContent*> historyHash;
-	ClipboardContent *currentItem;
+	QList<QAction*> pasteActions;
 	QSignalMapper *historySignalMapper;
 	QSignalMapper *pasteSignalMapper;
 	QSignalMapper *pasteAdvSignalMapper;
-	bool clipSync;
-	bool clipSnd;
-	bool clipRecv;
-	bool histEnabled;
-	int histSize;
-	bool histSave;
-	SelectionMode selectionMode;
-	SynchronizeMode syncMode;
-	QString host;
-	Encryption encryption;
-	QString certificate;
-	QString privateKey;
-	QString password;
-	QList<QAction*> pasteActions;
-	QList<BasePasteService*> pasteServices;
-	QTimer *selectionTimer;
-	bool clipboardChangedCalled;
-	bool uniteCalled;
 
-#ifdef Q_WS_X11
-	bool isUserSelecting();
-#endif
-	void uniteClipboards(ClipboardContent *content);
-	void ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode);
-	void distributeClipboard(ClipboardContent *content, bool deleteLater = false);
-	void addToHistory(ClipboardContent *content);
 	void updateHistoryContextMenu();
-	void popToFront(ClipboardContent *content);
-	QString historyFilePath();
-	void deleteHistoryFile();
 	void updateToolTip();
-	void loadNodes();
-	QMimeData* copyMimeData(const QMimeData *mimeReference);
-	void startListening(QHostAddress addr = QHostAddress::Null);
-	void loadPasteServices();
 	void clearPasteServices();
+	void loadPasteServices();
 
 private slots:
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-	void clipboardChanged();
-	void clipboardChanged(QClipboard::Mode m);
-	void incomingConnection(int handle);
-	void updateClipboard(ClipboardContent *content, bool fromHistory = false);
-	void historyActionClicked(QObject *obj);
 	void toggleSharedClipboard(bool enabled);
-	void toggleClipboardSending(bool enabled);
-	void toggleClipboardReceiving(bool enabled);
+	void historyActionClicked(QObject *obj);
 	void showSettings();
 	void showAbout();
-	void listenOnHost(const QHostInfo &host);
-	void determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors);
+	void determineCertificateTrust(ClipboardManager::Node *node, const QList<QSslError> errors);
 	void determineCertificateTrust(BasePasteService *service, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void simplePaste(QObject *obj);
 	void advancedPaste(QObject *obj);
-//	void setPasteService(bool enabled, BasePasteService::PasteService type);
-	void receivePasteUrl(QUrl url);
 	void pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg);
 	void pasteServiceError(QString error);
-#ifdef Q_WS_X11
-	void checkSelection();
-#endif
-	void loadHistory();
-	void saveHistory();
 };
 
 #endif // HAVECLIP_H

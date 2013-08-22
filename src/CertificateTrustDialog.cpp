@@ -22,7 +22,7 @@
 #include "CertificateTrustDialog.h"
 #include "ui_CertificateTrustDialog.h"
 
-CertificateTrustDialog::CertificateTrustDialog(HaveClip::Node *node, const QList<QSslError> &errors, QWidget *parent) :
+CertificateTrustDialog::CertificateTrustDialog(ClipboardManager::Node *node, const QList<QSslError> &errors, QWidget *parent) :
 	QDialog(parent),
 	ui(new Ui::CertificateTrustDialog)
 {

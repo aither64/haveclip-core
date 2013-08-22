@@ -28,7 +28,7 @@ class Receiver : public QSslSocket
 {
 	Q_OBJECT
 public:
-	explicit Receiver(HaveClip::Encryption enc, QObject *parent = 0);
+	explicit Receiver(ClipboardManager::Encryption enc, QObject *parent = 0);
 	void communicate();
 	void setCertificateAndKey(QString cert, QString key);
 	void setAcceptPassword(QString password);
@@ -42,7 +42,7 @@ private:
 	QByteArray buffer;
 	quint64 len;
 	quint64 dataRead;
-	HaveClip::Encryption encryption;
+	ClipboardManager::Encryption encryption;
 	QString certificate;
 	QString privateKey;
 	QString password;

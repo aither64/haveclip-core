@@ -25,7 +25,7 @@
 #include <QListWidgetItem>
 #include <QHash>
 
-#include "HaveClip.h"
+#include "ClipboardManager.h"
 #include "PasteServices/BasePasteService.h"
 
 #define NODE_ADD_STR tr("IP address:port")
@@ -45,12 +45,12 @@ public:
 	bool historyEnabled();
 	int historySize();
 	bool saveHistory();
-	HaveClip::SelectionMode selectionMode();
-	HaveClip::SynchronizeMode synchronizationMode();
+	ClipboardManager::SelectionMode selectionMode();
+	ClipboardManager::SynchronizeMode synchronizationMode();
 	QString host();
-	int port();
+	quint16 port();
 	QString password();
-	HaveClip::Encryption encryption();
+	ClipboardManager::Encryption encryption();
 	QString certificate();
 	QString privateKey();
 	QList<BasePasteService*> pasteServices();

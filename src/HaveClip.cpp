@@ -19,23 +19,15 @@
 
 #include "HaveClip.h"
 
-#include <QApplication>
-#include <QMimeData>
 #include <QStringList>
 #include <QUrl>
 #include <QImage>
 #include <QColor>
 #include <QMenu>
 #include <QLabel>
-#include <QTimer>
 #include <QTextDocument>
 #include <QMessageBox>
-#include <QFileInfo>
-#include <QDesktopServices>
-#include <QDir>
 
-#include "Receiver.h"
-#include "Sender.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
 #include "CertificateTrustDialog.h"
@@ -45,25 +37,16 @@
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
 
-#ifdef Q_WS_X11
-#include <QX11Info>
-extern "C" {
-	#include <X11/Xlib.h>
-}
-#endif
-
-QString HaveClip::Node::toString()
-{
-	return host + ":" + QString::number(port);
-}
-
 HaveClip::HaveClip(QObject *parent) :
-	QTcpServer(parent),
-	currentItem(0),
-	clipboardChangedCalled(false),
-	uniteCalled(false)
+	QObject(parent)
 {
-	clipboard = QApplication::clipboard();
+	manager = new ClipboardManager(this);
+	settings = manager->settings();
+
+	connect(manager, SIGNAL(historyChanged()), this, SLOT(updateHistory()));
+	connect(manager, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(ClipboardManager::Node*,QList<QSslError>)));
+	connect(manager, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
+
 	historySignalMapper = new QSignalMapper(this);
 	pasteSignalMapper = new QSignalMapper(this);
 	pasteAdvSignalMapper = new QSignalMapper(this);
@@ -71,52 +54,6 @@ HaveClip::HaveClip(QObject *parent) :
 	connect(historySignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(historyActionClicked(QObject*)));
 	connect(pasteSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(simplePaste(QObject*)));
 	connect(pasteAdvSignalMapper, SIGNAL(mapped(QObject*)), this, SLOT(advancedPaste(QObject*)));
-
-	connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(saveHistory()));
-
-#if defined Q_OS_LINUX
-	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
-#elif defined Q_OS_WIN32
-	// Signal change(QClipboard::Mode) is not sent on Windows
-	connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
-#elif defined Q_OS_MAC
-	// There's no notification about clipboard changes on OS X, active checking is needed
-	QTimer *timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
-	timer->start(300);
-#endif
-
-#ifdef Q_WS_X11
-	selectionTimer = new QTimer(this);
-	selectionTimer->setSingleShot(true);
-
-	connect(selectionTimer, SIGNAL(timeout()), this, SLOT(checkSelection()));
-#endif
-
-	// Load settings
-	settings = new QSettings(this);
-
-	loadNodes();
-
-	clipSync = settings->value("Sync/Enable", true).toBool();
-	clipSnd = settings->value("Sync/Send", true).toBool();
-	clipRecv = settings->value("Sync/Receive", true).toBool();
-
-	histEnabled = settings->value("History/Enable", true).toBool();
-	histSize = settings->value("History/Size", 10).toInt();
-	histSave = settings->value("History/Save", true).toBool();
-
-	selectionMode = (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt();
-	syncMode = (HaveClip::SynchronizeMode) settings->value("Sync/Synchronize", HaveClip::Both).toInt();
-
-	encryption = (HaveClip::Encryption) settings->value("Connection/Encryption", 0).toInt();
-	certificate = settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
-	privateKey = settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
-
-	password = settings->value("AccessPolicy/Password").toString();
-
-	// Start server
-	startListening();
 
 	// Tray
 	trayIcon = new QSystemTrayIcon(QIcon(":/gfx/HaveClip_128.png"), this);
@@ -138,20 +75,20 @@ HaveClip::HaveClip(QObject *parent) :
 
 	QAction *a = menu->addAction(tr("&Enable clipboard synchronization"));
 	a->setCheckable(true);
-	a->setChecked(clipSync);
+	a->setChecked(manager->isSyncEnabled());
 	connect(a, SIGNAL(toggled(bool)), this, SLOT(toggleSharedClipboard(bool)));
 
 	clipSndAction = menu->addAction(tr("Enable clipboard se&nding"));
 	clipSndAction->setCheckable(true);
-	clipSndAction->setChecked(clipSnd);
-	clipSndAction->setEnabled(clipSync);
-	connect(clipSndAction, SIGNAL(toggled(bool)), this, SLOT(toggleClipboardSending(bool)));
+	clipSndAction->setChecked(manager->isSendingEnabled());
+	clipSndAction->setEnabled(manager->isSyncEnabled());
+	connect(clipSndAction, SIGNAL(toggled(bool)), manager, SLOT(toggleClipboardSending(bool)));
 
 	clipRecvAction = menu->addAction(tr("Enable clipboard &receiving"));
 	clipRecvAction->setCheckable(true);
-	clipRecvAction->setChecked(clipRecv);
-	clipRecvAction->setEnabled(clipSync);
-	connect(clipRecvAction, SIGNAL(toggled(bool)), this, SLOT(toggleClipboardReceiving(bool)));
+	clipRecvAction->setChecked(manager->isReceivingEnabled());
+	clipRecvAction->setEnabled(manager->isSyncEnabled());
+	connect(clipRecvAction, SIGNAL(toggled(bool)), manager, SLOT(toggleClipboardReceiving(bool)));
 
 	menu->addSeparator();
 	menuSeparator = menu->addSeparator();
@@ -168,22 +105,19 @@ HaveClip::HaveClip(QObject *parent) :
 	qApp->setQuitOnLastWindowClosed(false);
 	qApp->setWindowIcon(QIcon(":/gfx/HaveClip_128.png"));
 
-	// Load history
-	if(histSave)
-		loadHistory();
-	else
-		deleteHistoryFile();
-
-	// Load contents of clipboard
-	clipboardChanged();
+	manager->start();
 }
 
 HaveClip::~HaveClip()
 {
-	qDeleteAll(pool);
-	qDeleteAll(history);
 	delete menu;
 	delete historyMenu;
+}
+
+void HaveClip::updateHistory()
+{
+	updateHistoryContextMenu();
+	updateToolTip();
 }
 
 void HaveClip::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -194,230 +128,12 @@ void HaveClip::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 	historyMenu->exec(trayIcon->geometry().bottomLeft());
 }
 
-/**
-  Called when system clipboard is changed
-  */
-void HaveClip::clipboardChanged()
+void HaveClip::toggleSharedClipboard(bool enabled)
 {
-	clipboardChanged(QClipboard::Clipboard);
-}
+	clipSndAction->setEnabled(enabled);
+	clipRecvAction->setEnabled(enabled);
 
-void HaveClip::clipboardChanged(QClipboard::Mode m)
-{
-	if(clipboardChangedCalled)
-	{
-		qDebug() << "ClipboardChanged already called, end";
-		return;
-	}
-
-	clipboardChangedCalled = true;
-
-	if((m != QClipboard::Clipboard && m != QClipboard::Selection)
-			|| (syncMode != HaveClip::Both
-			    && ((m == QClipboard::Selection && syncMode == HaveClip::Clipboard) || (m == QClipboard::Clipboard && syncMode == HaveClip::Selection)))
-	)
-	{
-		qDebug() << "Ignoring this clipboard";
-		clipboardChangedCalled = false;
-		return;
-	}
-
-#ifdef Q_WS_X11
-	if(m == QClipboard::Selection && isUserSelecting())
-	{
-		clipboardChangedCalled = false;
-		return;
-	}
-#endif
-
-	ClipboardContent::Mode mode = ClipboardContent::qtModeToOwn(m);
-	const QMimeData *mimeData = clipboard->mimeData(m);
-	QMimeData *copiedMimeData;
-
-	if(m == QClipboard::Selection) // Selection has only text and html
-	{
-		copiedMimeData = new QMimeData();
-
-		if(mimeData->hasText())
-			copiedMimeData->setText(mimeData->text());
-
-		if(mimeData->hasHtml())
-			copiedMimeData->setHtml(mimeData->html());
-	} else
-		copiedMimeData = copyMimeData(mimeData);
-
-	ClipboardContent *cnt = new ClipboardContent(mode, copiedMimeData);
-
-	if(currentItem && *currentItem == *cnt)
-	{
-		if(currentItem->mode != ClipboardContent::ClipboardAndSelection && currentItem->mode != cnt->mode)
-		{
-			currentItem->mode = ClipboardContent::ClipboardAndSelection;
-			distributeClipboard(currentItem);
-		}
-
-		delete cnt;
-		clipboardChangedCalled = false;
-		return;
-
-	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
-		qDebug() << "Clipboard is empty, reset";
-		updateClipboard(currentItem, true);
-		delete cnt;
-		clipboardChangedCalled = false;
-		return;
-	}
-
-	cnt->init();
-
-	addToHistory(cnt);
-	updateToolTip();
-	updateHistoryContextMenu();
-
-	if(selectionMode == HaveClip::United)
-		uniteClipboards(currentItem);
-
-	if(clipSnd)
-		distributeClipboard(currentItem);
-
-	clipboardChangedCalled = false;
-}
-
-void HaveClip::distributeClipboard(ClipboardContent *content, bool deleteLater)
-{
-	foreach(Node *n, pool)
-	{
-		Sender *d = new Sender(encryption, n, this);
-		d->setDeleteContentOnSent(deleteLater);
-
-		connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
-		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
-
-		d->distribute(content, password);
-	}
-}
-
-#ifdef Q_WS_X11
-bool HaveClip::isUserSelecting()
-{
-	Window root, child;
-	int root_x, root_y, win_x, win_y;
-	unsigned int state;
-
-	XQueryPointer(QX11Info::display(), QX11Info::appRootWindow(), &root, &child, &root_x, &root_y, &win_x, &win_y, &state);
-
-	if((state & Button1Mask) == Button1Mask || (state & ShiftMask) == ShiftMask)
-	{
-		if(!selectionTimer->isActive())
-			selectionTimer->start(100);
-
-		return true;
-	}
-
-	return false;
-}
-#endif
-
-void HaveClip::incomingConnection(int handle)
-{
-	Receiver *c = new Receiver(encryption, this);
-	c->setSocketDescriptor(handle);
-
-	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));
-
-	c->setCertificateAndKey(certificate, privateKey);
-	c->setAcceptPassword(password);
-	c->communicate();
-}
-
-/**
-  Called when new clipboard is received via network
-  */
-void HaveClip::updateClipboard(ClipboardContent *content, bool fromHistory)
-{
-	qDebug() << "Update clipboard";
-
-	currentItem = content;
-
-	if(selectionMode == HaveClip::United || content->mode == ClipboardContent::ClipboardAndSelection)
-	{
-		uniteClipboards(content);
-	} else
-		clipboard->setMimeData(copyMimeData(content->mimeData), ClipboardContent::ownModeToQt(content->mode));
-
-	if(fromHistory)
-	{
-		updateToolTip();
-	} else {
-		addToHistory(content);
-		updateToolTip();
-		updateHistoryContextMenu();
-	}
-
-	qDebug() << "Update clipboard end";
-}
-
-void HaveClip::uniteClipboards(ClipboardContent *content)
-{
-	if(uniteCalled)
-	{
-		qDebug() << "Unite has already been called, end";
-		return;
-	}
-
-	uniteCalled = true;
-
-	ensureClipboardContent(content, QClipboard::Selection);
-	ensureClipboardContent(content, QClipboard::Clipboard);
-
-	uniteCalled = false;
-}
-
-void HaveClip::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
-{
-	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
-	{
-		qDebug() << "Update" << mode;
-		clipboard->setMimeData(copyMimeData(content->mimeData), mode);
-	} else {
-		qDebug() << "No need to update" << mode;
-	}
-}
-
-void HaveClip::addToHistory(ClipboardContent *content)
-{
-	if(!histEnabled)
-	{
-		if(currentItem)
-			delete currentItem;
-
-		currentItem = content;
-
-		return;
-	}
-
-	foreach(ClipboardContent *c, history)
-	{
-		if(*c == *content)
-		{
-			currentItem = c;
-
-			if(currentItem->mode != content->mode)
-				currentItem->mode = ClipboardContent::ClipboardAndSelection;
-
-			if(c != content)
-				delete content;
-
-			popToFront(currentItem);
-			return;
-		}
-	}
-
-	if(history.size() >= histSize)
-		delete history.takeFirst();
-
-	history << content;
-	currentItem = content;
+	manager->toggleSharedClipboard(enabled);
 }
 
 void HaveClip::updateHistoryContextMenu()
@@ -434,8 +150,10 @@ void HaveClip::updateHistoryContextMenu()
 		i.key()->deleteLater();
 	}
 
-	if(!histEnabled)
+	if(!manager->isHistoryEnabled())
 		return;
+
+	history = manager->history();
 
 	QAction *lastAction = 0;
 
@@ -457,51 +175,17 @@ void HaveClip::updateHistoryContextMenu()
 	}
 }
 
-void HaveClip::popToFront(ClipboardContent *content)
-{
-	history.removeOne(content);
-	history << content;
-}
-
-QString HaveClip::historyFilePath()
-{
-	return QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/history.dat";
-}
-
-void HaveClip::deleteHistoryFile()
-{
-	QFile::remove(historyFilePath());
-}
-
 void HaveClip::updateToolTip()
 {
+	QString tip;
+
 #if defined Q_OS_LINUX
-	QString tip = "<p>%1</p>";
-	tip += "<pre>" + currentItem->excerpt + "</pre>";
+	tip = "<p>%1</p>";
+	tip += "<pre>" + manager->currentItem()->excerpt + "</pre>";
 #else
-	QString tip = "%1";
+	tip = "%1";
 #endif
-
 	trayIcon->setToolTip(tip.arg(tr("HaveClip")));
-}
-
-void HaveClip::loadNodes()
-{
-	pool.clear();
-
-	foreach(QString node, settings->value("Pool/Nodes").toStringList())
-	{
-		Node *n = new Node;
-		n->host = node.section(':', 0, 0);
-		n->port = node.section(':', 1, 1).toUShort();
-
-		QByteArray cert = settings->value("Node:" + n->toString() + "/Certificate").toString().toAscii();
-
-		if(!cert.isEmpty())
-			n->certificate = QSslCertificate::fromData(cert).first();
-
-		pool << n;
-	}
 }
 
 void HaveClip::historyActionClicked(QObject *obj)
@@ -510,45 +194,9 @@ void HaveClip::historyActionClicked(QObject *obj)
 
 	if(historyHash.contains(act))
 	{
-		ClipboardContent *c = historyHash[act];
-
-		currentItem = c;
-		popToFront(currentItem);
-		updateClipboard(c, true);
+		manager->jumpTo(historyHash[act]);
 		updateHistoryContextMenu();
-		distributeClipboard(currentItem);
 	}
-}
-
-void HaveClip::toggleSharedClipboard(bool enabled)
-{
-	clipSync = enabled;
-
-	toggleClipboardSending(enabled);
-	toggleClipboardReceiving(enabled);
-
-	clipSndAction->setEnabled(enabled);
-	clipRecvAction->setEnabled(enabled);
-
-	settings->setValue("Sync/Enable", clipSync);
-}
-
-void HaveClip::toggleClipboardSending(bool enabled)
-{
-	clipSnd = enabled;
-
-	settings->setValue("Sync/Send", clipSnd);
-}
-
-void HaveClip::toggleClipboardReceiving(bool enabled)
-{
-	if(enabled && !clipRecv)
-		startListening();
-	else if(!enabled && clipRecv)
-		close();
-
-	clipRecv = enabled;
-	settings->setValue("Sync/Receive", clipRecv);
 }
 
 void HaveClip::showSettings()
@@ -557,72 +205,23 @@ void HaveClip::showSettings()
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
-		settings->setValue("Pool/Nodes", dlg->nodes());
+		manager->setHistoryEnabled(dlg->historyEnabled());
+		manager->setHistorySize(dlg->historySize());
+		manager->setHistorySave(dlg->saveHistory());
 
-		loadNodes();
+		manager->setSelectionMode(dlg->selectionMode());
+		manager->setSyncMode(dlg->synchronizationMode());
 
-		histEnabled = dlg->historyEnabled();
-		histSize = dlg->historySize();
-		histSave = dlg->saveHistory();
+		manager->setListenHost(dlg->host(), dlg->port());
+		manager->setEncryption(dlg->encryption());
+		manager->setCertificate(dlg->certificate());
+		manager->setPrivateKey(dlg->privateKey());
 
-		settings->setValue("History/Enable", histEnabled);
-		settings->setValue("History/Size", histSize);
-		settings->setValue("History/Save", histSave);
+		manager->setPassword(dlg->password());
 
-		if(!histSave)
-			deleteHistoryFile();
+		manager->setPasteServices(dlg->pasteServices());
 
-		selectionMode = dlg->selectionMode();
-		syncMode = dlg->synchronizationMode();
-
-		settings->setValue("Selection/Mode", selectionMode);
-		settings->setValue("Sync/Synchronize", syncMode);
-
-		if(!histEnabled)
-			updateHistoryContextMenu();
-
-		QString oldHost = host;
-		host = dlg->host();
-		int port = dlg->port();
-
-		settings->setValue("Connection/Host", host);
-		settings->setValue("Connection/Port", port);
-
-		password = dlg->password();
-		settings->setValue("AccessPolicy/Password", password);
-
-		if(host != oldHost || port != serverPort())
-		{
-			if(isListening())
-				close();
-
-			startListening();
-		}
-
-		encryption = dlg->encryption();
-		certificate = dlg->certificate();
-		privateKey = dlg->privateKey();
-
-		settings->setValue("Connection/Encryption", encryption);
-		settings->setValue("Connection/Certificate", certificate);
-		settings->setValue("Connection/PrivateKey", privateKey);
-
-		// Paste services
-		settings->beginGroup("PasteServices");
-		settings->remove("");
-
-		int i = 0;
-
-		foreach(BasePasteService *s, dlg->pasteServices())
-		{
-			settings->beginGroup(QString::number(i++));
-
-			s->saveSettings();
-
-			settings->endGroup();
-		}
-
-		settings->endGroup();
+		manager->saveSettings();
 
 		clearPasteServices();
 		loadPasteServices();
@@ -638,78 +237,7 @@ void HaveClip::showAbout()
 	dlg->deleteLater();
 }
 
-QMimeData* HaveClip::copyMimeData(const QMimeData *mimeReference)
-{
-	QMimeData *mimeCopy = new QMimeData();
-
-	foreach(QString format, mimeReference->formats())
-	{
-		if(format.indexOf('/') == -1)
-			continue;
-
-		// Retrieving data
-		QByteArray data = mimeReference->data(format);
-
-		// Checking for custom MIME types
-		if(format.startsWith("application/x-qt"))
-		{
-			// Retrieving true format name
-			int indexBegin = format.indexOf('"') + 1;
-			int indexEnd = format.indexOf('"', indexBegin);
-			format = format.mid(indexBegin, indexEnd - indexBegin);
-		}
-
-
-		mimeCopy->setData(format, data);
-	}
-
-	return mimeCopy;
-}
-
-void HaveClip::startListening(QHostAddress addr)
-{
-	QString host = settings->value("Connection/Host", "0.0.0.0").toString();
-	this->host.clear();
-
-	if(addr.isNull())
-		addr.setAddress(host);
-
-	if(!addr.isNull())
-	{
-		if(!listen(addr, settings->value("Connection/Port", 9999).toInt()))
-		{
-			QMessageBox::warning(0, tr("Unable to start listening"), tr("Listening failed, clipboard receiving is not active!\n\n") + errorString());
-			return;
-		}
-
-		this->host = host;
-
-		qDebug() << "Listening on" << serverAddress() << serverPort();
-
-	} else {
-		QHostInfo::lookupHost(host, this, SLOT(listenOnHost(QHostInfo)));
-	}
-}
-
-void HaveClip::listenOnHost(const QHostInfo &host)
-{
-	if(host.error() != QHostInfo::NoError) {
-		QMessageBox::warning(0, tr("Unable to resolve hostname"), tr("Resolving failed: ") + host.errorString());
-		return;
-	}
-
-	QList<QHostAddress> addrs = host.addresses();
-
-	if(addrs.size() == 0)
-	{
-		QMessageBox::warning(0, tr("Hostname has no IP address"), tr("Hostname has no IP addresses. Clipboard receiving is not active."));
-		return;
-	}
-
-	startListening(addrs.first());
-}
-
-void HaveClip::determineCertificateTrust(HaveClip::Node *node, const QList<QSslError> errors)
+void HaveClip::determineCertificateTrust(ClipboardManager::Node *node, const QList<QSslError> errors)
 {
 	CertificateTrustDialog *dlg = new CertificateTrustDialog(node, errors);
 
@@ -721,13 +249,7 @@ void HaveClip::determineCertificateTrust(HaveClip::Node *node, const QList<QSslE
 		if(dlg->remember())
 			settings->setValue("Node:" + node->toString() + "/Certificate", QString(cert.toPem()));
 
-		// It is easier to just create new instance. We would have to wait for the current one to fail.
-		Sender *d = new Sender(encryption, node, this);
-
-		connect(d, SIGNAL(untrustedCertificateError(HaveClip::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(HaveClip::Node*,QList<QSslError>)));
-		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
-
-		d->distribute(currentItem, password);
+		manager->distributeCurrentClipboard();
 	}
 
 	dlg->deleteLater();
@@ -745,29 +267,13 @@ void HaveClip::sslFatalError(const QList<QSslError> errors)
 
 void HaveClip::loadPasteServices()
 {
-	settings->beginGroup("PasteServices");
+	QList<BasePasteService*> services = manager->pasteServices();
 
-	foreach(QString i, settings->childGroups())
+	foreach(BasePasteService *s, services)
 	{
-		settings->beginGroup(i);
 
-		BasePasteService *s;
-
-		switch(settings->value("Type").toInt())
-		{
-		case BasePasteService::Stikked:
-			s = new Stikked(settings, this);
-			break;
-		case BasePasteService::Pastebin:
-			s = new Pastebin(settings, this);
-			break;
-		default:
-			settings->endGroup();
-			continue;
-		}
-
+		// FIXME: those should be connected in CLipboardManager
 		connect(s, SIGNAL(authenticationRequired(BasePasteService*,QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(BasePasteService*,QString,bool,QString)));
-		connect(s, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
 		connect(s, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
 		connect(s, SIGNAL(untrustedCertificateError(BasePasteService*,QList<QSslError>)), this, SLOT(determineCertificateTrust(BasePasteService*,QList<QSslError>)));
 
@@ -793,13 +299,7 @@ void HaveClip::loadPasteServices()
 		a->setSeparator(true);
 		menu->insertAction(menuSeparator, a);
 		pasteActions << a;
-
-		pasteServices << s;
-
-		settings->endGroup();
 	}
-
-	settings->endGroup();
 }
 
 void HaveClip::clearPasteServices()
@@ -813,9 +313,6 @@ void HaveClip::clearPasteServices()
 	}
 
 	pasteActions.clear();
-
-	qDeleteAll(pasteServices);
-	pasteServices.clear();
 }
 
 void HaveClip::simplePaste(QObject *obj)
@@ -829,14 +326,14 @@ void HaveClip::simplePaste(QObject *obj)
 		break;
 	}
 
-	service->paste(currentItem->toPlainText());
+	service->paste(manager->currentItem()->toPlainText());
 }
 
 void HaveClip::advancedPaste(QObject *obj)
 {
 	BasePasteService *service = static_cast<BasePasteService*>(obj);
 
-	PasteDialog *dlg = new PasteDialog(currentItem->mimeData->text(), service);
+	PasteDialog *dlg = new PasteDialog(manager->currentItem()->mimeData->text(), service);
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
@@ -844,23 +341,6 @@ void HaveClip::advancedPaste(QObject *obj)
 	}
 
 	dlg->deleteLater();
-}
-
-void HaveClip::receivePasteUrl(QUrl url)
-{
-	QMimeData *mime = new QMimeData;
-
-	QString html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
-			"<html><head>"
-			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-			"</head><body>"
-			"<a href=\"%1\">%1</a>"
-			"</body></html>";
-
-	mime->setText(url.toString());
-	mime->setHtml(html.arg(url.toString()));
-
-	clipboard->setMimeData(mime);
 }
 
 void HaveClip::pasteServiceRequiresAuthentication(BasePasteService *service, QString username, bool failed, QString msg)
@@ -891,98 +371,10 @@ void HaveClip::determineCertificateTrust(BasePasteService *service, const QList<
 	{
 		service->setCertificate(errors.first().certificate());
 
-		if(dlg->remember())
-		{
-			int i = pasteServices.indexOf(service);
-
-			settings->beginGroup(QString("PasteServices/%1").arg(i));
-
-			service->saveSettings();
-
-			settings->endGroup();
-		}
+		manager->saveSettings(); // FIXME: it'd be enough to save just services
 
 		service->retryPaste();
 	}
 
 	dlg->deleteLater();
-}
-
-#ifdef Q_WS_X11
-void HaveClip::checkSelection()
-{
-	if(!isUserSelecting())
-	{
-		qDebug() << "User stopped selecting";
-		clipboardChanged(QClipboard::Selection); // FIXME: user selections is then double checked in clipboardChanged again
-	}
-}
-#endif
-
-void HaveClip::loadHistory()
-{
-	QFile file(historyFilePath());
-
-	if(!file.open(QIODevice::ReadOnly))
-	{
-		qDebug() << "Unable to open history file for reading";
-		return;
-	}
-
-	QDataStream ds(&file);
-
-	quint32 magic;
-	qint32 version;
-	ClipboardContent *cnt;
-
-	ds >> magic;
-
-	if(magic != HISTORY_MAGIC_NUMBER)
-	{
-		qDebug() << "Bad file format: magic number does not match";
-		return;
-	}
-
-	ds >> version;
-
-	while(!ds.atEnd())
-	{
-		cnt = ClipboardContent::load(ds);
-		cnt->init();
-
-		history << cnt;
-	}
-
-	file.close();
-}
-
-void HaveClip::saveHistory()
-{
-	if(!histSave)
-		return;
-
-	QFileInfo fi(historyFilePath());
-	QDir d;
-	d.mkpath(fi.absolutePath());
-
-	qDebug() << "Save history to" << fi.absoluteFilePath();
-
-	QFile file(fi.absoluteFilePath());
-
-	if(!file.open(QIODevice::WriteOnly))
-	{
-		qDebug() << "Unable to open history file for writing";
-		return;
-	}
-
-	QDataStream ds(&file);
-
-	ds << (quint32) HISTORY_MAGIC_NUMBER;
-	ds << (qint32) HISTORY_VERSION;
-
-	// Saved from oldest to newest
-	foreach(ClipboardContent *cnt, history)
-		ds << *cnt;
-
-	file.close();
 }

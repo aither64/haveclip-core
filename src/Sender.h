@@ -32,11 +32,11 @@ public:
 		CLIPBOARD_SYNC=1
 	};
 
-	explicit Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent = 0);
-	HaveClip::Node *node();
+	explicit Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
+	ClipboardManager::Node *node();
 	
 signals:
-	void untrustedCertificateError(HaveClip::Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	
 public slots:
@@ -44,9 +44,9 @@ public slots:
 	void setDeleteContentOnSent(bool del);
 
 private:
-	HaveClip::Node *m_node;
+	ClipboardManager::Node *m_node;
 	const ClipboardContent *content;
-	HaveClip::Encryption encryption;
+	ClipboardManager::Encryption encryption;
 	QString password;
 	bool deleteContent;
 

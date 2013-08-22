@@ -24,7 +24,7 @@
 #include "Receiver.h"
 #include "Sender.h"
 
-Receiver::Receiver(HaveClip::Encryption enc, QObject *parent) :
+Receiver::Receiver(ClipboardManager::Encryption enc, QObject *parent) :
 	QSslSocket(parent),
 	len(0),
 	dataRead(0),
@@ -37,14 +37,14 @@ Receiver::Receiver(HaveClip::Encryption enc, QObject *parent) :
 
 void Receiver::communicate()
 {
-	if(encryption != HaveClip::None)
+	if(encryption != ClipboardManager::None)
 	{
 		switch(encryption)
 		{
-		case HaveClip::Ssl:
+		case ClipboardManager::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case HaveClip::Tls:
+		case ClipboardManager::Tls:
 			setProtocol(QSsl::TlsV1);
 			break;
 		}

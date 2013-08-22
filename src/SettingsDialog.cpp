@@ -57,12 +57,12 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 
 	if(qApp->clipboard()->supportsSelection())
 	{
-		if( (HaveClip::SelectionMode) settings->value("Selection/Mode", HaveClip::Separate).toInt() == HaveClip::Separate)
+		if( (ClipboardManager::SelectionMode) settings->value("Selection/Mode", ClipboardManager::Separate).toInt() == ClipboardManager::Separate)
 			ui->keepSelectionSeparateRadioButton->setChecked(true);
 		else
 			ui->uniteSelectionRadioButton->setChecked(true);
 
-		ui->synchronizeComboBox->setCurrentIndex(settings->value("Sync/Synchronize", HaveClip::Both).toInt());
+		ui->synchronizeComboBox->setCurrentIndex(settings->value("Sync/Synchronize", ClipboardManager::Both).toInt());
 
 	} else {
 		ui->selectionGroupBox->hide();
@@ -70,7 +70,7 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 	}
 
 	// Encryption
-	ui->encryptionComboBox->setCurrentIndex(settings->value("Connection/Encryption", HaveClip::None).toInt());
+	ui->encryptionComboBox->setCurrentIndex(settings->value("Connection/Encryption", ClipboardManager::None).toInt());
 	ui->certificateLineEdit->setText(settings->value("Connection/Certificate", "certs/haveclip.crt").toString());
 	ui->keyLineEdit->setText(settings->value("Connection/PrivateKey", "certs/haveclip.key").toString());
 
@@ -157,14 +157,14 @@ bool SettingsDialog::saveHistory()
 	return ui->historySaveCheckBox->isChecked();
 }
 
-HaveClip::SelectionMode SettingsDialog::selectionMode()
+ClipboardManager::SelectionMode SettingsDialog::selectionMode()
 {
-	return ui->keepSelectionSeparateRadioButton->isChecked() ? HaveClip::Separate : HaveClip::United;
+	return ui->keepSelectionSeparateRadioButton->isChecked() ? ClipboardManager::Separate : ClipboardManager::United;
 }
 
-HaveClip::SynchronizeMode SettingsDialog::synchronizationMode()
+ClipboardManager::SynchronizeMode SettingsDialog::synchronizationMode()
 {
-	return (HaveClip::SynchronizeMode) ui->synchronizeComboBox->currentIndex();
+	return (ClipboardManager::SynchronizeMode) ui->synchronizeComboBox->currentIndex();
 }
 
 void SettingsDialog::addNode()
@@ -195,7 +195,7 @@ QString SettingsDialog::host()
 	return ui->hostLineEdit->text();
 }
 
-int SettingsDialog::port()
+quint16 SettingsDialog::port()
 {
 	return ui->portSpinBox->value();
 }
@@ -205,9 +205,9 @@ QString SettingsDialog::password()
 	return ui->passwordLineEdit->text();
 }
 
-HaveClip::Encryption SettingsDialog::encryption()
+ClipboardManager::Encryption SettingsDialog::encryption()
 {
-	return (HaveClip::Encryption) ui->encryptionComboBox->currentIndex();
+	return (ClipboardManager::Encryption) ui->encryptionComboBox->currentIndex();
 }
 
 void SettingsDialog::setCertificatePath()

@@ -26,7 +26,8 @@ SOURCES +=\
     src/PasteServices/Pastebin/Pastebin.cpp \
     src/LoginDialog.cpp \
     src/Main.cpp \
-    src/PasteServices/PasteServiceEditDialog.cpp
+    src/PasteServices/PasteServiceEditDialog.cpp \
+    src/ClipboardManager.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -43,7 +44,8 @@ HEADERS  += src/HaveClip.h \
     src/PasteServices/Pastebin/PastebinSettings.h \
     src/PasteServices/Pastebin/Pastebin.h \
     src/LoginDialog.h \
-    src/PasteServices/PasteServiceEditDialog.h
+    src/PasteServices/PasteServiceEditDialog.h \
+    src/ClipboardManager.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \

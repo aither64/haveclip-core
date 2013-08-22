@@ -26,7 +26,7 @@
 
 #include "Sender.h"
 
-Sender::Sender(HaveClip::Encryption enc, HaveClip::Node *node, QObject *parent) :
+Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
 	QSslSocket(parent),
 	m_node(node),
 	encryption(enc),
@@ -54,7 +54,7 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 	this->content = content;
 	this->password = password;
 
-	if(encryption != HaveClip::None)
+	if(encryption != ClipboardManager::None)
 	{
 		setPeerVerifyMode(QSslSocket::VerifyNone);
 
@@ -62,10 +62,10 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 
 		switch(encryption)
 		{
-		case HaveClip::Ssl:
+		case ClipboardManager::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case HaveClip::Tls:
+		case ClipboardManager::Tls:
 			setProtocol(QSsl::TlsV1);
 			break;
 		}
@@ -204,7 +204,7 @@ void Sender::onSslError(const QList<QSslError> &errors)
 	}
 }
 
-HaveClip::Node* Sender::node()
+ClipboardManager::Node* Sender::node()
 {
 	return m_node;
 }
