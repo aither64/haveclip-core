@@ -17,12 +17,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QBuffer>
 #include <QImage>
-#include <QDomDocument>
 #include <QTextCodec>
 #include <QDateTime>
-#include <QMessageBox>
+#include <QDataStream>
 
 #include "Sender.h"
 
@@ -40,15 +38,25 @@ Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, Q
 void Sender::distribute(const ClipboardContent *content, QString password)
 {
 	/**
-	  XML protocol
-	  <haveclip>
-		<password>1234</password>
+	  Binary protocol
 
-		<clipboard mode="selection or clipboard">
-			<mimedata mimetype="text/plain">base64 encoded data</mimedata>
-			...
-		</clipboard>
-	  </haveclip>
+	  length  type                       meaning
+	   4      uint32                     magic number, identifies correct data format
+	   4      int32                      version
+	   4      int32                      message type
+	   8      quint64                    message length
+	   -      QString                    password
+
+	  for message type = ClipboardUpdate:
+	   4      int32                      mode (clipboard, selection, both)
+	   -      QStringList                formats
+	   -      QByteArray * formats.size  mime data
+	   -      QStringList                file URLs
+
+	  for message type = FileRead:
+	   -      QString                    file name
+	   8      quint64                    offset
+	   8      quint64                    number of bytes to read starting from offset
 	  */
 
 	this->content = content;
@@ -97,65 +105,41 @@ void Sender::onError(QAbstractSocket::SocketError socketError)
 
 void Sender::onConnect()
 {
-	QDomDocument doc;
-	QDomElement root = doc.createElement("haveclip");
-	doc.appendChild(root);
+	QByteArray buf;
+	QDataStream ds(&buf, QIODevice::WriteOnly);
 
-	QDomElement passEl = doc.createElement("password");
-	QDomText pass = doc.createTextNode(password);
+	ds << (quint32) PROTO_MAGIC_NUMBER;
+	ds << (qint32) PROTO_VERSION;
+	ds << (qint32) ClipboardSync;
+	ds << (quint64) 0; // Filled later
 
-	passEl.appendChild(pass);
-	root.appendChild(passEl);
+	ds << password;
 
-	QDomElement clip = doc.createElement("clipboard");
-	QString mode;
-
-	switch(content->mode)
-	{
-	case ClipboardContent::Selection:
-		mode = "selection";
-		break;
-	case ClipboardContent::Clipboard:
-		mode = "clipboard";
-		break;
-	case ClipboardContent::ClipboardAndSelection:
-		mode = "all";
-		break;
-	}
-
-	clip.setAttribute("mode", mode);
-	root.appendChild(clip);
+	ds << (qint32) content->mode;
+	ds << content->mimeData->formats();
 
 	foreach(QString mimetype, content->mimeData->formats())
 	{
-		QDomElement mimedata = doc.createElement("mimedata");
-		mimedata.setAttribute("mimetype", mimetype);
-
-		QDomText text;
-		QByteArray data;
-
 		if(mimetype == "text/html")
 		{
 			QByteArray tmp = content->mimeData->data("text/html");
 
 			QTextCodec *codec = QTextCodec::codecForHtml(tmp, QTextCodec::codecForName("utf-8"));
-			data = codec->toUnicode(tmp).toUtf8();
+			ds << codec->toUnicode(tmp).toUtf8();
+
 		} else
-			data = content->mimeData->data(mimetype);
-
-//		qDebug() << mimetype << data;
-
-		text = doc.createTextNode(data.toBase64());
-		mimedata.appendChild(text);
-
-		clip.appendChild(mimedata);
+			ds << content->mimeData->data(mimetype);
 	}
 
-	QByteArray ba = doc.toByteArray();
+	ds.device()->seek(12); // seek to message length field
 
-	qDebug() << "Distributing" << ba.size() << "bytes";
+	qDebug() << "Buf size before setting size" << buf.size();
 
-	write(ba);
+	ds << (quint64) buf.size();
+
+	qDebug() << "Distributing" << buf.size() << "bytes";
+
+	write(buf);
 
 	disconnectFromHost();
 }

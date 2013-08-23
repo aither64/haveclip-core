@@ -24,6 +24,9 @@
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
 #define HISTORY_VERSION 1
 
+#define PROTO_MAGIC_NUMBER 0x84D3C117
+#define PROTO_VERSION 1
+
 #include <QTcpServer>
 #include <QClipboard>
 #include <QSettings>

@@ -29,7 +29,7 @@ class Sender : public QSslSocket
 	Q_OBJECT
 public:
 	enum Protocol {
-		CLIPBOARD_SYNC=1
+		ClipboardSync=1
 	};
 
 	explicit Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);

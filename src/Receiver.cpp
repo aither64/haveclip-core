@@ -19,7 +19,7 @@
 
 #include <QStringList>
 #include <QImage>
-#include <QDomDocument>
+#include <QDataStream>
 
 #include "Receiver.h"
 #include "Sender.h"
@@ -63,7 +63,7 @@ void Receiver::setCertificateAndKey(QString cert, QString key)
 
 void Receiver::setAcceptPassword(QString password)
 {
-	this->password = password;
+	m_password = password;
 }
 
 void Receiver::onRead()
@@ -80,61 +80,81 @@ void Receiver::onRead()
 
 void Receiver::onDisconnect()
 {
-	QDomDocument doc;
+	QDataStream ds(&buffer, QIODevice::ReadOnly);
 
-	if(!doc.setContent(buffer))
+	quint32 magic;
+	qint32 version, type, mode;
+	quint64 length;
+	QString password;
+
+	if(buffer.size() < 20)
 	{
-		qDebug() << "Invalid message";
+		qDebug() << "Invalid message - incomplete header";
+		this->deleteLater();
 		return;
 	}
 
-	QDomElement root = doc.documentElement();
+	ds >> magic;
 
-	if(!password.isEmpty())
+	if(magic != PROTO_MAGIC_NUMBER)
 	{
-		QDomElement passwd = root.firstChildElement("password");
-
-		if(passwd.text() != password)
-		{
-			qDebug() << "Password does not match! Ignore";
-			this->deleteLater();
-			return;
-		}
+		qDebug() << "Invalid message - magic number does not match";
+		this->deleteLater();
+		return;
 	}
 
-	QDomElement clipboard = root.firstChildElement("clipboard");
-	QDomNode n = clipboard.firstChild();
+	ds >> version;
+
+	if(version != PROTO_VERSION)
+	{
+		qDebug() << "Protocol version does not match. Supported is" << PROTO_VERSION << ", received" << version;
+		this->deleteLater();
+		return;
+	}
+
+	ds >> type;
+
+	if(type != Sender::ClipboardSync)
+	{
+		qDebug() << "Unsupported message type" << type;
+		this->deleteLater();
+		return;
+	}
+
+	ds >> length;
+
+	if(length != buffer.size())
+	{
+		qDebug() << "Message size does not match! Message says" << length << ", received" << buffer.size();
+		qDebug() << "Clipboard might be corrupted";
+	}
+
+	ds >> password;
+
+	if(password != m_password)
+	{
+		qDebug() << "Password does not match!";
+		this->deleteLater();
+		return;
+	}
+
+	ds >> mode;
+
+	QStringList formats;
+	ds >> formats;
+
 	QMimeData *mimedata = new QMimeData();
 
-	while(!n.isNull())
+	foreach(QString f, formats)
 	{
-		QDomElement e = n.toElement();
+		QByteArray tmp;
+		ds >> tmp;
 
-		if(!e.isNull())
-			mimedata->setData(e.attribute("mimetype"), QByteArray::fromBase64( e.text().toAscii() ));
-
-		n = n.nextSibling();
+		mimedata->setData(f, tmp);
 	}
 
-	qDebug() << "clipboard.mode" << clipboard.attribute("mode");
-
-	QString modeAttr = clipboard.attribute("mode");
-	ClipboardContent::Mode mode;
-
-	if(modeAttr == "selection")
-		mode = ClipboardContent::Selection;
-
-	else if(modeAttr == "clipboard")
-		mode = ClipboardContent::Clipboard;
-
-	else if(modeAttr == "all")
-		mode = ClipboardContent::ClipboardAndSelection;
-
-	else
-		mode = ClipboardContent::Clipboard;
-
 	ClipboardContent *content = new ClipboardContent(
-		mode,
+		(ClipboardContent::Mode) mode,
 		mimedata
 	);
 	content->init();

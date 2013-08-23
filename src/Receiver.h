@@ -31,7 +31,7 @@ public:
 	explicit Receiver(ClipboardManager::Encryption enc, QObject *parent = 0);
 	void communicate();
 	void setCertificateAndKey(QString cert, QString key);
-	void setAcceptPassword(QString password);
+	void setAcceptPassword(QString m_password);
 	
 signals:
 	void clipboardUpdated(ClipboardContent *content);
@@ -45,7 +45,7 @@ private:
 	ClipboardManager::Encryption encryption;
 	QString certificate;
 	QString privateKey;
-	QString password;
+	QString m_password;
 
 private slots:
 	void onRead();
