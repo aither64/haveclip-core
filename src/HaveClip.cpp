@@ -163,6 +163,11 @@ void HaveClip::updateHistoryContextMenu()
 
 		if(!c->icon.isNull())
 			act->setIcon(c->icon);
+		else if(c->mode == ClipboardContent::Selection)
+			act->setIcon(QIcon(":/gfx/icons/selection.svg"));
+
+		else if(c->mode == ClipboardContent::Clipboard || c->mode == ClipboardContent::ClipboardAndSelection)
+			act->setIcon(QIcon(":/gfx/icons/clipboard.svg"));
 
 		connect(act, SIGNAL(triggered()), historySignalMapper, SLOT(map()));
 		historySignalMapper->setMapping(act, act);
