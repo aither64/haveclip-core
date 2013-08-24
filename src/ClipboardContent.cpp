@@ -54,7 +54,7 @@ void ClipboardContent::init()
 		tmp = mimeData->text();
 
 #ifdef Q_OS_LINUX
-		excerpt = Qt::escape(tmp.left(200));
+		excerpt = escape(tmp.left(200));
 
 		if(tmp.count() > 200)
 			excerpt += "<br>...";
@@ -66,7 +66,7 @@ void ClipboardContent::init()
 		tmp = mimeData->html();
 
 #ifdef Q_OS_LINUX
-		excerpt = Qt::escape(tmp.left(200));
+		excerpt = escape(tmp.left(200));
 
 		if(tmp.count() > 200)
 			excerpt += "<br>...";
@@ -310,4 +310,13 @@ void ClipboardContent::setTitle(QString &str)
 
 	if(str.count() > 30)
 		title += "...";
+}
+
+QString ClipboardContent::escape(QString str)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	return str.toHtmlEscaped();
+#else
+	return Qt::escape(str);
+#endif
 }

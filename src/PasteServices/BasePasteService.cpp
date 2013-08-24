@@ -18,6 +18,11 @@
 */
 
 #include <QDebug>
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <QUrlQuery>
+#endif
+
 #include "BasePasteService.h"
 
 BasePasteService::BasePasteService(QObject *parent) :
@@ -37,7 +42,7 @@ BasePasteService::BasePasteService(QSettings *settings, QObject *parent) :
 
 	m_label = settings->value("Label").toString();
 
-	QByteArray cert = settings->value("Certificate").toString().toAscii();
+	QByteArray cert = settings->value("Certificate").toString().toUtf8();
 
 	if(!cert.isEmpty())
 		certificate = QSslCertificate::fromData(cert).first();
@@ -114,7 +119,12 @@ void BasePasteService::onSslError(QNetworkReply *reply, const QList<QSslError> &
 
 QByteArray BasePasteService::buildPostData(QHash<QString, QString> &data)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	QUrlQuery post;
+#else
 	QUrl post;
+#endif
+
 	QHashIterator<QString, QString> i(data);
 
 	while(i.hasNext())
@@ -124,7 +134,11 @@ QByteArray BasePasteService::buildPostData(QHash<QString, QString> &data)
 		post.addQueryItem(i.key(), i.value());
 	}
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	return post.toString(QUrl::FullyEncoded).replace('+', "%2B").toUtf8();
+#else
 	return post.encodedQuery().replace('+', "%2B");
+#endif
 }
 
 int BasePasteService::langIndexFromName(Language* langs, QString name)

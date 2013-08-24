@@ -56,15 +56,15 @@ void CertificateTrustDialog::init(QString to, const QList<QSslError> &errors)
 	QSslCertificate cert = errors.first().certificate();
 
 	// issued to
-	ui->toCommonNameLabel->setText( cert.subjectInfo(QSslCertificate::CommonName) );
-	ui->toOrgLabel->setText( cert.subjectInfo(QSslCertificate::Organization) );
-	ui->toOrgUnitLabel->setText( cert.subjectInfo(QSslCertificate::OrganizationalUnitName) );
+	ui->toCommonNameLabel->setText( subjectInfo(cert, QSslCertificate::CommonName) );
+	ui->toOrgLabel->setText( subjectInfo(cert, QSslCertificate::Organization) );
+	ui->toOrgUnitLabel->setText( subjectInfo(cert, QSslCertificate::OrganizationalUnitName) );
 	ui->serialLabel->setText( formatDigest(cert.serialNumber()) );
 
 	// issuer
-	ui->byCommonNameLabel->setText( cert.issuerInfo(QSslCertificate::CommonName) );
-	ui->byOrgLabel->setText( cert.issuerInfo(QSslCertificate::Organization) );
-	ui->byOrgUnitLabel->setText( cert.issuerInfo(QSslCertificate::OrganizationalUnitName) );
+	ui->byCommonNameLabel->setText( issuerInfo(cert, QSslCertificate::CommonName) );
+	ui->byOrgLabel->setText( issuerInfo(cert, QSslCertificate::Organization) );
+	ui->byOrgUnitLabel->setText( issuerInfo(cert, QSslCertificate::OrganizationalUnitName) );
 
 	// validity
 	ui->issuedOnLabel->setText( cert.effectiveDate().toString("d/M/yyyy") );
@@ -88,4 +88,22 @@ QString CertificateTrustDialog::formatDigest(QByteArray raw)
 bool CertificateTrustDialog::remember()
 {
 	return ui->rememberCheckBox->isChecked();
+}
+
+QString CertificateTrustDialog::subjectInfo(QSslCertificate &cert, QSslCertificate::SubjectInfo info)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	return cert.subjectInfo(info).join(" ");
+#else
+	return cert.subjectInfo(info);
+#endif
+}
+
+QString CertificateTrustDialog::issuerInfo(QSslCertificate &cert, QSslCertificate::SubjectInfo info)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	return cert.issuerInfo(info).join(" ");
+#else
+	return cert.issuerInfo(info);
+#endif
 }

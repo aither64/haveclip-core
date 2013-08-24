@@ -190,6 +190,7 @@ void HaveClip::updateToolTip()
 #else
 	tip = "%1";
 #endif
+
 	trayIcon->setToolTip(tip.arg(tr("HaveClip")));
 }
 

@@ -74,7 +74,11 @@ void Sender::distribute(const ClipboardContent *content, QString password)
 			setProtocol(QSsl::SslV3);
 			break;
 		case ClipboardManager::Tls:
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+			setProtocol(QSsl::TlsV1_0);
+#else
 			setProtocol(QSsl::TlsV1);
+#endif
 			break;
 		}
 

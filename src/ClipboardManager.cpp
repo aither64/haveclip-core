@@ -524,7 +524,11 @@ void ClipboardManager::popToFront(ClipboardContent *content)
 
 QString ClipboardManager::historyFilePath()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	return QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/history.dat";
+#else
 	return QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/history.dat";
+#endif
 }
 
 void ClipboardManager::deleteHistoryFile()
@@ -542,7 +546,7 @@ void ClipboardManager::loadNodes()
 		n->host = node.section(':', 0, 0);
 		n->port = node.section(':', 1, 1).toUShort();
 
-		QByteArray cert = m_settings->value("Node:" + n->toString() + "/Certificate").toString().toAscii();
+		QByteArray cert = m_settings->value("Node:" + n->toString() + "/Certificate").toString().toUtf8();
 
 		if(!cert.isEmpty())
 			n->certificate = QSslCertificate::fromData(cert).first();
@@ -730,6 +734,12 @@ void ClipboardManager::loadHistory()
 
 	QDataStream ds(&file);
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	ds.setVersion(QDataStream::Qt_5_1);
+#else
+	ds.setVersion(QDataStream::Qt_4_6);
+#endif
+
 	quint32 magic;
 	qint32 version;
 	ClipboardContent *cnt;
@@ -775,6 +785,12 @@ void ClipboardManager::saveHistory()
 	}
 
 	QDataStream ds(&file);
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	ds.setVersion(QDataStream::Qt_5_1);
+#else
+	ds.setVersion(QDataStream::Qt_4_6);
+#endif
 
 	ds << (quint32) HISTORY_MAGIC_NUMBER;
 	ds << (qint32) HISTORY_VERSION;

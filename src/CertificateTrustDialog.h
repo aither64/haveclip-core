@@ -43,6 +43,9 @@ public:
 
 private:
 	Ui::CertificateTrustDialog *ui;
+
+	QString subjectInfo(QSslCertificate &cert, QSslCertificate::SubjectInfo info);
+	QString issuerInfo(QSslCertificate &cert, QSslCertificate::SubjectInfo info);
 };
 
 #endif // CERTIFICATETRUSTDIALOG_H

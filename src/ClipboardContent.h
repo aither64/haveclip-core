@@ -66,6 +66,7 @@ public:
 private:
 	Preview* createItemPreview(QImage &img);
 	void setTitle(QString &str);
+	QString escape(QString str);
 };
 
 inline QDataStream& operator<<(QDataStream &ds, const ClipboardContent &cnt)
