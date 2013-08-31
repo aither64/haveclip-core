@@ -19,6 +19,11 @@
 
 #include <QApplication>
 #include <QTextCodec>
+
+#ifdef Q_OS_LINUX
+#include <signal.h>
+#endif
+
 #include "HaveClip.h"
 
 int main(int argc, char *argv[])
@@ -35,6 +40,13 @@ int main(int argc, char *argv[])
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf8"));
 
 	QApplication a(argc, argv);
+
+#ifdef Q_OS_LINUX
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = ClipboardManager::gracefullyExit;
+	sigaction(SIGTERM, &sa, NULL);
+#endif
 
 	HaveClip hc;
 	

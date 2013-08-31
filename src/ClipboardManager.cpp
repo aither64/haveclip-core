@@ -243,6 +243,13 @@ void ClipboardManager::distributeCurrentClipboard()
 	distributeClipboard(m_currentItem);
 }
 
+void ClipboardManager::gracefullyExit(int sig)
+{
+	qDebug() << "Gracefully exit";
+
+	qApp->quit();
+}
+
 void ClipboardManager::jumpTo(ClipboardContent *content)
 {
 	popToFront(content);

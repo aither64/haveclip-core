@@ -91,6 +91,7 @@ public:
 	void setPassword(QString pass);
 	void setPasteServices(QList<BasePasteService*> services);
 	void distributeCurrentClipboard();
+	static void gracefullyExit(int sig);
 
 signals:
 	void listenFailed(QString error);
