@@ -131,8 +131,6 @@ void ClipboardItem::init()
 
 ClipboardItem::~ClipboardItem()
 {
-	qDebug() << "ClipboardItem: delete" << this << toPlainText();
-
 	if(preview)
 		delete preview;
 

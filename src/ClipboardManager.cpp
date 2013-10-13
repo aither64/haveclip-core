@@ -64,7 +64,10 @@ ClipboardManager::ClipboardManager(QObject *parent) :
       uniteCalled(false)
 {
 	m_instance = this;
-	serialExceptions << "gedit";
+	serialExceptions
+		<< "gedit"
+		<< "main" // VirtualBox
+		<< "Caja";
 
 	clipboard = QApplication::clipboard();
 
@@ -135,7 +138,8 @@ void ClipboardManager::start()
 	m_history->init();
 
 	// Start server
-	startListening();
+	if(shouldListen())
+		startListening();
 
 	// Load contents of clipboard
 	clipboardChanged();
@@ -286,12 +290,22 @@ bool ClipboardManager::eventFilter(void *message)
 }
 #endif // INCLUDE_SERIAL_MODE
 
+bool ClipboardManager::shouldDistribute() const
+{
+	return m_clipSync && m_clipSnd;
+}
+
+bool ClipboardManager::shouldListen() const
+{
+	return m_clipSync && m_clipRecv;
+}
+
 void ClipboardManager::jumpTo(ClipboardItem *content)
 {
 	m_history->jumpTo(content);
 	updateClipboard(content, true);
 
-	if(m_clipSnd)
+	if(shouldDistribute())
 		distributeClipboard(content);
 }
 
@@ -301,9 +315,8 @@ void ClipboardManager::saveSettings()
 	m_settings->setValue("History/Size", m_history->stackSize());
 	m_settings->setValue("History/Save", m_history->isSaving());
 
-	// FIXME
-//	if(!m_histSave)
-//		deleteHistoryFile();
+	if(!m_history->isEnabled())
+		m_history->deleteFile();
 
 	m_settings->setValue("Selection/Mode", m_selectionMode);
 	m_settings->setValue("Sync/Synchronize", m_syncMode);
@@ -397,7 +410,9 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 		if(currentItem->mode != ClipboardItem::ClipboardAndSelection && currentItem->mode != cnt->mode)
 		{
 			currentItem->mode = ClipboardItem::ClipboardAndSelection;
-			distributeClipboard(currentItem);
+
+			if(shouldDistribute())
+				distributeClipboard(currentItem);
 		}
 
 		delete cnt;
@@ -424,7 +439,7 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 	if(m_selectionMode == ClipboardManager::United)
 		uniteClipboards(currentItem);
 
-	if(m_clipSnd)
+	if(shouldDistribute())
 		distributeClipboard(currentItem);
 
 	clipboardChangedCalled = false;
@@ -546,30 +561,34 @@ void ClipboardManager::loadNodes()
 
 void ClipboardManager::toggleSharedClipboard(bool enabled)
 {
+	toggleClipboardSending(enabled, true);
+	toggleClipboardReceiving(enabled, true);
+
 	m_clipSync = enabled;
-
-	toggleClipboardSending(enabled);
-	toggleClipboardReceiving(enabled);
-
 	m_settings->setValue("Sync/Enable", m_clipSync);
 }
 
-void ClipboardManager::toggleClipboardSending(bool enabled)
+void ClipboardManager::toggleClipboardSending(bool enabled, bool masterChange)
 {
-	m_clipSnd = enabled;
+	if(masterChange)
+		return;
 
+	m_clipSnd = enabled;
 	m_settings->setValue("Sync/Send", m_clipSnd);
 }
 
-void ClipboardManager::toggleClipboardReceiving(bool enabled)
+void ClipboardManager::toggleClipboardReceiving(bool enabled, bool masterChange)
 {
-	if(enabled && !m_clipRecv)
+	if(enabled && !shouldListen())
 		startListening();
-	else if(!enabled && m_clipRecv)
+	else if(!enabled && shouldListen())
 		close();
 
-	m_clipRecv = enabled;
-	m_settings->setValue("Sync/Receive", m_clipRecv);
+	if(!masterChange)
+	{
+		m_clipRecv = enabled;
+		m_settings->setValue("Sync/Receive", m_clipRecv);
+	}
 }
 
 #ifdef INCLUDE_SERIAL_MODE

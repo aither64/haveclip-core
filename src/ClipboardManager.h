@@ -103,6 +103,8 @@ public:
 #ifdef INCLUDE_SERIAL_MODE
 	static bool eventFilter(void *message);
 #endif
+	inline bool shouldDistribute() const;
+	inline bool shouldListen() const;
 
 signals:
 	void listenFailed(QString error);
@@ -113,8 +115,8 @@ public slots:
 	void jumpTo(ClipboardItem *content);
 	void saveSettings();
 	void toggleSharedClipboard(bool enabled);
-	void toggleClipboardSending(bool enabled);
-	void toggleClipboardReceiving(bool enabled);
+	void toggleClipboardSending(bool enabled, bool masterChange = false);
+	void toggleClipboardReceiving(bool enabled, bool masterChange = false);
 #ifdef INCLUDE_SERIAL_MODE
 	void toggleSerialMode();
 #endif
