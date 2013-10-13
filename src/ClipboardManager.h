@@ -22,10 +22,16 @@
 
 #define VERSION "0.9.0-dev"
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
-#define HISTORY_VERSION 1
+#define HISTORY_VERSION 2
 
 #define PROTO_MAGIC_NUMBER 0x84D3C117
 #define PROTO_VERSION 1
+
+#include <QtGlobal>
+
+#ifdef Q_WS_X11
+#define INCLUDE_SERIAL_MODE 1
+#endif
 
 #include <QTcpServer>
 #include <QClipboard>
@@ -36,7 +42,10 @@
 #include <QSslError>
 
 #include "PasteServices/BasePasteService.h"
-#include "ClipboardContent.h"
+#include "ClipboardItem.h"
+#include "History.h"
+
+class History;
 
 class ClipboardManager : public QTcpServer
 {
@@ -72,16 +81,15 @@ public:
 	void start();
 	QSettings *settings();
 	QList<BasePasteService*> pasteServices();
-	QList<ClipboardContent*> history();
-	ClipboardContent *currentItem();
-	bool isHistoryEnabled();
+	History* history();
+	ClipboardItem *currentItem();
 	bool isSyncEnabled();
 	bool isSendingEnabled();
 	bool isReceivingEnabled();
+#ifdef INCLUDE_SERIAL_MODE
+	bool isSerialModeEnabled() const;
+#endif
 	void setNodes(QStringList nodes);
-	void setHistoryEnabled(bool enable);
-	void setHistorySize(int size);
-	void setHistorySave(bool save);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
 	void setListenHost(QString host, quint16 port);
@@ -92,32 +100,35 @@ public:
 	void setPasteServices(QList<BasePasteService*> services);
 	void distributeCurrentClipboard();
 	static void gracefullyExit(int sig);
+#ifdef INCLUDE_SERIAL_MODE
+	static bool eventFilter(void *message);
+#endif
 
 signals:
 	void listenFailed(QString error);
-	void historyChanged();
 	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 
 public slots:
-	void jumpTo(ClipboardContent *content);
+	void jumpTo(ClipboardItem *content);
 	void saveSettings();
 	void toggleSharedClipboard(bool enabled);
 	void toggleClipboardSending(bool enabled);
 	void toggleClipboardReceiving(bool enabled);
+#ifdef INCLUDE_SERIAL_MODE
+	void toggleSerialMode();
+#endif
 
 private:
+	static ClipboardManager *m_instance;
+	static QStringList serialExceptions;
 	QSettings *m_settings;
 	QClipboard *clipboard;
 	QList<Node*> pool;
-	QList<ClipboardContent*> m_history;
-	ClipboardContent *m_currentItem;
+	History* m_history;
 	bool m_clipSync;
 	bool m_clipSnd;
 	bool m_clipRecv;
-	bool m_histEnabled;
-	int m_histSize;
-	bool m_histSave;
 	SelectionMode m_selectionMode;
 	SynchronizeMode m_syncMode;
 	QString m_host;
@@ -128,19 +139,19 @@ private:
 	QString m_password;
 	QList<BasePasteService*> m_pasteServices;
 	QTimer *selectionTimer;
+	QTimer *serialTimer;
 	bool clipboardChangedCalled;
 	bool uniteCalled;
+#ifdef INCLUDE_SERIAL_MODE
+	bool m_serialMode;
+#endif
 
 #ifdef Q_WS_X11
 	bool isUserSelecting();
 #endif
-	void uniteClipboards(ClipboardContent *content);
-	void ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode);
-	void distributeClipboard(ClipboardContent *content, bool deleteLater = false);
-	void addToHistory(ClipboardContent *content);
-	void popToFront(ClipboardContent *content);
-	QString historyFilePath();
-	void deleteHistoryFile();
+	void uniteClipboards(ClipboardItem *content);
+	void ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode);
+	void distributeClipboard(ClipboardItem *content, bool deleteLater = false);
 	void updateToolTip();
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
@@ -150,16 +161,15 @@ private:
 
 private slots:
 	void clipboardChanged();
-	void clipboardChanged(QClipboard::Mode m);
+	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
 	void incomingConnection(int handle);
-	void updateClipboard(ClipboardContent *content, bool fromHistory = false);
+	void updateClipboard(ClipboardItem *content, bool fromHistory = false);
 	void listenOnHost(const QHostInfo &m_host);
 #ifdef Q_WS_X11
 	void checkSelection();
 #endif
-	void loadHistory();
-	void saveHistory();
 	void receivePasteUrl(QUrl url);
+	void nextSerialClipboard();
 	
 };
 

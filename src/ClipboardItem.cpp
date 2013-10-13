@@ -27,31 +27,38 @@
 #include <QPixmap>
 #include <QDebug>
 
-#include "ClipboardContent.h"
+#include "ClipboardItem.h"
 
-ClipboardContent::Preview::~Preview()
+ClipboardItem::Preview::~Preview()
 {
 	QFile::remove(path);
 }
 
-ClipboardContent::ClipboardContent(ClipboardContent::Mode m, QMimeData *data) :
-	preview(0),
-	mode(m),
-	mimeData(data)
+ClipboardItem::ClipboardItem() :
+	ClipboardContainer(),
+	preview(0)
 {
-	foreach(QString f, mimeData->formats())
+}
+
+ClipboardItem::ClipboardItem(ClipboardItem::Mode m, QMimeData *data) :
+	ClipboardItem()
+{
+	mode = m;
+	m_mimeData = data;
+
+	foreach(QString f, m_mimeData->formats())
 	{
 		if(f.indexOf('/') != -1)
 			formats << f;
 	}
 }
 
-void ClipboardContent::init()
+void ClipboardItem::init()
 {
 	QString tmp;
 
-	if(mimeData->hasText()) {
-		tmp = mimeData->text();
+	if(m_mimeData->hasText()) {
+		tmp = m_mimeData->text();
 
 #ifdef Q_OS_LINUX
 		excerpt = escape(tmp.left(200));
@@ -62,8 +69,8 @@ void ClipboardContent::init()
 
 		setTitle(tmp);
 
-	} else if(mimeData->hasHtml()) {
-		tmp = mimeData->html();
+	} else if(m_mimeData->hasHtml()) {
+		tmp = m_mimeData->html();
 
 #ifdef Q_OS_LINUX
 		excerpt = escape(tmp.left(200));
@@ -74,8 +81,8 @@ void ClipboardContent::init()
 
 		setTitle(tmp);
 
-	} else if(mimeData->hasUrls()) {
-		QList<QUrl> urls = mimeData->urls();
+	} else if(m_mimeData->hasUrls()) {
+		QList<QUrl> urls = m_mimeData->urls();
 
 #ifdef Q_OS_LINUX
 		foreach(QUrl u, urls.mid(0, 5))
@@ -91,11 +98,11 @@ void ClipboardContent::init()
 
 		setTitle(tmp);
 
-	} else if(mimeData->hasImage()) {
+	} else if(m_mimeData->hasImage()) {
 		// For some reason, QMimeData::imageData().value<QImage>() does not work on copied QMimeData
 		// Loaded image is null
 		QImage img;
-		img.loadFromData(mimeData->data("application/x-qt-image"));
+		img.loadFromData(m_mimeData->data("application/x-qt-image"));
 
 		excerpt = QObject::tr("Image");
 		setTitle(excerpt);
@@ -122,37 +129,124 @@ void ClipboardContent::init()
 	}
 }
 
-ClipboardContent::~ClipboardContent()
+ClipboardItem::~ClipboardItem()
 {
+	qDebug() << "ClipboardItem: delete" << this << toPlainText();
+
 	if(preview)
 		delete preview;
 
-	delete mimeData;
+	delete m_mimeData;
 }
 
-QString ClipboardContent::toPlainText()
+ClipboardContainer::ItemType ClipboardItem::type() const
+{
+	return BasicItem;
+}
+
+//ClipboardItem::Mode ClipboardItem::mode()
+//{
+//	return m_mode;
+//}
+
+//QString ClipboardItem::title()
+//{
+//	return m_title;
+//}
+
+//QString ClipboardItem::excerpt()
+//{
+//	return m_excerpt;
+//}
+
+//QIcon ClipboardItem::icon()
+//{
+//	return m_icon;
+//}
+
+//ClipboardItem::Preview* ClipboardItem::preview()
+//{
+//	return m_preview;
+//}
+
+//QStringList ClipboardItem::formats()
+//{
+//	return m_formats;
+//}
+
+ClipboardItem* ClipboardItem::item()
+{
+	return this;
+}
+
+bool ClipboardItem::hasNext() const
+{
+	return false;
+}
+
+ClipboardItem* ClipboardItem::nextItem()
+{
+	return 0;
+}
+
+bool ClipboardItem::hasPrevious() const
+{
+	return false;
+}
+
+ClipboardItem* ClipboardItem::previousItem()
+{
+	return 0;
+}
+
+void ClipboardItem::addItem(ClipboardItem *item, bool allowDuplicity)
+{
+
+}
+
+void ClipboardItem::seal()
+{
+
+}
+
+bool ClipboardItem::isSealed() const
+{
+	return false;
+}
+
+QList<ClipboardItem*> ClipboardItem::items()
+{
+	return QList<ClipboardItem*>();
+}
+
+QMimeData* ClipboardItem::mimeData()
+{
+	return m_mimeData;
+}
+
+QString ClipboardItem::toPlainText()
 {
 	QString ret;
 
-	if(mimeData->hasText())
-		ret = mimeData->text();
+	if(m_mimeData->hasText())
+		ret = m_mimeData->text();
 
-	else if(mimeData->hasHtml())
-		ret = mimeData->html();
+	else if(m_mimeData->hasHtml())
+		ret = m_mimeData->html();
 
-	else if(mimeData->hasUrls()) {
-		foreach(QUrl u, mimeData->urls())
+	else if(m_mimeData->hasUrls()) {
+		foreach(QUrl u, m_mimeData->urls())
 			ret += u.toString() + "\n";
 	}
 
 	return ret;
 }
 
-bool ClipboardContent::operator==(const ClipboardContent &other) const
+bool ClipboardItem::operator==(const ClipboardItem &other) const
 {
-	if(mode == ClipboardContent::Selection || other.mode == ClipboardContent::Selection)
+	if(mode == ClipboardContainer::Selection || other.mode == ClipboardContainer::Selection)
 	{
-		return compareMimeData(mimeData, other.mimeData, true);
+		return compareMimeData(m_mimeData, other.m_mimeData, true);
 
 	} else {
 		if(formats != other.formats)
@@ -160,7 +254,7 @@ bool ClipboardContent::operator==(const ClipboardContent &other) const
 
 		foreach(QString f, formats)
 		{
-			if(mimeData->data(f) != other.mimeData->data(f))
+			if(m_mimeData->data(f) != other.m_mimeData->data(f))
 				return false;
 		}
 
@@ -168,102 +262,23 @@ bool ClipboardContent::operator==(const ClipboardContent &other) const
 	}
 }
 
-bool ClipboardContent::operator!=(const ClipboardContent &other) const
+bool ClipboardItem::operator!=(const ClipboardItem &other) const
 {
 	return !(*this == other);
 }
 
-bool ClipboardContent::compareMimeData(const QMimeData *data1, const QMimeData *data2, bool isSelection)
+void ClipboardItem::save(QDataStream &ds) const
 {
-	if(isSelection)
-	{
-		if(data1->hasText() != data2->hasText())
-			return false;
+	saveType(ds);
 
-		if(data1->hasText() && data1->text() != data2->text())
-			return false;
-
-		return true;
-
-	} else {
-		QStringList formats1, formats2;
-
-		foreach(QString f, data1->formats())
-			if(f.indexOf('/') != -1)
-				formats1 << f;
-
-		foreach(QString f, data2->formats())
-			if(f.indexOf('/') != -1)
-				formats2 << f;
-
-		if(formats1 != formats2)
-			return false;
-
-		foreach(QString f, formats1)
-			if(data1->data(f) != data2->data(f))
-				return false;
-
-		return true;
-	}
-}
-
-void ClipboardContent::save(QDataStream &ds) const
-{
 	ds << (qint32) mode;
 	ds << formats;
 
 	foreach(QString f, formats)
-		ds << mimeData->data(f);
+		ds << m_mimeData->data(f);
 }
 
-ClipboardContent* ClipboardContent::load(QDataStream &ds)
-{
-	qint32 mode;
-	QStringList formats;
-	QMimeData *md = new QMimeData();
-	QByteArray data;
-
-	ds >> mode;
-	ds >> formats;
-
-	foreach(QString f, formats)
-	{
-		ds >> data;
-		md->setData(f, data);
-	}
-
-	return new ClipboardContent((ClipboardContent::Mode) mode, md);
-}
-
-ClipboardContent::Mode ClipboardContent::qtModeToOwn(QClipboard::Mode m)
-{
-	switch(m)
-	{
-	case QClipboard::Selection:
-		return Selection;
-	case QClipboard::Clipboard:
-		return Clipboard;
-	case QClipboard::FindBuffer:
-		return FindBuffer;
-	}
-}
-
-QClipboard::Mode ClipboardContent::ownModeToQt(Mode m)
-{
-	switch(m)
-	{
-	case Selection:
-		return QClipboard::Selection;
-	case Clipboard:
-		return QClipboard::Clipboard;
-	case FindBuffer:
-		return QClipboard::FindBuffer;
-	default:
-		return QClipboard::Clipboard;
-	}
-}
-
-ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)
+ClipboardItem::Preview* ClipboardItem::createItemPreview(QImage &img)
 {
 	Preview *preview = 0;
 	QTemporaryFile tmp(QDir::tempPath() + "/haveclip-preview-XXXXXX");
@@ -285,7 +300,7 @@ ClipboardContent::Preview* ClipboardContent::createItemPreview(QImage &img)
 	return preview;
 }
 
-void ClipboardContent::setTitle(QString &str)
+void ClipboardItem::setTitle(QString &str)
 {
 	QString s = str.trimmed(), tmp;
 	int start = 0, end;
@@ -312,7 +327,7 @@ void ClipboardContent::setTitle(QString &str)
 		title += "...";
 }
 
-QString ClipboardContent::escape(QString str)
+QString ClipboardItem::escape(QString str)
 {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 	return str.toHtmlEscaped();

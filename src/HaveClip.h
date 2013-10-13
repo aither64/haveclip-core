@@ -31,7 +31,7 @@
 
 #include "ClipboardManager.h"
 #include "PasteServices/BasePasteService.h"
-#include "ClipboardContent.h"
+#include "ClipboardItem.h"
 
 class HaveClip : public QObject
 {
@@ -55,8 +55,11 @@ private:
 	QAction *menuSeparator;
 	QAction *clipSndAction;
 	QAction *clipRecvAction;
-	QList<ClipboardContent*> history;
-	QHash<QAction*, ClipboardContent*> historyHash;
+#ifdef INCLUDE_SERIAL_MODE
+	QAction *serialModeAction;
+#endif
+	QList<ClipboardContainer*> history;
+	QHash<QAction*, ClipboardItem*> historyHash;
 	QList<QAction*> pasteActions;
 	QSignalMapper *historySignalMapper;
 	QSignalMapper *pasteSignalMapper;
@@ -71,6 +74,9 @@ private slots:
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 	void toggleSharedClipboard(bool enabled);
 	void historyActionClicked(QObject *obj);
+#ifdef INCLUDE_SERIAL_MODE
+	void toggleSerialMode();
+#endif
 	void showSettings();
 	void showAbout();
 	void determineCertificateTrust(ClipboardManager::Node *node, const QList<QSslError> errors);

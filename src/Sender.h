@@ -40,12 +40,12 @@ signals:
 	void sslFatalError(const QList<QSslError> errors);
 	
 public slots:
-	void distribute(const ClipboardContent *content, QString password);
+	void distribute(ClipboardItem *content, QString password);
 	void setDeleteContentOnSent(bool del);
 
 private:
 	ClipboardManager::Node *m_node;
-	const ClipboardContent *content;
+	ClipboardItem *content;
 	ClipboardManager::Encryption encryption;
 	QString password;
 	bool deleteContent;

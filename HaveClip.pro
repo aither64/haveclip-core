@@ -14,7 +14,6 @@ SOURCES +=\
     src/HaveClip.cpp \
     src/AboutDialog.cpp \
     src/SettingsDialog.cpp \
-    src/ClipboardContent.cpp \
     src/Sender.cpp \
     src/Receiver.cpp \
     src/CertificateTrustDialog.cpp \
@@ -28,12 +27,15 @@ SOURCES +=\
     src/LoginDialog.cpp \
     src/Main.cpp \
     src/PasteServices/PasteServiceEditDialog.cpp \
-    src/ClipboardManager.cpp
+    src/ClipboardManager.cpp \
+    src/ClipboardItem.cpp \
+    src/ClipboardSerialBatch.cpp \
+    src/History.cpp \
+    src/ClipboardContainer.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
     src/SettingsDialog.h \
-    src/ClipboardContent.h \
     src/Sender.h \
     src/Receiver.h \
     src/CertificateTrustDialog.h \
@@ -46,7 +48,11 @@ HEADERS  += src/HaveClip.h \
     src/PasteServices/Pastebin/Pastebin.h \
     src/LoginDialog.h \
     src/PasteServices/PasteServiceEditDialog.h \
-    src/ClipboardManager.h
+    src/ClipboardManager.h \
+    src/ClipboardItem.h \
+    src/ClipboardSerialBatch.h \
+    src/History.h \
+    src/ClipboardContainer.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \

@@ -157,8 +157,8 @@ void Receiver::onDisconnect()
 		mimedata->setData(f, tmp);
 	}
 
-	ClipboardContent *content = new ClipboardContent(
-		(ClipboardContent::Mode) mode,
+	ClipboardItem *content = new ClipboardItem(
+		(ClipboardItem::Mode) mode,
 		mimedata
 	);
 	content->init();

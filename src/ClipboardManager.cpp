@@ -28,12 +28,12 @@
 #include <QLabel>
 #include <QTimer>
 #include <QTextDocument>
-#include <QFileInfo>
-#include <QDesktopServices>
-#include <QDir>
+#include <QAbstractEventDispatcher>
 
 #include "Receiver.h"
 #include "Sender.h"
+
+#include "ClipboardSerialBatch.h"
 
 #include "PasteServices/PasteDialog.h"
 #include "PasteServices/Stikked/Stikked.h"
@@ -43,8 +43,12 @@
 #include <QX11Info>
 extern "C" {
 	#include <X11/Xlib.h>
+	#include <X11/Xatom.h>
 }
 #endif
+
+ClipboardManager *ClipboardManager::m_instance = 0;
+QStringList ClipboardManager::serialExceptions;
 
 QString ClipboardManager::Node::toString()
 {
@@ -53,13 +57,20 @@ QString ClipboardManager::Node::toString()
 
 ClipboardManager::ClipboardManager(QObject *parent) :
 	QTcpServer(parent),
-	m_currentItem(0),
 	clipboardChangedCalled(false),
-	uniteCalled(false)
+#ifdef INCLUDE_SERIAL_MODE
+	m_serialMode(false),
+ #endif
+      uniteCalled(false)
 {
+	m_instance = this;
+	serialExceptions << "gedit";
+
 	clipboard = QApplication::clipboard();
 
-	connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(saveHistory()));
+	m_history = new History(this);
+
+	connect(qApp, SIGNAL(aboutToQuit()), m_history, SLOT(save()));
 
 #if defined Q_OS_LINUX
 	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
@@ -78,6 +89,11 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	selectionTimer->setSingleShot(true);
 
 	connect(selectionTimer, SIGNAL(timeout()), this, SLOT(checkSelection()));
+
+	serialTimer = new QTimer(this);
+	serialTimer->setSingleShot(true);
+
+	connect(serialTimer, SIGNAL(timeout()), this, SLOT(nextSerialClipboard()));
 #endif
 
 	// Load settings
@@ -92,9 +108,9 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	m_clipSnd = m_settings->value("Sync/Send", true).toBool();
 	m_clipRecv = m_settings->value("Sync/Receive", true).toBool();
 
-	m_histEnabled = m_settings->value("History/Enable", true).toBool();
-	m_histSize = m_settings->value("History/Size", 10).toInt();
-	m_histSave = m_settings->value("History/Save", true).toBool();
+	m_history->setEnabled(m_settings->value("History/Enable", true).toBool());
+	m_history->setStackSize(m_settings->value("History/Size", 10).toInt());
+	m_history->setSave(m_settings->value("History/Save", true).toBool());
 
 	m_selectionMode = (ClipboardManager::SelectionMode) m_settings->value("Selection/Mode", ClipboardManager::Separate).toInt();
 	m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Sync/Synchronize", ClipboardManager::Both).toInt();
@@ -111,22 +127,22 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 ClipboardManager::~ClipboardManager()
 {
 	qDeleteAll(pool);
-	qDeleteAll(m_history);
 }
 
 void ClipboardManager::start()
 {
 	// Load history
-	if(m_histSave)
-		loadHistory();
-	else
-		deleteHistoryFile();
+	m_history->init();
 
 	// Start server
 	startListening();
 
 	// Load contents of clipboard
 	clipboardChanged();
+
+#ifdef INCLUDE_SERIAL_MODE
+	QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
+#endif
 }
 
 QSettings* ClipboardManager::settings()
@@ -139,19 +155,9 @@ QList<BasePasteService*> ClipboardManager::pasteServices()
 	return m_pasteServices;
 }
 
-QList<ClipboardContent*> ClipboardManager::history()
+History* ClipboardManager::history()
 {
 	return m_history;
-}
-
-ClipboardContent* ClipboardManager::currentItem()
-{
-	return m_currentItem;
-}
-
-bool ClipboardManager::isHistoryEnabled()
-{
-	return m_histEnabled;
 }
 
 bool ClipboardManager::isSyncEnabled()
@@ -169,25 +175,17 @@ bool ClipboardManager::isReceivingEnabled()
 	return m_clipRecv;
 }
 
+#ifdef INCLUDE_SERIAL_MODE
+bool ClipboardManager::isSerialModeEnabled() const
+{
+	return m_serialMode;
+}
+#endif
+
 void ClipboardManager::setNodes(QStringList nodes)
 {
 	m_settings->setValue("Pool/Nodes", nodes);
 	loadNodes();
-}
-
-void ClipboardManager::setHistoryEnabled(bool enable)
-{
-	m_histEnabled = enable;
-}
-
-void ClipboardManager::setHistorySize(int size)
-{
-	m_histSize = size;
-}
-
-void ClipboardManager::setHistorySave(bool save)
-{
-	m_histSave = save;
 }
 
 void ClipboardManager::setSelectionMode(SelectionMode m)
@@ -240,7 +238,7 @@ void ClipboardManager::setPasteServices(QList<BasePasteService*> services)
 
 void ClipboardManager::distributeCurrentClipboard()
 {
-	distributeClipboard(m_currentItem);
+	distributeClipboard(m_history->currentItem());
 }
 
 void ClipboardManager::gracefullyExit(int sig)
@@ -250,9 +248,47 @@ void ClipboardManager::gracefullyExit(int sig)
 	qApp->quit();
 }
 
-void ClipboardManager::jumpTo(ClipboardContent *content)
+#ifdef INCLUDE_SERIAL_MODE
+bool ClipboardManager::eventFilter(void *message)
 {
-	popToFront(content);
+	if(!m_instance->m_serialMode)
+		return false;
+
+	XEvent *event = static_cast<XEvent *>(message);
+
+	if(event->type == SelectionRequest)
+	{
+		XSelectionRequestEvent *sel = reinterpret_cast<XSelectionRequestEvent*>(event);
+
+		qDebug() << "Someone wants our selection!" << (sel->selection == XA_PRIMARY ? "PRIMARY" : "CLIPBOARD") << sel->requestor;
+
+		char *name;
+
+		if(XFetchName(QX11Info::display(), sel->requestor, &name))
+		{
+			if(serialExceptions.contains(name))
+			{
+				qDebug() << "Serial mode: ignoring" << name;
+				XFree(name);
+
+				return false;
+			}
+
+			qDebug() << "Serial mode: accept" << name;
+
+			XFree(name);
+		}
+
+		m_instance->serialTimer->start(100);
+	}
+
+	return false;
+}
+#endif // INCLUDE_SERIAL_MODE
+
+void ClipboardManager::jumpTo(ClipboardItem *content)
+{
+	m_history->jumpTo(content);
 	updateClipboard(content, true);
 
 	if(m_clipSnd)
@@ -261,12 +297,13 @@ void ClipboardManager::jumpTo(ClipboardContent *content)
 
 void ClipboardManager::saveSettings()
 {
-	m_settings->setValue("History/Enable", m_histEnabled);
-	m_settings->setValue("History/Size", m_histSize);
-	m_settings->setValue("History/Save", m_histSave);
+	m_settings->setValue("History/Enable", m_history->isEnabled());
+	m_settings->setValue("History/Size", m_history->stackSize());
+	m_settings->setValue("History/Save", m_history->isSaving());
 
-	if(!m_histSave)
-		deleteHistoryFile();
+	// FIXME
+//	if(!m_histSave)
+//		deleteHistoryFile();
 
 	m_settings->setValue("Selection/Mode", m_selectionMode);
 	m_settings->setValue("Sync/Synchronize", m_syncMode);
@@ -308,7 +345,7 @@ void ClipboardManager::clipboardChanged()
 	clipboardChanged(QClipboard::Clipboard);
 }
 
-void ClipboardManager::clipboardChanged(QClipboard::Mode m)
+void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 {
 	if(clipboardChangedCalled)
 	{
@@ -336,7 +373,7 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m)
 	}
 #endif
 
-	ClipboardContent::Mode mode = ClipboardContent::qtModeToOwn(m);
+	ClipboardItem::Mode mode = ClipboardItem::qtModeToOwn(m);
 	const QMimeData *mimeData = clipboard->mimeData(m);
 	QMimeData *copiedMimeData;
 
@@ -352,23 +389,24 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m)
 	} else
 		copiedMimeData = copyMimeData(mimeData);
 
-	ClipboardContent *cnt = new ClipboardContent(mode, copiedMimeData);
+	ClipboardItem *cnt = new ClipboardItem(mode, copiedMimeData);
+	ClipboardItem *currentItem = m_history->currentItem();
 
-	if(m_currentItem && *m_currentItem == *cnt)
+	if(currentItem && *currentItem == *cnt)
 	{
-		if(m_currentItem->mode != ClipboardContent::ClipboardAndSelection && m_currentItem->mode != cnt->mode)
+		if(currentItem->mode != ClipboardItem::ClipboardAndSelection && currentItem->mode != cnt->mode)
 		{
-			m_currentItem->mode = ClipboardContent::ClipboardAndSelection;
-			distributeClipboard(m_currentItem);
+			currentItem->mode = ClipboardItem::ClipboardAndSelection;
+			distributeClipboard(currentItem);
 		}
 
 		delete cnt;
 		clipboardChangedCalled = false;
 		return;
 
-	} else if(m_currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
+	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
 		qDebug() << "Clipboard is empty, reset";
-		updateClipboard(m_currentItem, true);
+		updateClipboard(currentItem, true);
 		delete cnt;
 		clipboardChangedCalled = false;
 		return;
@@ -376,20 +414,23 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m)
 
 	cnt->init();
 
-	addToHistory(cnt);
+	currentItem = m_history->add(cnt, !fromSelection);
 
-	emit historyChanged();
+#ifdef INCLUDE_SERIAL_MODE
+	if(m_serialMode)
+		ensureClipboardContent(currentItem->item(), m);
+#endif
 
 	if(m_selectionMode == ClipboardManager::United)
-		uniteClipboards(m_currentItem);
+		uniteClipboards(currentItem);
 
 	if(m_clipSnd)
-		distributeClipboard(m_currentItem);
+		distributeClipboard(currentItem);
 
 	clipboardChangedCalled = false;
 }
 
-void ClipboardManager::distributeClipboard(ClipboardContent *content, bool deleteLater)
+void ClipboardManager::distributeClipboard(ClipboardItem *content, bool deleteLater)
 {
 	foreach(Node *n, pool)
 	{
@@ -429,7 +470,7 @@ void ClipboardManager::incomingConnection(int handle)
 	Receiver *c = new Receiver(m_encryption, this);
 	c->setSocketDescriptor(handle);
 
-	connect(c, SIGNAL(clipboardUpdated(ClipboardContent*)), this, SLOT(updateClipboard(ClipboardContent*)));
+	connect(c, SIGNAL(clipboardUpdated(ClipboardItem*)), this, SLOT(updateClipboard(ClipboardItem*)));
 
 	c->setCertificateAndKey(m_certificate, m_privateKey);
 	c->setAcceptPassword(m_password);
@@ -439,28 +480,24 @@ void ClipboardManager::incomingConnection(int handle)
 /**
   Called when new clipboard is received via network
   */
-void ClipboardManager::updateClipboard(ClipboardContent *content, bool fromHistory)
+void ClipboardManager::updateClipboard(ClipboardItem *content, bool fromHistory)
 {
 	qDebug() << "Update clipboard";
 
-	m_currentItem = content;
-
-	if(m_selectionMode == ClipboardManager::United || content->mode == ClipboardContent::ClipboardAndSelection)
+	if(m_selectionMode == ClipboardManager::United || content->mode == ClipboardItem::ClipboardAndSelection)
 	{
 		uniteClipboards(content);
 	} else
-		clipboard->setMimeData(copyMimeData(content->mimeData), ClipboardContent::ownModeToQt(content->mode));
+		clipboard->setMimeData(copyMimeData(content->mimeData()), ClipboardItem::ownModeToQt(content->mode));
 
 	// FIXME
 	if(!fromHistory)
-		addToHistory(content);
-
-	emit historyChanged();
+		m_history->add(content, false);
 
 	qDebug() << "Update clipboard end";
 }
 
-void ClipboardManager::uniteClipboards(ClipboardContent *content)
+void ClipboardManager::uniteClipboards(ClipboardItem *content)
 {
 	if(uniteCalled)
 	{
@@ -476,71 +513,16 @@ void ClipboardManager::uniteClipboards(ClipboardContent *content)
 	uniteCalled = false;
 }
 
-void ClipboardManager::ensureClipboardContent(ClipboardContent *content, QClipboard::Mode mode)
+void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode)
 {
-	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
-	{
-		qDebug() << "Update" << mode;
-		clipboard->setMimeData(copyMimeData(content->mimeData), mode);
-	} else {
-		qDebug() << "No need to update" << mode;
-	}
-}
-
-void ClipboardManager::addToHistory(ClipboardContent *content)
-{
-	if(!m_histEnabled)
-	{
-		if(m_currentItem)
-			delete m_currentItem;
-
-		m_currentItem = content;
-
-		return;
-	}
-
-	foreach(ClipboardContent *c, m_history)
-	{
-		if(*c == *content)
-		{
-			m_currentItem = c;
-
-			if(m_currentItem->mode != content->mode)
-				m_currentItem->mode = ClipboardContent::ClipboardAndSelection;
-
-			if(c != content)
-				delete content;
-
-			popToFront(m_currentItem);
-			return;
-		}
-	}
-
-	if(m_history.size() >= m_histSize)
-		delete m_history.takeFirst();
-
-	m_history << content;
-	m_currentItem = content;
-}
-
-void ClipboardManager::popToFront(ClipboardContent *content)
-{
-	m_history.removeOne(content);
-	m_history << content;
-}
-
-QString ClipboardManager::historyFilePath()
-{
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-	return QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/history.dat";
-#else
-	return QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/history.dat";
-#endif
-}
-
-void ClipboardManager::deleteHistoryFile()
-{
-	QFile::remove(historyFilePath());
+	qDebug() << "Ensure clipboard content" << content->toPlainText();
+//	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
+//	{
+//		qDebug() << "Update" << mode;
+		clipboard->setMimeData(copyMimeData(content->mimeData()), mode);
+//	} else {
+//		qDebug() << "No need to update" << mode;
+//	}
 }
 
 void ClipboardManager::loadNodes()
@@ -589,6 +571,23 @@ void ClipboardManager::toggleClipboardReceiving(bool enabled)
 	m_clipRecv = enabled;
 	m_settings->setValue("Sync/Receive", m_clipRecv);
 }
+
+#ifdef INCLUDE_SERIAL_MODE
+void ClipboardManager::toggleSerialMode()
+{
+	m_serialMode = !m_serialMode;
+
+	if(m_serialMode)
+	{
+		qDebug() << "Serial mode enabled";
+		m_history->beginSerialMode();
+
+	} else {
+		qDebug() << "Serial mode disabled";
+		m_history->endSerialMode();
+	}
+}
+#endif
 
 QMimeData* ClipboardManager::copyMimeData(const QMimeData *mimeReference)
 {
@@ -718,93 +717,27 @@ void ClipboardManager::receivePasteUrl(QUrl url)
 	clipboard->setMimeData(mime);
 }
 
+void ClipboardManager::nextSerialClipboard()
+{
+	qDebug() << "ClipboardManager::nextSerialClipboard";
+
+	ClipboardContainer *cont = m_history->currentContainer();
+
+	if(cont->hasNext())
+	{
+		clipboardChangedCalled = true;
+		updateClipboard(cont->nextItem(), true);
+		clipboardChangedCalled = false;
+	}
+}
+
 #ifdef Q_WS_X11
 void ClipboardManager::checkSelection()
 {
 	if(!isUserSelecting())
 	{
 		qDebug() << "User stopped selecting";
-		clipboardChanged(QClipboard::Selection); // FIXME: user selections is then double checked in clipboardChanged again
+		clipboardChanged(QClipboard::Selection, true); // FIXME: user selections is then double checked in clipboardChanged again
 	}
 }
 #endif
-
-void ClipboardManager::loadHistory()
-{
-	QFile file(historyFilePath());
-
-	if(!file.open(QIODevice::ReadOnly))
-	{
-		qDebug() << "Unable to open history file for reading";
-		return;
-	}
-
-	QDataStream ds(&file);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-	ds.setVersion(QDataStream::Qt_5_1);
-#else
-	ds.setVersion(QDataStream::Qt_4_6);
-#endif
-
-	quint32 magic;
-	qint32 version;
-	ClipboardContent *cnt;
-
-	ds >> magic;
-
-	if(magic != HISTORY_MAGIC_NUMBER)
-	{
-		qDebug() << "Bad file format: magic number does not match";
-		return;
-	}
-
-	ds >> version;
-
-	while(!ds.atEnd())
-	{
-		cnt = ClipboardContent::load(ds);
-		cnt->init();
-
-		m_history << cnt;
-	}
-
-	file.close();
-}
-
-void ClipboardManager::saveHistory()
-{
-	if(!m_histSave)
-		return;
-
-	QFileInfo fi(historyFilePath());
-	QDir d;
-	d.mkpath(fi.absolutePath());
-
-	qDebug() << "Save history to" << fi.absoluteFilePath();
-
-	QFile file(fi.absoluteFilePath());
-
-	if(!file.open(QIODevice::WriteOnly))
-	{
-		qDebug() << "Unable to open history file for writing";
-		return;
-	}
-
-	QDataStream ds(&file);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-	ds.setVersion(QDataStream::Qt_5_1);
-#else
-	ds.setVersion(QDataStream::Qt_4_6);
-#endif
-
-	ds << (quint32) HISTORY_MAGIC_NUMBER;
-	ds << (qint32) HISTORY_VERSION;
-
-	// Saved from oldest to newest
-	foreach(ClipboardContent *cnt, m_history)
-		ds << *cnt;
-
-	file.close();
-}

@@ -43,7 +43,7 @@ HaveClip::HaveClip(QObject *parent) :
 	manager = new ClipboardManager(this);
 	settings = manager->settings();
 
-	connect(manager, SIGNAL(historyChanged()), this, SLOT(updateHistory()));
+	connect(manager->history(), SIGNAL(historyChanged()), this, SLOT(updateHistory()));
 	connect(manager, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SLOT(determineCertificateTrust(ClipboardManager::Node*,QList<QSslError>)));
 	connect(manager, SIGNAL(sslFatalError(QList<QSslError>)), this, SLOT(sslFatalError(QList<QSslError>)));
 
@@ -90,7 +90,13 @@ HaveClip::HaveClip(QObject *parent) :
 	clipRecvAction->setEnabled(manager->isSyncEnabled());
 	connect(clipRecvAction, SIGNAL(toggled(bool)), manager, SLOT(toggleClipboardReceiving(bool)));
 
+#ifdef INCLUDE_SERIAL_MODE
 	menu->addSeparator();
+	serialModeAction = menu->addAction(tr("Begin serial mode"), this, SLOT(toggleSerialMode()));
+#endif // INCLUDE_SERIAL_MODE
+
+	menu->addSeparator();
+
 	menuSeparator = menu->addSeparator();
 
 	loadPasteServices();
@@ -138,7 +144,7 @@ void HaveClip::toggleSharedClipboard(bool enabled)
 
 void HaveClip::updateHistoryContextMenu()
 {
-	QHashIterator<QAction*, ClipboardContent*> i(historyHash);
+	QHashIterator<QAction*, ClipboardItem*> i(historyHash);
 
 	while(i.hasNext())
 	{
@@ -150,33 +156,71 @@ void HaveClip::updateHistoryContextMenu()
 		i.key()->deleteLater();
 	}
 
-	if(!manager->isHistoryEnabled())
+	historyMenu->clear();
+
+	if(!manager->history()->isEnabled())
 		return;
 
-	history = manager->history();
+	history = manager->history()->items();
 
 	QAction *lastAction = 0;
 
-	foreach(ClipboardContent *c, history)
+	foreach(ClipboardContainer *cont, history)
 	{
-		QAction *act = new QAction(c->title, this);
+		switch(cont->type())
+		{
+#ifdef INCLUDE_SERIAL_MODE
+		case ClipboardItem::SerialBatch: {
+			QMenu *menu = new QMenu(cont->title);
 
-		if(!c->icon.isNull())
-			act->setIcon(c->icon);
-		else if(c->mode == ClipboardContent::Selection)
-			act->setIcon(QIcon(":/gfx/icons/selection.svg"));
+			foreach(ClipboardItem *child, cont->items())
+			{
+				QAction *act = menu->addAction(child->title);
 
-		else if(c->mode == ClipboardContent::Clipboard || c->mode == ClipboardContent::ClipboardAndSelection)
-			act->setIcon(QIcon(":/gfx/icons/clipboard.svg"));
+				if(!child->icon.isNull())
+					act->setIcon(child->icon);
+				else if(child->mode == ClipboardItem::Selection)
+					act->setIcon(QIcon(":/gfx/icons/selection.svg"));
 
-		connect(act, SIGNAL(triggered()), historySignalMapper, SLOT(map()));
-		historySignalMapper->setMapping(act, act);
+				else if(child->mode == ClipboardItem::Clipboard || child->mode == ClipboardItem::ClipboardAndSelection)
+					act->setIcon(QIcon(":/gfx/icons/clipboard.svg"));
 
-		historyMenu->insertAction(lastAction ? lastAction : historySeparator, act);
+				connect(act, SIGNAL(triggered()), historySignalMapper, SLOT(map()));
+				historySignalMapper->setMapping(act, act);
 
-		historyHash.insert(act, c);
+				historyHash.insert(act, child);
+			}
 
-		lastAction = act;
+			lastAction = historyMenu->insertMenu(lastAction ? lastAction : historySeparator, menu);
+
+			continue;
+		}
+#endif // INCLUDE_SERIAL_MODE
+
+		case ClipboardItem::BasicItem: {
+			ClipboardItem *it = cont->item();
+			QAction *act = new QAction(it->title, this);
+
+			if(!it->icon.isNull())
+				act->setIcon(it->icon);
+			else if(it->mode == ClipboardItem::Selection)
+				act->setIcon(QIcon(":/gfx/icons/selection.svg"));
+
+			else if(it->mode == ClipboardItem::Clipboard || it->mode == ClipboardItem::ClipboardAndSelection)
+				act->setIcon(QIcon(":/gfx/icons/clipboard.svg"));
+
+			connect(act, SIGNAL(triggered()), historySignalMapper, SLOT(map()));
+			historySignalMapper->setMapping(act, act);
+
+			historyMenu->insertAction(lastAction ? lastAction : historySeparator, act);
+
+			historyHash.insert(act, it);
+
+			lastAction = act;
+
+			break;
+		}
+		}
 	}
 }
 
@@ -186,7 +230,7 @@ void HaveClip::updateToolTip()
 
 #if defined Q_OS_LINUX
 	tip = "<p>%1</p>";
-	tip += "<pre>" + manager->currentItem()->excerpt + "</pre>";
+	tip += "<pre>" + manager->history()->currentItem()->excerpt + "</pre>";
 #else
 	tip = "%1";
 #endif
@@ -205,15 +249,29 @@ void HaveClip::historyActionClicked(QObject *obj)
 	}
 }
 
+#ifdef INCLUDE_SERIAL_MODE
+void HaveClip::toggleSerialMode()
+{
+	manager->toggleSerialMode();
+
+	if(manager->isSerialModeEnabled())
+		serialModeAction->setText(tr("End serial mode"));
+	else
+		serialModeAction->setText(tr("Begin serial mode"));
+}
+#endif // INCLUDE_SERIAL_MODE
+
 void HaveClip::showSettings()
 {
 	SettingsDialog *dlg = new SettingsDialog(settings);
 
 	if(dlg->exec() == QDialog::Accepted)
 	{
-		manager->setHistoryEnabled(dlg->historyEnabled());
-		manager->setHistorySize(dlg->historySize());
-		manager->setHistorySave(dlg->saveHistory());
+		History *h = manager->history();
+
+		h->setEnabled(dlg->historyEnabled());
+		h->setStackSize(dlg->historySize());
+		h->setSave(dlg->saveHistory());
 
 		manager->setSelectionMode(dlg->selectionMode());
 		manager->setSyncMode(dlg->synchronizationMode());
@@ -332,14 +390,14 @@ void HaveClip::simplePaste(QObject *obj)
 		break;
 	}
 
-	service->paste(manager->currentItem()->toPlainText());
+	service->paste(manager->history()->currentItem()->toPlainText());
 }
 
 void HaveClip::advancedPaste(QObject *obj)
 {
 	BasePasteService *service = static_cast<BasePasteService*>(obj);
 
-	PasteDialog *dlg = new PasteDialog(manager->currentItem()->mimeData->text(), service);
+	PasteDialog *dlg = new PasteDialog(manager->history()->currentItem()->mimeData()->text(), service);
 
 	if(dlg->exec() == QDialog::Accepted)
 	{

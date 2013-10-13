@@ -34,7 +34,7 @@ public:
 	void setAcceptPassword(QString m_password);
 	
 signals:
-	void clipboardUpdated(ClipboardContent *content);
+	void clipboardUpdated(ClipboardItem *content);
 	
 public slots:
 

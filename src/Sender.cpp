@@ -35,7 +35,7 @@ Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, Q
 	connect(this, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
 }
 
-void Sender::distribute(const ClipboardContent *content, QString password)
+void Sender::distribute(ClipboardItem *content, QString password)
 {
 	/**
 	  Binary protocol
@@ -120,19 +120,19 @@ void Sender::onConnect()
 	ds << password;
 
 	ds << (qint32) content->mode;
-	ds << content->mimeData->formats();
+	ds << content->mimeData()->formats();
 
-	foreach(QString mimetype, content->mimeData->formats())
+	foreach(QString mimetype, content->mimeData()->formats())
 	{
 		if(mimetype == "text/html")
 		{
-			QByteArray tmp = content->mimeData->data("text/html");
+			QByteArray tmp = content->mimeData()->data("text/html");
 
 			QTextCodec *codec = QTextCodec::codecForHtml(tmp, QTextCodec::codecForName("utf-8"));
 			ds << codec->toUnicode(tmp).toUtf8();
 
 		} else
-			ds << content->mimeData->data(mimetype);
+			ds << content->mimeData()->data(mimetype);
 	}
 
 	ds.device()->seek(12); // seek to message length field

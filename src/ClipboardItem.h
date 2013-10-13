@@ -24,16 +24,11 @@
 #include <QMimeData>
 #include <QIcon>
 
-class ClipboardContent
+#include "ClipboardContainer.h"
+
+class ClipboardItem : public ClipboardContainer
 {
 public:
-	enum Mode {
-		Selection,
-		Clipboard,
-		FindBuffer,
-		ClipboardAndSelection
-	};
-
 	struct Preview
 	{
 		QString path;
@@ -43,37 +38,52 @@ public:
 		~Preview();
 	};
 
-	Mode mode;
-	QMimeData *mimeData;
-	QString title;
 	QString excerpt;
 	QIcon icon;
 	Preview *preview;
 	QStringList formats;
 
-	ClipboardContent(Mode m, QMimeData *data);
-	~ClipboardContent();
-	void init();
+	ClipboardItem(Mode m, QMimeData *data);
+	~ClipboardItem();
+	virtual void init();
+	virtual ItemType type() const;
+//	virtual Mode mode();
+//	virtual QString title();
+//	virtual QString excerpt();
+//	virtual QIcon icon();
+//	virtual Preview* preview();
+//	virtual QStringList formats();
+	virtual ClipboardItem* item();
+	virtual bool hasNext() const;
+	virtual ClipboardItem* nextItem();
+	virtual bool hasPrevious() const;
+	virtual ClipboardItem* previousItem();
+	virtual void addItem(ClipboardItem *item, bool allowDuplicity);
+	virtual void seal();
+	virtual bool isSealed() const;
+	virtual QList<ClipboardItem*> items();
+	QMimeData* mimeData();
 	QString toPlainText();
-	bool operator==(const ClipboardContent &other) const;
-	bool operator!=(const ClipboardContent &other) const;
-	static bool compareMimeData(const QMimeData *data1, const QMimeData *data2, bool isSelection);
-	void save(QDataStream &ds) const;
-	static ClipboardContent* load(QDataStream &ds);
-	static Mode qtModeToOwn(QClipboard::Mode m);
-	static QClipboard::Mode ownModeToQt(Mode m);
+	bool operator==(const ClipboardItem &other) const;
+	bool operator!=(const ClipboardItem &other) const;
+	virtual void save(QDataStream &ds) const;
+
+protected:
+	ClipboardItem();
+
+	QMimeData *m_mimeData;
 
 private:
+//	Mode m_mode;
+//	QString m_title;
+//	QString m_excerpt;
+//	QIcon m_icon;
+//	Preview *m_preview;
+//	QStringList m_formats;
+
 	Preview* createItemPreview(QImage &img);
 	void setTitle(QString &str);
 	QString escape(QString str);
 };
-
-inline QDataStream& operator<<(QDataStream &ds, const ClipboardContent &cnt)
-{
-	cnt.save(ds);
-
-	return ds;
-}
 
 #endif // CLIPBOARDCONTENT_H
