@@ -30,8 +30,8 @@
 #include <QTextDocument>
 #include <QAbstractEventDispatcher>
 
-#include "Receiver.h"
-#include "Sender.h"
+#include "Network/Receiver.h"
+#include "Network/Sender.h"
 
 #include "ClipboardSerialBatch.h"
 

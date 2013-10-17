@@ -1,9 +1,28 @@
+/*
+  HaveClip
+
+  Copyright (C) 2013 Jakub Skokan <aither@havefun.cz>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "Conversation.h"
 
-#include "NetworkCommands/ClipboardUpdateReady.h"
-#include "NetworkCommands/ClipboardUpdateConfirm.h"
-#include "NetworkCommands/ClipboardUpdateSend.h"
-#include "NetworkCommands/Confirm.h"
+#include "Commands/ClipboardUpdateReady.h"
+#include "Commands/ClipboardUpdateConfirm.h"
+#include "Commands/ClipboardUpdateSend.h"
+#include "Commands/Confirm.h"
 
 Conversation::Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: QObject(parent),
@@ -24,7 +43,7 @@ Communicator::Role Conversation::currentRole() const
 	return m_cmds[m_currentCmd]->role();
 }
 
-NetworkCommand::Type Conversation::currentCommandType() const
+BaseCommand::Type Conversation::currentCommandType() const
 {
 	return m_cmds[m_currentCmd]->type();
 }
@@ -52,25 +71,25 @@ void Conversation::send(QDataStream &ds)
 	moveToNextCommand();
 }
 
-NetworkCommand* Conversation::addCommand(NetworkCommand::Type t, Communicator::Role r)
+BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 {
-	NetworkCommand *cmd;
+	BaseCommand *cmd;
 
 	switch(t)
 	{
-	case NetworkCommand::ClipboardUpdateReady:
+	case BaseCommand::ClipboardUpdateReady:
 		cmd = new ClipboardUpdateReady(m_cont, r);
 		break;
 
-	case NetworkCommand::ClipboardUpdateConfirm:
+	case BaseCommand::ClipboardUpdateConfirm:
 		cmd = new ClipboardUpdateConfirm(m_cont, r);
 		break;
 
-	case NetworkCommand::ClipboardUpdateSend:
+	case BaseCommand::ClipboardUpdateSend:
 		cmd = new ClipboardUpdateSend(m_cont, r);
 		break;
 
-	case NetworkCommand::Confirm:
+	case BaseCommand::Confirm:
 		cmd = new Confirm(m_cont, r);
 		break;
 	}
@@ -100,7 +119,7 @@ void Conversation::moveToNextCommand()
 	}
 }
 
-void Conversation::nextCommand(NetworkCommand::Type lastCmd, int index)
+void Conversation::nextCommand(BaseCommand::Type lastCmd, int index)
 {
 
 }

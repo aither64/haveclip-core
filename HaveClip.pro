@@ -14,8 +14,8 @@ SOURCES +=\
     src/HaveClip.cpp \
     src/AboutDialog.cpp \
     src/SettingsDialog.cpp \
-    src/Sender.cpp \
-    src/Receiver.cpp \
+    src/Network/Sender.cpp \
+    src/Network/Receiver.cpp \
     src/CertificateTrustDialog.cpp \
     src/PasteServices/BasePasteService.cpp \
     src/PasteServices/Stikked/Stikked.cpp \
@@ -32,20 +32,20 @@ SOURCES +=\
     src/ClipboardSerialBatch.cpp \
     src/History.cpp \
     src/ClipboardContainer.cpp \
-    src/Conversation.cpp \
-    src/Conversations/ClipboardUpdate.cpp \
-    src/NetworkCommand.cpp \
-    src/NetworkCommands/ClipboardUpdateReady.cpp \
-    src/NetworkCommands/ClipboardUpdateSend.cpp \
-    src/Communicator.cpp \
-    src/NetworkCommands/ClipboardUpdateConfirm.cpp \
-    src/NetworkCommands/Confirm.cpp
+    src/Network/Conversation.cpp \
+    src/Network/Conversations/ClipboardUpdate.cpp \
+    src/Network/Commands/ClipboardUpdateReady.cpp \
+    src/Network/Commands/ClipboardUpdateSend.cpp \
+    src/Network/Communicator.cpp \
+    src/Network/Commands/ClipboardUpdateConfirm.cpp \
+    src/Network/Commands/Confirm.cpp \
+    src/Network/Command.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
     src/SettingsDialog.h \
-    src/Sender.h \
-    src/Receiver.h \
+    src/Network/Sender.h \
+    src/Network/Receiver.h \
     src/CertificateTrustDialog.h \
     src/PasteServices/BasePasteService.h \
     src/PasteServices/Stikked/Stikked.h \
@@ -61,14 +61,14 @@ HEADERS  += src/HaveClip.h \
     src/ClipboardSerialBatch.h \
     src/History.h \
     src/ClipboardContainer.h \
-    src/Conversation.h \
-    src/Conversations/ClipboardUpdate.h \
-    src/NetworkCommand.h \
-    src/NetworkCommands/ClipboardUpdateReady.h \
-    src/NetworkCommands/ClipboardUpdateSend.h \
-    src/Communicator.h \
-    src/NetworkCommands/ClipboardUpdateConfirm.h \
-    src/NetworkCommands/Confirm.h
+    src/Network/Conversation.h \
+    src/Network/Conversations/ClipboardUpdate.h \
+    src/Network/Commands/ClipboardUpdateReady.h \
+    src/Network/Commands/ClipboardUpdateSend.h \
+    src/Network/Communicator.h \
+    src/Network/Commands/ClipboardUpdateConfirm.h \
+    src/Network/Commands/Confirm.h \
+    src/Network/Command.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \
