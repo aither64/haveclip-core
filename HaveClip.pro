@@ -31,7 +31,15 @@ SOURCES +=\
     src/ClipboardItem.cpp \
     src/ClipboardSerialBatch.cpp \
     src/History.cpp \
-    src/ClipboardContainer.cpp
+    src/ClipboardContainer.cpp \
+    src/Conversation.cpp \
+    src/Conversations/ClipboardUpdate.cpp \
+    src/NetworkCommand.cpp \
+    src/NetworkCommands/ClipboardUpdateReady.cpp \
+    src/NetworkCommands/ClipboardUpdateSend.cpp \
+    src/Communicator.cpp \
+    src/NetworkCommands/ClipboardUpdateConfirm.cpp \
+    src/NetworkCommands/Confirm.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -52,7 +60,15 @@ HEADERS  += src/HaveClip.h \
     src/ClipboardItem.h \
     src/ClipboardSerialBatch.h \
     src/History.h \
-    src/ClipboardContainer.h
+    src/ClipboardContainer.h \
+    src/Conversation.h \
+    src/Conversations/ClipboardUpdate.h \
+    src/NetworkCommand.h \
+    src/NetworkCommands/ClipboardUpdateReady.h \
+    src/NetworkCommands/ClipboardUpdateSend.h \
+    src/Communicator.h \
+    src/NetworkCommands/ClipboardUpdateConfirm.h \
+    src/NetworkCommands/Confirm.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \
@@ -101,7 +117,8 @@ OTHER_FILES += \
     android/res/values-nl/strings.xml \
     android/version.xml \
     android/AndroidManifest.xml \
-    CHANGELOG
+    CHANGELOG \
+    doc/protocol.md
 
 win32:RC_FILE = src/HaveClip.rc
 

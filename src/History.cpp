@@ -127,6 +127,23 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 #endif // INCLUDE_SERIAL_MODE
 
 		case ClipboardItem::BasicItem:
+#ifdef INCLUDE_SERIAL_MODE
+			if(m_serialInit)
+			{
+				m_currentContainer = new ClipboardSerialBatch(item);
+				m_items << m_currentContainer;
+
+				m_serialInit = false;
+
+				if(m_items.size() >= m_size)
+					delete m_items.takeFirst();
+
+				emit historyChanged();
+
+				return m_currentContainer->item();
+			}
+#endif // INCLUDE_SERIAL_MODE
+
 			foreach(ClipboardContainer *cont, m_items)
 			{
 				ClipboardItem *it = cont->item();
@@ -153,24 +170,7 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 			if(m_items.size() >= m_size)
 				delete m_items.takeFirst();
 
-#ifdef INCLUDE_SERIAL_MODE
-			if(m_serialInit)
-			{
-				m_currentContainer = new ClipboardSerialBatch(item);
-				m_items << m_currentContainer;
-
-				m_serialInit = false;
-
-				emit historyChanged();
-
-				return m_currentContainer->item();
-
-			} else
-				m_items << item;
-
-#else
 			m_items << item;
-#endif // INCLUDE_SERIAL_MODE
 
 			break;
 		}

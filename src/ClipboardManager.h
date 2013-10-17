@@ -25,7 +25,7 @@
 #define HISTORY_VERSION 2
 
 #define PROTO_MAGIC_NUMBER 0x84D3C117
-#define PROTO_VERSION 1
+#define PROTO_VERSION 2
 
 #include <QtGlobal>
 
@@ -153,7 +153,7 @@ private:
 #endif
 	void uniteClipboards(ClipboardItem *content);
 	void ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode);
-	void distributeClipboard(ClipboardItem *content, bool deleteLater = false);
+	void distributeClipboard(ClipboardItem *content);
 	void updateToolTip();
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
@@ -165,7 +165,7 @@ private slots:
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
 	void incomingConnection(int handle);
-	void updateClipboard(ClipboardItem *content, bool fromHistory = false);
+	void updateClipboard(ClipboardContainer *content, bool fromHistory = false);
 	void listenOnHost(const QHostInfo &m_host);
 #ifdef Q_WS_X11
 	void checkSelection();

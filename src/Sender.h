@@ -22,39 +22,25 @@
 
 #include <QSslSocket>
 #include <QMimeData>
-#include "HaveClip.h"
 
-class Sender : public QSslSocket
+#include "Communicator.h"
+
+class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	enum Protocol {
-		ClipboardSync=1
-	};
-
 	explicit Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
 	ClipboardManager::Node *node();
-	
-signals:
-	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
-	void sslFatalError(const QList<QSslError> errors);
-	
+
 public slots:
 	void distribute(ClipboardItem *content, QString password);
-	void setDeleteContentOnSent(bool del);
+
+protected slots:
+	virtual void onError(QAbstractSocket::SocketError socketError);
+	virtual void onSslError(const QList<QSslError> &errors);
 
 private:
 	ClipboardManager::Node *m_node;
-	ClipboardItem *content;
-	ClipboardManager::Encryption encryption;
-	QString password;
-	bool deleteContent;
-
-private slots:
-	void onError(QAbstractSocket::SocketError socketError);
-	void onSslError(const QList<QSslError> &errors);
-	void onConnect();
-	void onDisconnect();
 	
 };
 

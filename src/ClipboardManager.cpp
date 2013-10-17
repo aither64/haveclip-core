@@ -445,12 +445,11 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 	clipboardChangedCalled = false;
 }
 
-void ClipboardManager::distributeClipboard(ClipboardItem *content, bool deleteLater)
+void ClipboardManager::distributeClipboard(ClipboardItem *content)
 {
 	foreach(Node *n, pool)
 	{
 		Sender *d = new Sender(m_encryption, n, this);
-		d->setDeleteContentOnSent(deleteLater);
 
 		connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
@@ -485,29 +484,30 @@ void ClipboardManager::incomingConnection(int handle)
 	Receiver *c = new Receiver(m_encryption, this);
 	c->setSocketDescriptor(handle);
 
-	connect(c, SIGNAL(clipboardUpdated(ClipboardItem*)), this, SLOT(updateClipboard(ClipboardItem*)));
+	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboard(ClipboardContainer*)));
 
 	c->setCertificateAndKey(m_certificate, m_privateKey);
-	c->setAcceptPassword(m_password);
+	c->setPassword(m_password);
 	c->communicate();
 }
 
 /**
   Called when new clipboard is received via network
   */
-void ClipboardManager::updateClipboard(ClipboardItem *content, bool fromHistory)
+void ClipboardManager::updateClipboard(ClipboardContainer *cont, bool fromHistory)
 {
 	qDebug() << "Update clipboard";
-
-	if(m_selectionMode == ClipboardManager::United || content->mode == ClipboardItem::ClipboardAndSelection)
-	{
-		uniteClipboards(content);
-	} else
-		clipboard->setMimeData(copyMimeData(content->mimeData()), ClipboardItem::ownModeToQt(content->mode));
+	ClipboardItem *it = cont->item();
 
 	// FIXME
 	if(!fromHistory)
-		m_history->add(content, false);
+		it = m_history->add(it, false);
+
+	if(m_selectionMode == ClipboardManager::United || it->mode == ClipboardItem::ClipboardAndSelection)
+	{
+		uniteClipboards(it);
+	} else
+		clipboard->setMimeData(copyMimeData(it->mimeData()), ClipboardItem::ownModeToQt(it->mode));
 
 	qDebug() << "Update clipboard end";
 }

@@ -23,44 +23,21 @@
 #include <QDataStream>
 
 #include "Sender.h"
+#include "Conversations/ClipboardUpdate.h"
 
 Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
-	QSslSocket(parent),
-	m_node(node),
-	encryption(enc),
-	deleteContent(false)
+	Communicator(parent),
+	m_node(node)
 {
-	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
-	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
-	connect(this, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
+	encryption = enc;
 }
 
 void Sender::distribute(ClipboardItem *content, QString password)
 {
-	/**
-	  Binary protocol
+	m_password = password;
+	m_conversation = new ClipboardUpdate(Communicator::Send, content);
 
-	  length  type                       meaning
-	   4      uint32                     magic number, identifies correct data format
-	   4      int32                      version
-	   4      int32                      message type
-	   8      quint64                    message length
-	   -      QString                    password
-
-	  for message type = ClipboardUpdate:
-	   4      int32                      mode (clipboard, selection, both)
-	   -      QStringList                formats
-	   -      QByteArray * formats.size  mime data
-	   -      QStringList                file URLs
-
-	  for message type = FileRead:
-	   -      QString                    file name
-	   8      quint64                    offset
-	   8      quint64                    number of bytes to read starting from offset
-	  */
-
-	this->content = content;
-	this->password = password;
+	conversationSignals();
 
 	if(encryption != ClipboardManager::None)
 	{
@@ -96,63 +73,9 @@ void Sender::distribute(ClipboardItem *content, QString password)
 	  */
 }
 
-void Sender::setDeleteContentOnSent(bool del)
-{
-	deleteContent = del;
-}
-
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Unable to reach" << m_node->host << ":" << socketError;
-	this->deleteLater();
-}
-
-void Sender::onConnect()
-{
-	QByteArray buf;
-	QDataStream ds(&buf, QIODevice::WriteOnly);
-
-	ds << (quint32) PROTO_MAGIC_NUMBER;
-	ds << (qint32) PROTO_VERSION;
-	ds << (qint32) ClipboardSync;
-	ds << (quint64) 0; // Filled later
-
-	ds << password;
-
-	ds << (qint32) content->mode;
-	ds << content->mimeData()->formats();
-
-	foreach(QString mimetype, content->mimeData()->formats())
-	{
-		if(mimetype == "text/html")
-		{
-			QByteArray tmp = content->mimeData()->data("text/html");
-
-			QTextCodec *codec = QTextCodec::codecForHtml(tmp, QTextCodec::codecForName("utf-8"));
-			ds << codec->toUnicode(tmp).toUtf8();
-
-		} else
-			ds << content->mimeData()->data(mimetype);
-	}
-
-	ds.device()->seek(12); // seek to message length field
-
-	qDebug() << "Buf size before setting size" << buf.size();
-
-	ds << (quint64) buf.size();
-
-	qDebug() << "Distributing" << buf.size() << "bytes";
-
-	write(buf);
-
-	disconnectFromHost();
-}
-
-void Sender::onDisconnect()
-{
-	if(deleteContent)
-		delete content;
-
 	this->deleteLater();
 }
 
