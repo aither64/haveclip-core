@@ -22,13 +22,15 @@
 
 #include "../Command.h"
 
-class Confirm : public BaseCommand
-{
-public:
-	Confirm(ClipboardContainer *cont, Communicator::Role r);
-	virtual Type type() const;
-	virtual void receive(QDataStream &ds);
-	virtual void send(QDataStream &ds);
-};
+namespace Commands {
+	class Confirm : public BaseCommand
+	{
+	public:
+		Confirm(ClipboardContainer *cont, Communicator::Role r);
+		virtual Type type() const;
+		virtual void receive(QDataStream &ds);
+		virtual void send(QDataStream &ds);
+	};
+}
 
 #endif // CONFIRM_H

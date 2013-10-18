@@ -19,6 +19,8 @@
 
 #include "ClipboardUpdateReady.h"
 
+using namespace Commands;
+
 ClipboardUpdateReady::ClipboardUpdateReady(ClipboardContainer *cont, Communicator::Role r)
 	: BaseCommand(cont, r)
 {

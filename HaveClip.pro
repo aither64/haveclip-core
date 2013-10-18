@@ -39,7 +39,13 @@ SOURCES +=\
     src/Network/Communicator.cpp \
     src/Network/Commands/ClipboardUpdateConfirm.cpp \
     src/Network/Commands/Confirm.cpp \
-    src/Network/Command.cpp
+    src/Network/Command.cpp \
+    src/Network/Conversations/SerialModeBegin.cpp \
+    src/Network/Commands/Cmd_SerialModeBegin.cpp \
+    src/Network/Conversations/SerialModeEnd.cpp \
+    src/Network/Commands/Cmd_SerialModeEnd.cpp \
+    src/Network/Conversations/SerialModeBase.cpp \
+    src/Network/Commands/Cmd_SerialModeBase.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -68,7 +74,13 @@ HEADERS  += src/HaveClip.h \
     src/Network/Communicator.h \
     src/Network/Commands/ClipboardUpdateConfirm.h \
     src/Network/Commands/Confirm.h \
-    src/Network/Command.h
+    src/Network/Command.h \
+    src/Network/Conversations/SerialModeBegin.h \
+    src/Network/Commands/Cmd_SerialModeBegin.h \
+    src/Network/Conversations/SerialModeEnd.h \
+    src/Network/Commands/Cmd_SerialModeEnd.h \
+    src/Network/Conversations/SerialModeBase.h \
+    src/Network/Commands/Cmd_SerialModeBase.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \

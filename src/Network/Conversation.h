@@ -58,10 +58,18 @@ protected:
 	Communicator::Role reverse(Communicator::Role r) const;
 	virtual void moveToNextCommand();
 	virtual void nextCommand(BaseCommand::Type lastCmd, int index);
+	virtual void nextCommandSender(BaseCommand::Type lastCmd, int index);
+	virtual void nextCommandReceiver(BaseCommand::Type lastCmd, int index);
+	void confirm(BaseCommand::Status s);
+	void morph(Conversation *c);
 
 signals:
 	void clipboardSync(ClipboardContainer *cont);
+#ifdef INCLUDE_SERIAL_MODE
+	void serialModeToggled(bool enabled, qint64 id);
+#endif
 	void done();
+	void morphed(Conversation *c);
 };
 
 #endif // CONVERSATION_H

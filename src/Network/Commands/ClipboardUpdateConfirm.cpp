@@ -19,6 +19,8 @@
 
 #include "ClipboardUpdateConfirm.h"
 
+using namespace Commands;
+
 ClipboardUpdateConfirm::ClipboardUpdateConfirm(ClipboardContainer *cont, Communicator::Role r)
 	: BaseCommand(cont, r)
 {

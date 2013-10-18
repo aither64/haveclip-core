@@ -27,8 +27,8 @@
 class ClipboardSerialBatch : public ClipboardContainer
 {
 public:
-	ClipboardSerialBatch();
-	ClipboardSerialBatch(ClipboardItem *item);
+	ClipboardSerialBatch(qint64 id);
+	ClipboardSerialBatch(qint64 id, ClipboardItem *item);
 	~ClipboardSerialBatch();
 	virtual void init();
 	virtual ItemType type() const;
@@ -42,11 +42,14 @@ public:
 	virtual bool isSealed() const;
 	virtual QList<ClipboardItem*> items();
 	virtual void save(QDataStream &ds) const;
+	qint64 id() const;
+	static qint64 createId();
 
 private:
 	QList<ClipboardItem*> m_items;
 	int m_index;
 	bool m_sealed;
+	qint64 m_id;
 
 };
 

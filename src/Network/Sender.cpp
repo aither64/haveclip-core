@@ -24,6 +24,8 @@
 
 #include "Sender.h"
 #include "Conversations/ClipboardUpdate.h"
+#include "Conversations/SerialModeBegin.h"
+#include "Conversations/SerialModeEnd.h"
 
 Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
 	Communicator(parent),
@@ -32,46 +34,25 @@ Sender::Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, Q
 	encryption = enc;
 }
 
-void Sender::distribute(ClipboardItem *content, QString password)
+void Sender::distribute(ClipboardItem *content)
 {
-	m_password = password;
-	m_conversation = new ClipboardUpdate(Communicator::Send, content);
+	m_conversation = new Conversations::ClipboardUpdate(Communicator::Send, content, this);
 
-	conversationSignals();
-
-	if(encryption != ClipboardManager::None)
-	{
-		setPeerVerifyMode(QSslSocket::VerifyNone);
-
-		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
-
-		switch(encryption)
-		{
-		case ClipboardManager::Ssl:
-			setProtocol(QSsl::SslV3);
-			break;
-		case ClipboardManager::Tls:
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-			setProtocol(QSsl::TlsV1_0);
-#else
-			setProtocol(QSsl::TlsV1);
-#endif
-			break;
-		}
-
-		connectToHostEncrypted(m_node->host, m_node->port);
-
-	} else {
-		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
-
-		connectToHost(m_node->host, m_node->port);
-	}
-
-	/**
-	  We cannot write data immediately due to a bug in Qt which will cause application to end up
-	  in infinite loop when connection fails.
-	  */
+	connectToPeer();
 }
+
+#ifdef INCLUDE_SERIAL_MODE
+void Sender::serialMode(bool enable, qint64 id)
+{
+	if(enable)
+		m_conversation = new Conversations::SerialModeBegin(id, Communicator::Send, 0, this);
+	else
+		m_conversation = new Conversations::SerialModeEnd(id, Communicator::Send, 0, this);
+
+	connectToPeer();
+}
+
+#endif
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
@@ -118,4 +99,42 @@ void Sender::onSslError(const QList<QSslError> &errors)
 ClipboardManager::Node* Sender::node()
 {
 	return m_node;
+}
+
+void Sender::connectToPeer()
+{
+	conversationSignals();
+
+	if(encryption != ClipboardManager::None)
+	{
+		setPeerVerifyMode(QSslSocket::VerifyNone);
+
+		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
+
+		switch(encryption)
+		{
+		case ClipboardManager::Ssl:
+			setProtocol(QSsl::SslV3);
+			break;
+		case ClipboardManager::Tls:
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+			setProtocol(QSsl::TlsV1_0);
+#else
+			setProtocol(QSsl::TlsV1);
+#endif
+			break;
+		}
+
+		connectToHostEncrypted(m_node->host, m_node->port);
+
+	} else {
+		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
+
+		connectToHost(m_node->host, m_node->port);
+	}
+
+	/**
+	  We cannot write data immediately due to a bug in Qt which will cause application to end up
+	  in infinite loop when connection fails.
+	  */
 }

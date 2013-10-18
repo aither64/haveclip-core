@@ -75,7 +75,8 @@ private slots:
 	void toggleSharedClipboard(bool enabled);
 	void historyActionClicked(QObject *obj);
 #ifdef INCLUDE_SERIAL_MODE
-	void toggleSerialMode();
+	void userToggleSerialMode();
+	void toggleSerialMode(bool enabled);
 #endif
 	void showSettings();
 	void showAbout();

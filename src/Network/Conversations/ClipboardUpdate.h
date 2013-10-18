@@ -22,14 +22,17 @@
 
 #include "../Conversation.h"
 
-class ClipboardUpdate : public Conversation
-{
-public:
-	ClipboardUpdate(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
-	virtual Type type() const;
+namespace Conversations {
+	class ClipboardUpdate : public Conversation
+	{
+		Q_OBJECT
+	public:
+		ClipboardUpdate(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
+		virtual Type type() const;
 
-protected:
-	virtual void nextCommand(BaseCommand::Type lastCmd, int index);
-};
+	protected:
+		virtual void nextCommand(BaseCommand::Type lastCmd, int index);
+	};
+}
 
 #endif // CLIPBOARDUPDATE_H

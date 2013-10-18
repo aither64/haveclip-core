@@ -110,6 +110,9 @@ signals:
 	void listenFailed(QString error);
 	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
+#ifdef INCLUDE_SERIAL_MODE
+	void serialModeChanged(bool enabled);
+#endif
 
 public slots:
 	void jumpTo(ClipboardItem *content);
@@ -119,6 +122,7 @@ public slots:
 	void toggleClipboardReceiving(bool enabled, bool masterChange = false);
 #ifdef INCLUDE_SERIAL_MODE
 	void toggleSerialMode();
+	void toggleSerialModeFromNetwork(bool enable, qint64 id);
 #endif
 
 private:
@@ -171,7 +175,10 @@ private slots:
 	void checkSelection();
 #endif
 	void receivePasteUrl(QUrl url);
+#ifdef INCLUDE_SERIAL_MODE
 	void nextSerialClipboard();
+	void propagateSerialMode();
+#endif
 	
 };
 

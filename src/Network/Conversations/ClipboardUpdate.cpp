@@ -19,6 +19,8 @@
 
 #include "ClipboardUpdate.h"
 
+using namespace Conversations;
+
 ClipboardUpdate::ClipboardUpdate(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: Conversation(r, cont, parent)
 {

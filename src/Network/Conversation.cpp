@@ -23,6 +23,8 @@
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
 #include "Commands/Confirm.h"
+#include "Commands/Cmd_SerialModeBegin.h"
+#include "Commands/Cmd_SerialModeEnd.h"
 
 Conversation::Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: QObject(parent),
@@ -75,6 +77,8 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 {
 	BaseCommand *cmd;
 
+	using namespace Commands;
+
 	switch(t)
 	{
 	case BaseCommand::ClipboardUpdateReady:
@@ -91,6 +95,14 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 
 	case BaseCommand::Confirm:
 		cmd = new Confirm(m_cont, r);
+		break;
+
+	case BaseCommand::SerialModeBegin:
+		cmd = new Commands::SerialModeBegin(m_cont, r);
+		break;
+
+	case BaseCommand::SerialModeEnd:
+		cmd = new Commands::SerialModeEnd(m_cont, r);
 		break;
 	}
 
@@ -111,6 +123,11 @@ void Conversation::moveToNextCommand()
 
 	nextCommand(m_cmds[m_currentCmd]->type(), m_currentCmd);
 
+	if(m_role == Communicator::Send)
+		nextCommandSender(m_cmds[m_currentCmd]->type(), m_currentCmd);
+	else
+		nextCommandReceiver(m_cmds[m_currentCmd]->type(), m_currentCmd);
+
 	if(m_cmds.size() > (m_currentCmd+1))
 		m_currentCmd++;
 	else {
@@ -122,4 +139,26 @@ void Conversation::moveToNextCommand()
 void Conversation::nextCommand(BaseCommand::Type lastCmd, int index)
 {
 
+}
+
+void Conversation::nextCommandSender(BaseCommand::Type lastCmd, int index)
+{
+
+}
+
+void Conversation::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
+{
+
+}
+
+void Conversation::confirm(BaseCommand::Status s)
+{
+	addCommand(BaseCommand::Confirm, Communicator::Send)->setStatus(s);
+}
+
+void Conversation::morph(Conversation *c)
+{
+	m_done = true;
+
+	emit morphed(c);
 }

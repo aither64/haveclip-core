@@ -21,17 +21,19 @@
 
 #ifdef INCLUDE_SERIAL_MODE
 #include <QDebug>
+#include <QDateTime>
 
-ClipboardSerialBatch::ClipboardSerialBatch() :
+ClipboardSerialBatch::ClipboardSerialBatch(qint64 id) :
 	ClipboardContainer(),
+	m_id(id),
 	m_index(0),
 	m_sealed(false)
 {
 	title = QObject::tr("< Serial batch >");
 }
 
-ClipboardSerialBatch::ClipboardSerialBatch(ClipboardItem *item) :
-	ClipboardSerialBatch()
+ClipboardSerialBatch::ClipboardSerialBatch(qint64 id, ClipboardItem *item) :
+	ClipboardSerialBatch(id)
 {
 	m_items << item;
 }
@@ -123,10 +125,21 @@ void ClipboardSerialBatch::save(QDataStream &ds) const
 {
 	saveType(ds);
 
+	ds << m_id;
 	ds << (quint32) m_items.count();
 
 	foreach(ClipboardItem* it, m_items)
 		ds << *it;
+}
+
+qint64 ClipboardSerialBatch::id() const
+{
+	return m_id;
+}
+
+qint64 ClipboardSerialBatch::createId()
+{
+	return QDateTime::currentMSecsSinceEpoch();
 }
 
 #endif // INCLUDE_SERIAL_MODE

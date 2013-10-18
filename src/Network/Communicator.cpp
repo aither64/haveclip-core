@@ -18,7 +18,10 @@
 */
 
 #include "Communicator.h"
+
 #include "Conversations/ClipboardUpdate.h"
+#include "Conversations/SerialModeBegin.h"
+#include "Conversations/SerialModeEnd.h"
 
 Communicator::Communicator(QObject *parent) :
 	QSslSocket(parent),
@@ -154,7 +157,17 @@ void Communicator::readHeader()
 		{
 		case Conversation::ClipboardUpdate:
 			qDebug() << "Initiating conversation ClipboardUpdate";
-			m_conversation = new ClipboardUpdate(Communicator::Receive, 0);
+			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
+			break;
+
+		case Conversation::SerialModeBegin:
+			qDebug() << "Initiating conversation SerialModeBegin";
+			m_conversation = new Conversations::SerialModeBegin(0, Communicator::Receive, 0, this);
+			break;
+
+		case Conversation::SerialModeEnd:
+			qDebug() << "Initiating conversation SerialModeEnd";
+			m_conversation = new Conversations::SerialModeEnd(0, Communicator::Receive, 0, this);
 			break;
 
 		default:
@@ -190,6 +203,7 @@ void Communicator::conversationSignals()
 	qDebug() << "Communicator::conversationSignals() called";
 
 	connect(m_conversation, SIGNAL(done()), this, SLOT(conversationDone()));
+	connect(m_conversation, SIGNAL(morphed(Conversation*)), this, SLOT(morphConversation(Conversation*)));
 }
 
 void Communicator::continueConversation()
@@ -243,6 +257,14 @@ void Communicator::onDisconnect()
 void Communicator::conversationDone()
 {
 
+}
+
+void Communicator::morphConversation(Conversation *c)
+{
+	m_conversation->deleteLater();
+
+	m_conversation = c;
+	m_conversation->setParent(this);
 }
 
 void Communicator::onSslError(const QList<QSslError> &errors)

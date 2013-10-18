@@ -49,7 +49,8 @@ Next step depends on status from reply:
   * not exists / not matches
     3. Request: [SerialModeCopy](#serialmodecopy)
     4. Reply: [Confirm](#confirm)
-  * not understood - close connection
+  * not understood
+    - morph into conversation [Clipboard update](#clipboard-update)
 
 Protocol structure
 ------------------
@@ -99,19 +100,19 @@ Protocol structure
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            serial batch ID
+       8    int64           serial batch ID
 
 #### SerialModeEnd
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            serial batch ID
+       8    int64           serial batch ID
 
 #### SerialModeAppendReady
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            serial batch ID
+       8    int64           serial batch ID
        4    int32            serial batch item count
 
 #### SerialModeAppendAccept
@@ -135,7 +136,7 @@ Protocol structure
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            serial batch ID
+       8    int64           serial batch ID
        4    int32            serial batch item count
        4    int32            current index
 
@@ -152,6 +153,6 @@ For each item:
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            serial batch ID
+       8    int64           serial batch ID
        4    int32            serial batch item count
        4    int32            current index

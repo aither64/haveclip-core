@@ -37,6 +37,9 @@ protected:
 	
 signals:
 	void clipboardUpdated(ClipboardContainer *cont);
+#ifdef INCLUDE_SERIAL_MODE
+	void serialModeToggled(bool enabled, qint64 id);
+#endif
 	
 };
 

@@ -19,6 +19,8 @@
 
 #include "Confirm.h"
 
+using namespace Commands;
+
 Confirm::Confirm(ClipboardContainer *cont, Communicator::Role r)
 	: BaseCommand(cont, r)
 {
@@ -38,7 +40,7 @@ void Confirm::receive(QDataStream &ds)
 
 void Confirm::send(QDataStream &ds)
 {
-	writeStatus(ds, Ok);
+	writeStatus(ds);
 
 	finish();
 }

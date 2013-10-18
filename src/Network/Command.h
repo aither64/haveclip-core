@@ -32,7 +32,9 @@ public:
 		ClipboardUpdateReady=0,
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,
-		Confirm
+		Confirm,
+		SerialModeBegin,
+		SerialModeEnd
 	};
 
 	enum Status {
@@ -48,6 +50,7 @@ public:
 	Communicator::Role role() const;
 	bool isFinished() const;
 	Status status() const;
+	void setStatus(Status s);
 	ClipboardContainer *container();
 	virtual Type type() const = 0;
 	virtual void receive(QDataStream &ds) = 0;
@@ -59,12 +62,13 @@ protected:
 
 	void readStatus(QDataStream &ds);
 	void writeStatus(QDataStream &ds, Status s = Undefined);
-	void setStatus(Status s);
 	void finish();
 
 private:
 	bool m_finished;
 	Status m_status;
+
+friend class Conversation;
 };
 
 #endif // NETWORKCOMMAND_H

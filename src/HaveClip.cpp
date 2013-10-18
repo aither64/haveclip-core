@@ -92,7 +92,9 @@ HaveClip::HaveClip(QObject *parent) :
 
 #ifdef INCLUDE_SERIAL_MODE
 	menu->addSeparator();
-	serialModeAction = menu->addAction(tr("Begin serial mode"), this, SLOT(toggleSerialMode()));
+	serialModeAction = menu->addAction(tr("Begin serial mode"), this, SLOT(userToggleSerialMode()));
+
+	connect(manager, SIGNAL(serialModeChanged(bool)), this, SLOT(toggleSerialMode(bool)));
 #endif // INCLUDE_SERIAL_MODE
 
 	menu->addSeparator();
@@ -250,15 +252,21 @@ void HaveClip::historyActionClicked(QObject *obj)
 }
 
 #ifdef INCLUDE_SERIAL_MODE
-void HaveClip::toggleSerialMode()
+void HaveClip::userToggleSerialMode()
 {
 	manager->toggleSerialMode();
 
-	if(manager->isSerialModeEnabled())
+	toggleSerialMode(manager->isSerialModeEnabled());
+}
+
+void HaveClip::toggleSerialMode(bool enabled)
+{
+	if(enabled)
 		serialModeAction->setText(tr("End serial mode"));
 	else
 		serialModeAction->setText(tr("Begin serial mode"));
 }
+
 #endif // INCLUDE_SERIAL_MODE
 
 void HaveClip::showSettings()

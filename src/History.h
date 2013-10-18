@@ -42,8 +42,11 @@ public:
 	void setStackSize(int size);
 	ClipboardItem* add(ClipboardItem *item, bool allowDuplicity);
 	bool isNew(ClipboardItem *item) const;
-	void beginSerialMode();
+#ifdef INCLUDE_SERIAL_MODE
+	void beginSerialMode(qint64 id = 0);
 	void endSerialMode();
+	qint64 preparedSerialbatchId() const;
+#endif
 	
 signals:
 	void historyChanged();
@@ -62,6 +65,7 @@ private:
 	bool m_save;
 	int m_size;
 	bool m_serialInit;
+	qint64 m_serialBatchId;
 
 	QString filePath();
 	void popToFront(ClipboardContainer *item);

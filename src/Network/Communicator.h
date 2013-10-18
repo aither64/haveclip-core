@@ -66,6 +66,7 @@ protected slots:
 	void onRead();
 	void onDisconnect();
 	virtual void conversationDone();
+	void morphConversation(Conversation *c);
 
 private:
 	// Current message

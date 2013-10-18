@@ -22,13 +22,15 @@
 
 #include "../Command.h"
 
-class ClipboardUpdateConfirm : public BaseCommand
-{
-public:
-	ClipboardUpdateConfirm(ClipboardContainer *cont, Communicator::Role r);
-	virtual Type type() const;
-	virtual void receive(QDataStream &ds);
-	virtual void send(QDataStream &ds);
-};
+namespace Commands {
+	class ClipboardUpdateConfirm : public BaseCommand
+	{
+	public:
+		ClipboardUpdateConfirm(ClipboardContainer *cont, Communicator::Role r);
+		virtual Type type() const;
+		virtual void receive(QDataStream &ds);
+		virtual void send(QDataStream &ds);
+	};
+}
 
 #endif // CLIPBOARDUPDATECONFIRM_H

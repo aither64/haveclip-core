@@ -130,7 +130,7 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 #ifdef INCLUDE_SERIAL_MODE
 			if(m_serialInit)
 			{
-				m_currentContainer = new ClipboardSerialBatch(item);
+				m_currentContainer = new ClipboardSerialBatch(m_serialBatchId, item);
 				m_items << m_currentContainer;
 
 				m_serialInit = false;
@@ -189,17 +189,32 @@ bool History::isNew(ClipboardItem *item) const
 
 }
 
-void History::beginSerialMode()
+void History::beginSerialMode(qint64 id)
 {
 	m_serialInit = true;
+
+	if(!id)
+		id = ClipboardSerialBatch::createId();
+
+	m_serialBatchId = id;
+
+	qDebug() << "History: begun serial mode id = " << m_serialBatchId;
 }
 
 void History::endSerialMode()
 {
 	if(m_currentContainer->type() == ClipboardItem::SerialBatch)
+	{
 		m_currentContainer->seal();
+		qDebug() << "History: end serial mode id = " << static_cast<ClipboardSerialBatch*>(m_currentContainer)->id();
+	}
 
 	m_serialInit = false;
+}
+
+qint64 History::preparedSerialbatchId() const
+{
+	return m_serialBatchId;
 }
 
 void History::load()

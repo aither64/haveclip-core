@@ -33,7 +33,11 @@ public:
 	ClipboardManager::Node *node();
 
 public slots:
-	void distribute(ClipboardItem *content, QString password);
+	void distribute(ClipboardItem *content);
+
+#ifdef INCLUDE_SERIAL_MODE
+	void serialMode(bool enable, qint64 id);
+#endif
 
 protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);
@@ -41,6 +45,8 @@ protected slots:
 
 private:
 	ClipboardManager::Node *m_node;
+
+	void connectToPeer();
 	
 };
 

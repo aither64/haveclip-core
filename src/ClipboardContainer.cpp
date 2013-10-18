@@ -62,8 +62,13 @@ ClipboardContainer* ClipboardContainer::load(QDataStream &ds)
 
 #ifdef INCLUDE_SERIAL_MODE
 	case ClipboardContainer::SerialBatch: {
-		ClipboardContainer *cnt = new ClipboardSerialBatch();
+		ClipboardContainer *cnt;
 		quint32 count;
+		qint64 id;
+
+		ds >> id;
+
+		cnt = new ClipboardSerialBatch(id);
 
 		ds >> count;
 

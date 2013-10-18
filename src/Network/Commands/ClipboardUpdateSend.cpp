@@ -21,6 +21,8 @@
 
 #include <QTextCodec>
 
+using namespace Commands;
+
 ClipboardUpdateSend::ClipboardUpdateSend(ClipboardContainer *cont, Communicator::Role r)
 	: BaseCommand(cont, r)
 {

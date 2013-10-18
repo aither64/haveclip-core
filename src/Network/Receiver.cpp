@@ -59,4 +59,8 @@ void Receiver::conversationSignals()
 	Communicator::conversationSignals();
 
 	connect(m_conversation, SIGNAL(clipboardSync(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
+
+#ifdef INCLUDE_SERIAL_MODE
+	connect(m_conversation, SIGNAL(serialModeToggled(bool,qint64)), this, SIGNAL(serialModeToggled(bool,qint64)));
+#endif
 }
