@@ -24,7 +24,9 @@
 #include <QFileInfo>
 #include <QDesktopServices>
 
+#ifdef INCLUDE_SERIAL_MODE
 #include "ClipboardSerialBatch.h"
+#endif
 
 History::History(QObject *parent) :
 	QObject(parent),
@@ -55,6 +57,19 @@ ClipboardItem* History::currentItem()
 		return 0;
 
 	return m_currentContainer->item();
+}
+
+ClipboardItem* History::lastItem()
+{
+	if(!m_currentContainer)
+		return 0;
+
+	QList<ClipboardItem*> items = m_currentContainer->items();
+
+	if(!items.count())
+		return currentItem();
+
+	return items.last();
 }
 
 ClipboardContainer* History::currentContainer()
@@ -134,6 +149,7 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 				m_items << m_currentContainer;
 
 				m_serialInit = false;
+				m_serialBatchId = 0;
 
 				if(m_items.size() >= m_size)
 					delete m_items.takeFirst();
@@ -189,6 +205,7 @@ bool History::isNew(ClipboardItem *item) const
 
 }
 
+#ifdef INCLUDE_SERIAL_MODE
 void History::beginSerialMode(qint64 id)
 {
 	m_serialInit = true;
@@ -216,6 +233,23 @@ qint64 History::preparedSerialbatchId() const
 {
 	return m_serialBatchId;
 }
+
+ClipboardSerialBatch* History::searchBatchById(qint64 id)
+{
+	foreach(ClipboardContainer *cont, m_items)
+	{
+		if(cont->type() != ClipboardContainer::SerialBatch)
+			continue;
+
+		ClipboardSerialBatch *s = static_cast<ClipboardSerialBatch*>(cont);
+
+		if(s->id() == id)
+			return s;
+	}
+
+	return 0;
+}
+#endif // INCLUDE_SERIAL_MODE
 
 void History::load()
 {

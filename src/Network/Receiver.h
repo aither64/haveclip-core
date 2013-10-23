@@ -29,7 +29,7 @@ class Receiver : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Receiver(ClipboardManager::Encryption enc, QObject *parent = 0);
+	explicit Receiver(History *history, ClipboardManager::Encryption enc, QObject *parent = 0);
 	void communicate();
 
 protected:
@@ -39,6 +39,9 @@ signals:
 	void clipboardUpdated(ClipboardContainer *cont);
 #ifdef INCLUDE_SERIAL_MODE
 	void serialModeToggled(bool enabled, qint64 id);
+	void serialModeNewBatch(ClipboardSerialBatch *batch);
+	void serialModeAppend(ClipboardItem *item);
+	void serialModeNext();
 #endif
 	
 };

@@ -25,6 +25,10 @@
 #include "ClipboardManager.h"
 #include "ClipboardItem.h"
 
+#ifdef INCLUDE_SERIAL_MODE
+class ClipboardSerialBatch;
+#endif
+
 class History : public QObject
 {
 	Q_OBJECT
@@ -33,6 +37,7 @@ public:
 	void init();
 	QList<ClipboardContainer*> items();
 	ClipboardItem* currentItem();
+	ClipboardItem* lastItem();
 	ClipboardContainer* currentContainer();
 	bool isEnabled() const;
 	void setEnabled(bool enabled);
@@ -46,6 +51,7 @@ public:
 	void beginSerialMode(qint64 id = 0);
 	void endSerialMode();
 	qint64 preparedSerialbatchId() const;
+	ClipboardSerialBatch* searchBatchById(qint64 id);
 #endif
 	
 signals:

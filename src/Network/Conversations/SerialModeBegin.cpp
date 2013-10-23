@@ -6,7 +6,7 @@ using namespace Conversations;
 SerialModeBegin::SerialModeBegin(qint64 id, Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: SerialModeBase(id, r, cont, parent)
 {
-	addCommand(BaseCommand::SerialModeBegin, r);
+	addSerialCommand(BaseCommand::SerialModeToggle, r);
 	addCommand(BaseCommand::Confirm, reverse(r));
 }
 
@@ -33,7 +33,7 @@ void SerialModeBegin::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 {
 	switch(lastCmd)
 	{
-	case BaseCommand::SerialModeBegin:
+	case BaseCommand::SerialModeToggle:
 		// Check serial mode availability
 		m_cmds[index+1]->setStatus(BaseCommand::Ok);
 

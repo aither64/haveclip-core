@@ -65,6 +65,7 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 {
 	m_instance = this;
 	serialExceptions
+		<< "HaveClip"
 		<< "gedit"
 		<< "main" // VirtualBox
 		<< "Caja";
@@ -87,16 +88,21 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	timer->start(300);
 #endif
 
+	delayedEnsureTimer = new QTimer(this);
+	delayedEnsureTimer->setSingleShot(true);
+
+	connect(delayedEnsureTimer, SIGNAL(timeout()), this, SLOT(delayedClipboardEnsure()));
+
 #ifdef Q_WS_X11
 	selectionTimer = new QTimer(this);
 	selectionTimer->setSingleShot(true);
 
 	connect(selectionTimer, SIGNAL(timeout()), this, SLOT(checkSelection()));
 
+#ifdef INCLUDE_SERIAL_MODE
 	serialTimer = new QTimer(this);
 	serialTimer->setSingleShot(true);
 
-#ifdef INCLUDE_SERIAL_MODE
 	connect(serialTimer, SIGNAL(timeout()), this, SLOT(nextSerialClipboard()));
 #endif
 #endif
@@ -366,6 +372,11 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 	{
 		qDebug() << "ClipboardChanged already called, end";
 		return;
+
+	} else if((m == QClipboard::Clipboard && clipboard->ownsClipboard())
+		  || (m == QClipboard::Selection && clipboard->ownsSelection())) {
+		qDebug() << "HaveClip already owns the clipboard/selection, ignore";
+		return;
 	}
 
 	clipboardChangedCalled = true;
@@ -405,25 +416,25 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 		copiedMimeData = copyMimeData(mimeData);
 
 	ClipboardItem *cnt = new ClipboardItem(mode, copiedMimeData);
-	ClipboardItem *currentItem = m_history->currentItem();
+	ClipboardItem *lastItem = m_history->lastItem();
 
-	if(currentItem && *currentItem == *cnt)
+	if(lastItem && *lastItem == *cnt)
 	{
-		if(currentItem->mode != ClipboardItem::ClipboardAndSelection && currentItem->mode != cnt->mode)
+		if(lastItem->mode != ClipboardItem::ClipboardAndSelection && lastItem->mode != cnt->mode)
 		{
-			currentItem->mode = ClipboardItem::ClipboardAndSelection;
+			lastItem->mode = ClipboardItem::ClipboardAndSelection;
 
 			if(shouldDistribute())
-				distributeClipboard(currentItem);
+				distributeClipboard(lastItem);
 		}
 
 		delete cnt;
 		clipboardChangedCalled = false;
 		return;
 
-	} else if(currentItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
+	} else if(lastItem && cnt->formats.isEmpty()) { // empty clipboard, restore last content
 		qDebug() << "Clipboard is empty, reset";
-		updateClipboard(currentItem, true);
+		updateClipboard(lastItem, true);
 		delete cnt;
 		clipboardChangedCalled = false;
 		return;
@@ -431,18 +442,21 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 
 	cnt->init();
 
-	currentItem = m_history->add(cnt, !fromSelection);
+	lastItem = m_history->add(cnt, !fromSelection);
 
 #ifdef INCLUDE_SERIAL_MODE
 	if(m_serialMode)
-		ensureClipboardContent(currentItem->item(), m);
+	{
+		delayedEnsureItem = lastItem;
+		delayedEnsureTimer->start(100);
+	}
 #endif
 
 	if(m_selectionMode == ClipboardManager::United)
-		uniteClipboards(currentItem);
+		uniteClipboards(lastItem);
 
 	if(shouldDistribute())
-		distributeClipboard(currentItem);
+		distributeClipboard(lastItem);
 
 	clipboardChangedCalled = false;
 }
@@ -451,13 +465,21 @@ void ClipboardManager::distributeClipboard(ClipboardItem *content)
 {
 	foreach(Node *n, pool)
 	{
-		Sender *d = new Sender(m_encryption, n, this);
+		Sender *d = new Sender(m_history, m_encryption, n, this);
 		d->setPassword(m_password);
 
 		connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
 
+#ifdef INCLUDE_SERIAL_MODE
+		if(m_serialMode)
+			d->serialModeAppend(static_cast<ClipboardSerialBatch*>(m_history->currentContainer()), content);
+		else
+			d->distribute(content);
+
+#else
 		d->distribute(content);
+#endif
 	}
 }
 
@@ -484,13 +506,16 @@ bool ClipboardManager::isUserSelecting()
 
 void ClipboardManager::incomingConnection(int handle)
 {
-	Receiver *c = new Receiver(m_encryption, this);
+	Receiver *c = new Receiver(m_history, m_encryption, this);
 	c->setSocketDescriptor(handle);
 
-	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboard(ClipboardContainer*)));
+	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboardFromNetwork(ClipboardContainer*)));
 
 #ifdef INCLUDE_SERIAL_MODE
 	connect(c, SIGNAL(serialModeToggled(bool,qint64)), this, SLOT(toggleSerialModeFromNetwork(bool,qint64)));
+	connect(c, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SLOT(serialModeNewBatch(ClipboardSerialBatch*)));
+	connect(c, SIGNAL(serialModeAppend(ClipboardItem*)), this, SLOT(serialModeAppend(ClipboardItem*)));
+	connect(c, SIGNAL(serialModeNext()), this, SLOT(serialModeNext()));
 #endif
 
 	c->setCertificateAndKey(m_certificate, m_privateKey);
@@ -517,6 +542,15 @@ void ClipboardManager::updateClipboard(ClipboardContainer *cont, bool fromHistor
 		clipboard->setMimeData(copyMimeData(it->mimeData()), ClipboardItem::ownModeToQt(it->mode));
 
 	qDebug() << "Update clipboard end";
+}
+
+void ClipboardManager::updateClipboardFromNetwork(ClipboardContainer *cont)
+{
+	clipboardChangedCalled = true;
+
+	updateClipboard(cont);
+
+	clipboardChangedCalled = false;
 }
 
 void ClipboardManager::uniteClipboards(ClipboardItem *content)
@@ -644,6 +678,30 @@ void ClipboardManager::toggleSerialModeFromNetwork(bool enable, qint64 id)
 	emit serialModeChanged(enable);
 }
 
+void ClipboardManager::serialModeNewBatch(ClipboardSerialBatch *batch)
+{
+	qDebug() << "New serial batcha, what shall I do?";
+}
+
+void ClipboardManager::serialModeAppend(ClipboardItem *item)
+{
+	m_history->add(item, false);
+
+	if(m_history->currentContainer()->items().count() == 1)
+	{
+		clipboardChangedCalled = true;
+
+		ensureClipboardContent(item, ClipboardContainer::ownModeToQt(item->mode));
+
+		clipboardChangedCalled = false;
+	}
+}
+
+void ClipboardManager::serialModeNext()
+{
+	nextSerialClipboard(true);
+}
+
 #endif
 
 QMimeData* ClipboardManager::copyMimeData(const QMimeData *mimeReference)
@@ -715,6 +773,17 @@ void ClipboardManager::listenOnHost(const QHostInfo &host)
 	startListening(addrs.first());
 }
 
+void ClipboardManager::delayedClipboardEnsure()
+{
+	qDebug() << "Delayed ensure";
+
+	clipboardChangedCalled = true;
+
+	ensureClipboardContent(delayedEnsureItem, ClipboardContainer::ownModeToQt(delayedEnsureItem->mode));
+
+	clipboardChangedCalled = false;
+}
+
 void ClipboardManager::loadPasteServices()
 {
 	m_settings->beginGroup("PasteServices");
@@ -775,7 +844,7 @@ void ClipboardManager::receivePasteUrl(QUrl url)
 }
 
 #ifdef INCLUDE_SERIAL_MODE
-void ClipboardManager::nextSerialClipboard()
+void ClipboardManager::nextSerialClipboard(bool fromNetwork)
 {
 	qDebug() << "ClipboardManager::nextSerialClipboard";
 
@@ -786,6 +855,20 @@ void ClipboardManager::nextSerialClipboard()
 		clipboardChangedCalled = true;
 		updateClipboard(cont->nextItem(), true);
 		clipboardChangedCalled = false;
+
+		if(!fromNetwork)
+		{
+			foreach(Node *n, pool)
+			{
+				Sender *d = new Sender(m_history, m_encryption, n, this);
+				d->setPassword(m_password);
+
+				connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));
+				connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
+
+				d->serialModeNext(static_cast<ClipboardSerialBatch*>(cont));
+			}
+		}
 	}
 }
 
@@ -793,7 +876,7 @@ void ClipboardManager::propagateSerialMode()
 {
 	foreach(Node *n, pool)
 	{
-		Sender *d = new Sender(m_encryption, n, this);
+		Sender *d = new Sender(m_history, m_encryption, n, this);
 		d->setPassword(m_password);
 
 		connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));

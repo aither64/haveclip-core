@@ -24,8 +24,8 @@
 #include "Receiver.h"
 #include "Conversation.h"
 
-Receiver::Receiver(ClipboardManager::Encryption enc, QObject *parent) :
-	Communicator(parent)
+Receiver::Receiver(History *history, ClipboardManager::Encryption enc, QObject *parent) :
+	Communicator(history, parent)
 {
 	encryption = enc;
 }
@@ -62,5 +62,8 @@ void Receiver::conversationSignals()
 
 #ifdef INCLUDE_SERIAL_MODE
 	connect(m_conversation, SIGNAL(serialModeToggled(bool,qint64)), this, SIGNAL(serialModeToggled(bool,qint64)));
+	connect(m_conversation, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)));
+	connect(m_conversation, SIGNAL(serialModeAppend(ClipboardItem*)), this, SIGNAL(serialModeAppend(ClipboardItem*)));
+	connect(m_conversation, SIGNAL(serialModeNext()), this, SIGNAL(serialModeNext()));
 #endif
 }

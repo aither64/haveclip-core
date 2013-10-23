@@ -33,8 +33,9 @@ public:
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,
 		Confirm,
-		SerialModeBegin,
-		SerialModeEnd
+		SerialModeToggle,
+		SerialModeAppendReady,
+		SerialModeInfo
 	};
 
 	enum Status {
@@ -52,6 +53,7 @@ public:
 	Status status() const;
 	void setStatus(Status s);
 	ClipboardContainer *container();
+	void setContainer(ClipboardContainer *cont);
 	virtual Type type() const = 0;
 	virtual void receive(QDataStream &ds) = 0;
 	virtual void send(QDataStream &ds) = 0;

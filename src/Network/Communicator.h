@@ -37,7 +37,7 @@ public:
 		Receive
 	};
 
-	explicit Communicator(QObject *parent = 0);
+	explicit Communicator(History *history, QObject *parent = 0);
 	~Communicator();
 	ClipboardManager::Node *node();
 	void setCertificateAndKey(QString cert, QString key);
@@ -48,6 +48,7 @@ signals:
 	void sslFatalError(const QList<QSslError> errors);
 
 protected:
+	History *m_history;
 	ClipboardContainer *container;
 	ClipboardManager::Encryption encryption;
 	QString m_password;

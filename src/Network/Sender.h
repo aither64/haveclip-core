@@ -25,11 +25,13 @@
 
 #include "Communicator.h"
 
+class ClipboardSerialBatch;
+
 class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Sender(ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
+	explicit Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
 	ClipboardManager::Node *node();
 
 public slots:
@@ -37,6 +39,8 @@ public slots:
 
 #ifdef INCLUDE_SERIAL_MODE
 	void serialMode(bool enable, qint64 id);
+	void serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item);
+	void serialModeNext(ClipboardSerialBatch *batch);
 #endif
 
 protected slots:

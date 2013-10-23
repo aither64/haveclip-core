@@ -41,11 +41,16 @@ SOURCES +=\
     src/Network/Commands/Confirm.cpp \
     src/Network/Command.cpp \
     src/Network/Conversations/SerialModeBegin.cpp \
-    src/Network/Commands/Cmd_SerialModeBegin.cpp \
     src/Network/Conversations/SerialModeEnd.cpp \
-    src/Network/Commands/Cmd_SerialModeEnd.cpp \
     src/Network/Conversations/SerialModeBase.cpp \
-    src/Network/Commands/Cmd_SerialModeBase.cpp
+    src/Network/Commands/Cmd_SerialModeBase.cpp \
+    src/Network/Commands/SerialModeToggle.cpp \
+    src/Network/Conversations/SerialModeAppend.cpp \
+    src/Network/Commands/SerialModeAppendReady.cpp \
+    src/Network/Conversations/SerialModeCopy.cpp \
+    src/Network/Commands/SerialModeInfo.cpp \
+    src/Network/Conversations/HistoryMixin.cpp \
+    src/Network/Conversations/SerialModeNext.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -76,11 +81,16 @@ HEADERS  += src/HaveClip.h \
     src/Network/Commands/Confirm.h \
     src/Network/Command.h \
     src/Network/Conversations/SerialModeBegin.h \
-    src/Network/Commands/Cmd_SerialModeBegin.h \
     src/Network/Conversations/SerialModeEnd.h \
-    src/Network/Commands/Cmd_SerialModeEnd.h \
     src/Network/Conversations/SerialModeBase.h \
-    src/Network/Commands/Cmd_SerialModeBase.h
+    src/Network/Commands/Cmd_SerialModeBase.h \
+    src/Network/Commands/SerialModeToggle.h \
+    src/Network/Conversations/SerialModeAppend.h \
+    src/Network/Commands/SerialModeAppendReady.h \
+    src/Network/Conversations/SerialModeCopy.h \
+    src/Network/Commands/SerialModeInfo.h \
+    src/Network/Conversations/HistoryMixin.h \
+    src/Network/Conversations/SerialModeNext.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \

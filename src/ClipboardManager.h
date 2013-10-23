@@ -47,6 +47,10 @@
 
 class History;
 
+#ifdef INCLUDE_SERIAL_MODE
+class ClipboardSerialBatch;
+#endif
+
 class ClipboardManager : public QTcpServer
 {
 	Q_OBJECT
@@ -123,6 +127,9 @@ public slots:
 #ifdef INCLUDE_SERIAL_MODE
 	void toggleSerialMode();
 	void toggleSerialModeFromNetwork(bool enable, qint64 id);
+	void serialModeNewBatch(ClipboardSerialBatch *batch);
+	void serialModeAppend(ClipboardItem *item);
+	void serialModeNext();
 #endif
 
 private:
@@ -145,10 +152,12 @@ private:
 	QString m_password;
 	QList<BasePasteService*> m_pasteServices;
 	QTimer *selectionTimer;
-	QTimer *serialTimer;
+	QTimer *delayedEnsureTimer;
+	ClipboardItem *delayedEnsureItem;
 	bool clipboardChangedCalled;
 	bool uniteCalled;
 #ifdef INCLUDE_SERIAL_MODE
+	QTimer *serialTimer;
 	bool m_serialMode;
 #endif
 
@@ -170,13 +179,15 @@ private slots:
 	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
 	void incomingConnection(int handle);
 	void updateClipboard(ClipboardContainer *content, bool fromHistory = false);
+	void updateClipboardFromNetwork(ClipboardContainer *cont);
 	void listenOnHost(const QHostInfo &m_host);
+	void delayedClipboardEnsure();
 #ifdef Q_WS_X11
 	void checkSelection();
 #endif
 	void receivePasteUrl(QUrl url);
 #ifdef INCLUDE_SERIAL_MODE
-	void nextSerialClipboard();
+	void nextSerialClipboard(bool fromNetwork = false);
 	void propagateSerialMode();
 #endif
 	

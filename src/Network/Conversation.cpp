@@ -23,8 +23,9 @@
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
 #include "Commands/Confirm.h"
-#include "Commands/Cmd_SerialModeBegin.h"
-#include "Commands/Cmd_SerialModeEnd.h"
+#include "Commands/SerialModeToggle.h"
+#include "Commands/SerialModeAppendReady.h"
+#include "Commands/SerialModeInfo.h"
 
 Conversation::Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: QObject(parent),
@@ -57,7 +58,7 @@ bool Conversation::isDone() const
 
 void Conversation::receive(QDataStream &ds)
 {
-	qDebug() << "Conversation::receive" << m_currentCmd;
+//	qDebug() << "Conversation::receive" << m_currentCmd;
 
 	m_cmds[m_currentCmd]->receive(ds);
 
@@ -66,7 +67,7 @@ void Conversation::receive(QDataStream &ds)
 
 void Conversation::send(QDataStream &ds)
 {
-	qDebug() << "Conversation::send" << m_currentCmd;
+//	qDebug() << "Conversation::send" << m_currentCmd;
 
 	m_cmds[m_currentCmd]->send(ds);
 
@@ -97,12 +98,16 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 		cmd = new Confirm(m_cont, r);
 		break;
 
-	case BaseCommand::SerialModeBegin:
-		cmd = new Commands::SerialModeBegin(m_cont, r);
+	case BaseCommand::SerialModeToggle:
+		cmd = new Commands::SerialModeToggle(m_cont, r);
 		break;
 
-	case BaseCommand::SerialModeEnd:
-		cmd = new Commands::SerialModeEnd(m_cont, r);
+	case BaseCommand::SerialModeAppendReady:
+		cmd = new Commands::SerialModeAppendReady(m_cont, r);
+		break;
+
+	case BaseCommand::SerialModeInfo:
+		cmd = new Commands::SerialModeInfo(m_cont, r);
 		break;
 	}
 
@@ -158,6 +163,8 @@ void Conversation::confirm(BaseCommand::Status s)
 
 void Conversation::morph(Conversation *c)
 {
+	qDebug() << "Morphing conversation" << type() << "into" << c->type();
+
 	m_done = true;
 
 	emit morphed(c);

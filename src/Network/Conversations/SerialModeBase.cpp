@@ -14,9 +14,9 @@ void SerialModeBase::setBatchId(qint64 id)
 	m_batchId = id;
 }
 
-BaseCommand* SerialModeBase::addCommand(BaseCommand::Type t, Communicator::Role r)
+BaseCommand* SerialModeBase::addSerialCommand(BaseCommand::Type t, Communicator::Role r)
 {
-	Commands::SerialModeBase *cmd = static_cast<Commands::SerialModeBase*>(Conversation::addCommand(t, r));
+	Commands::SerialModeBase *cmd = static_cast<Commands::SerialModeBase*>(addCommand(t, r));
 	cmd->setBatchId(m_batchId);
 
 	return cmd;

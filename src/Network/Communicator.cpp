@@ -22,9 +22,12 @@
 #include "Conversations/ClipboardUpdate.h"
 #include "Conversations/SerialModeBegin.h"
 #include "Conversations/SerialModeEnd.h"
+#include "Conversations/SerialModeAppend.h"
+#include "Conversations/SerialModeNext.h"
 
-Communicator::Communicator(QObject *parent) :
+Communicator::Communicator(History *history, QObject *parent) :
 	QSslSocket(parent),
+	m_history(history),
 	m_conversation(0),
 	haveHeader(false),
 	msgLen(0)
@@ -74,12 +77,12 @@ void Communicator::sendMessage()
 	qDebug() << "Send message" << m_conversation->currentCommandType() << buf.size() << "bytes";
 
 	write(buf);
+
+	continueConversation();
 }
 
 void Communicator::receiveMessage()
 {
-	qDebug() << "receiveMessage: buffer" << buffer.size() << "msgLen" << msgLen;
-
 	QDataStream ds(&buffer, QIODevice::ReadOnly);
 	ds.device()->seek(HEADER_SIZE); // skip header
 
@@ -105,8 +108,6 @@ void Communicator::receiveMessage()
 
 	buffer.remove(0, msgLen);
 
-	qDebug() << "Deleting message from buffer, size = " << buffer.size();
-
 	haveHeader = false;
 	msgLen = 0;
 	dataRead = 0;
@@ -116,9 +117,6 @@ void Communicator::receiveMessage()
 
 void Communicator::readHeader()
 {
-	if(m_conversation)
-		qDebug() << "Read header start" << m_conversation->currentCommandType() << m_conversation->currentRole();
-
 	QDataStream ds(&buffer, QIODevice::ReadOnly);
 
 	quint32 magic;
@@ -170,6 +168,24 @@ void Communicator::readHeader()
 			m_conversation = new Conversations::SerialModeEnd(0, Communicator::Receive, 0, this);
 			break;
 
+		case Conversation::SerialModeAppend: {
+			qDebug() << "Initiating conversation SerialModeAppend";
+			Conversations::SerialModeAppend *c = new Conversations::SerialModeAppend(0, Communicator::Receive, 0, this);
+			c->setHistory(m_history);
+
+			m_conversation = c;
+			break;
+		}
+
+		case Conversation::SerialModeNext: {
+			qDebug() << "Initiating conversation SerialModeNext";
+			Conversations::SerialModeNext *c = new Conversations::SerialModeNext(0, Communicator::Receive, 0, this);
+			c->setHistory(m_history);
+
+			m_conversation = c;
+			break;
+		}
+
 		default:
 			qDebug() << "Unknown conversation" << convType;
 			this->deleteLater();
@@ -194,14 +210,10 @@ void Communicator::readHeader()
 	}
 
 	ds >> msgLen;
-
-	qDebug() << "Header read, msg len" << msgLen;
 }
 
 void Communicator::conversationSignals()
 {
-	qDebug() << "Communicator::conversationSignals() called";
-
 	connect(m_conversation, SIGNAL(done()), this, SLOT(conversationDone()));
 	connect(m_conversation, SIGNAL(morphed(Conversation*)), this, SLOT(morphConversation(Conversation*)));
 }
@@ -250,7 +262,7 @@ void Communicator::onRead()
 
 void Communicator::onDisconnect()
 {
-	qDebug() << "Communicator::onDisconnect";
+//	qDebug() << "Communicator::onDisconnect";
 	this->deleteLater();
 }
 

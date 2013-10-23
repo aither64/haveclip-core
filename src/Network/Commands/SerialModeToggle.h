@@ -4,10 +4,10 @@
 #include "Cmd_SerialModeBase.h"
 
 namespace Commands {
-	class SerialModeBegin : public SerialModeBase
+	class SerialModeToggle : public SerialModeBase
 	{
 	public:
-		SerialModeBegin(ClipboardContainer *cont, Communicator::Role r);
+		SerialModeToggle(ClipboardContainer *cont, Communicator::Role r);
 		virtual Type type() const;
 		virtual void receive(QDataStream &ds);
 		virtual void send(QDataStream &ds);

@@ -16,30 +16,29 @@ Requestor is sending ClipboardItem to replier.
 ### Serial clipboard
 
 #### Begin serial mode
-  1. Request: [SerialModeBegin](#serialmodebegin)
+  1. Request: [SerialModeToggle](#serialmodetoggle)
   2. Reply: [Confirm](#confirm)
 
 #### End serial mode
-  1. Request: [SerialModeEnd](#serialmodeend)
+  1. Request: [SerialModeToggle](#serialmodetoggle)
   2. Reply: [Confirm](#confirm)
 
 #### Add item to serial batch
   1. Request: [SerialModeAppendReady](#serialmodeappendready)
-  2. Reply: [SerialModeAppendAccept](#serialmodeappendaccept)
+  2. Reply: [ClipboardUpdateConfirm](#clipboardupdateconfirm)
 
 Next step depends on status from reply:
 
   * continue
-    3. Request: [SerialModeAppend](#serialmodeappend)
+    3. Request: [ClipboardUpdateSend](#clipboardupdatesend)
     4. Reply: [Confirm](#confirm)
   * abort - close connection
   * not exists / not matches
-    3. Request: [SerialModeCopy](#serialmodecopy)
-    4. Reply: [Confirm](#confirm)
+    * morph into conversation [Copy serial batch](#copy-serial-batch)
   * not understood - close connection
 
 #### Move to next item in serial batch
-  1. Request: [SerialModeNext](#serialmodenext)
+  1. Request: [SerialModeInfo](#serialmodeinfo)
   2. Reply: [Confirm](#confirm)
 
 Next step depends on status from reply:
@@ -47,10 +46,14 @@ Next step depends on status from reply:
   * continue - close connection
   * abort - close connection
   * not exists / not matches
-    3. Request: [SerialModeCopy](#serialmodecopy)
-    4. Reply: [Confirm](#confirm)
+    * morph into conversation [Copy serial batch](#copy-serial-batch)
   * not understood
     - morph into conversation [Clipboard update](#clipboard-update)
+
+#### Copy serial batch
+  1. Request: [SerialModeInfo](#serialmodeinfo)  
+       For each item command [ClipboardUpdateSend](#clipboardupdatesend)
+  2. Reply: [Confirm](#confirm)
 
 Protocol structure
 ------------------
@@ -79,8 +82,8 @@ Protocol structure
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
        4    int32            status (continue/abort)
-       -    QStringList      accept only these mime types (empty = all)
-       -    QStringList      exclude only these mime types (empty = none)
+       4    int8             meaning of the list below (Accept or Exclude)
+       -    QStringList      list of mime types
 
 #### ClipboardUpdateSend
 
@@ -96,63 +99,23 @@ Protocol structure
  -------    -----------      -----------------------------------------------------------
        4    int32            status (ok, abort, not exists, not matches, not understood)
 
-#### SerialModeBegin
+#### SerialModeToggle
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       8    int64           serial batch ID
-
-#### SerialModeEnd
-
-  Length    Type             Meaning
- -------    -----------      ------------------------------------------------
-       8    int64           serial batch ID
+       8    int64            serial batch ID
 
 #### SerialModeAppendReady
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       8    int64           serial batch ID
+       8    int64            serial batch ID
        4    int32            serial batch item count
 
-#### SerialModeAppendAccept
+#### SerialModeInfo
 
   Length    Type             Meaning
  -------    -----------      ------------------------------------------------
-       4    int32            status (continue, abort, not exists, not matches, not understood)
-       -    QStringList      accept only these mime types (empty = all)
-       -    QStringList      exclude only these mime types (empty = none)
-
-#### SerialModeAppend
-
-  Length    Type                           Meaning
- -------    -------------------------      ------------------------------------------------
-       4    int32                          mode (clipboard, selection, both)
-       -    QStringList                    formats
-       -    QByteArray * formats.size      mime data
-
-
-#### SerialModeCopy
-
-  Length    Type             Meaning
- -------    -----------      ------------------------------------------------
-       8    int64           serial batch ID
-       4    int32            serial batch item count
-       4    int32            current index
-
-For each item:
-
-  Length    Type                           Meaning
- -------    -------------------------      ------------------------------------------------
-       4    int32                          mode (clipboard, selection, both)
-       -    QStringList                    formats
-       -    QByteArray * formats.size      mime data
-
-
-#### SerialModeNext
-
-  Length    Type             Meaning
- -------    -----------      ------------------------------------------------
-       8    int64           serial batch ID
+       8    int64            serial batch ID
        4    int32            serial batch item count
        4    int32            current index

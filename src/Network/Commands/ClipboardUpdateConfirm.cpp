@@ -35,8 +35,10 @@ void ClipboardUpdateConfirm::receive(QDataStream &ds)
 {
 	readStatus(ds);
 
+	qint32 n;
 	QStringList tmp;
-	ds >> tmp;
+
+	ds >> n;
 	ds >> tmp;
 
 	finish();
@@ -46,7 +48,7 @@ void ClipboardUpdateConfirm::send(QDataStream &ds)
 {
 	writeStatus(ds, BaseCommand::Ok);
 
-	ds << QStringList();
+	ds << (qint32) 0;
 	ds << QStringList();
 
 	finish();

@@ -43,6 +43,8 @@ public:
 	virtual QList<ClipboardItem*> items();
 	virtual void save(QDataStream &ds) const;
 	qint64 id() const;
+	int currentIndex() const;
+	int count() const;
 	static qint64 createId();
 
 private:

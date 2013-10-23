@@ -35,7 +35,8 @@ public:
 		SerialModeBegin,
 		SerialModeEnd,
 		SerialModeAppend,
-		SerialModeNext
+		SerialModeNext,
+		SerialModeCopy
 	};
 
 	Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
@@ -67,6 +68,9 @@ signals:
 	void clipboardSync(ClipboardContainer *cont);
 #ifdef INCLUDE_SERIAL_MODE
 	void serialModeToggled(bool enabled, qint64 id);
+	void serialModeNewBatch(ClipboardSerialBatch *batch);
+	void serialModeAppend(ClipboardItem *item);
+	void serialModeNext();
 #endif
 	void done();
 	void morphed(Conversation *c);

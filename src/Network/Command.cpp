@@ -47,6 +47,11 @@ ClipboardContainer* BaseCommand::container()
 	return m_cont;
 }
 
+void BaseCommand::setContainer(ClipboardContainer *cont)
+{
+	m_cont = cont;
+}
+
 void BaseCommand::readStatus(QDataStream &ds)
 {
 	qint32 s;
