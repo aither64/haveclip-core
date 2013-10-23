@@ -45,6 +45,7 @@ public:
 	qint64 id() const;
 	int currentIndex() const;
 	int count() const;
+	void seek(int index);
 	static qint64 createId();
 
 private:

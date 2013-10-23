@@ -103,6 +103,10 @@ HaveClip::HaveClip(QObject *parent) :
 	QxtGlobalShortcut *shortcut = new QxtGlobalShortcut(this);
 	connect(shortcut, SIGNAL(activated()), this, SLOT(userToggleSerialModeShortcut()));
 	shortcut->setShortcut(QKeySequence("Ctrl+Alt+S"));
+
+	serialRestartMapper = new QSignalMapper(this);
+	connect(serialRestartMapper, SIGNAL(mapped(int)), this, SLOT(restartSerialBatch(int)));
+
 #endif // INCLUDE_SERIAL_MODE
 
 	menu->addSeparator();
@@ -181,7 +185,7 @@ void HaveClip::updateHistoryContextMenu()
 		{
 #ifdef INCLUDE_SERIAL_MODE
 		case ClipboardItem::SerialBatch: {
-			QMenu *menu = new QMenu(cont->title);
+			QMenu *menu = new QMenu(cont->title, historyMenu);
 
 			foreach(ClipboardItem *child, cont->items())
 			{
@@ -200,6 +204,12 @@ void HaveClip::updateHistoryContextMenu()
 
 				historyHash.insert(act, child);
 			}
+
+			menu->addSeparator();
+			QAction *restart = menu->addAction(tr("Restart"));
+
+			connect(restart, SIGNAL(triggered()), serialRestartMapper, SLOT(map()));
+			serialRestartMapper->setMapping(restart, *((int*) &cont));
 
 			lastAction = historyMenu->insertMenu(lastAction ? lastAction : historySeparator, menu);
 
@@ -289,6 +299,11 @@ void HaveClip::toggleSerialMode(bool enabled)
 
 	else
 		serialModeAction->setText(tr("Begin serial mode"));
+}
+
+void HaveClip::restartSerialBatch(int batch)
+{
+	manager->serialModeRestart((ClipboardContainer*) batch);
 }
 
 #endif // INCLUDE_SERIAL_MODE

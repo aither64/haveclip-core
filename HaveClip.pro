@@ -53,7 +53,8 @@ SOURCES +=\
     src/Network/Conversations/SerialModeCopy.cpp \
     src/Network/Commands/SerialModeInfo.cpp \
     src/Network/Conversations/HistoryMixin.cpp \
-    src/Network/Conversations/SerialModeNext.cpp
+    src/Network/Conversations/SerialModeNext.cpp \
+    src/Network/Conversations/SerialModeRestart.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -93,7 +94,8 @@ HEADERS  += src/HaveClip.h \
     src/Network/Conversations/SerialModeCopy.h \
     src/Network/Commands/SerialModeInfo.h \
     src/Network/Conversations/HistoryMixin.h \
-    src/Network/Conversations/SerialModeNext.h
+    src/Network/Conversations/SerialModeNext.h \
+    src/Network/Conversations/SerialModeRestart.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \

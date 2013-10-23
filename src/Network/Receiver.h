@@ -42,6 +42,7 @@ signals:
 	void serialModeNewBatch(ClipboardSerialBatch *batch);
 	void serialModeAppend(ClipboardItem *item);
 	void serialModeNext();
+	void serialModeRestart(ClipboardSerialBatch *batch);
 #endif
 	
 };

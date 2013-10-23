@@ -131,6 +131,8 @@ public slots:
 	void serialModeNewBatch(ClipboardSerialBatch *batch);
 	void serialModeAppend(ClipboardItem *item);
 	void serialModeNext();
+	void serialModeRestart(ClipboardContainer *cont);
+	void serialModeRestartFromNetwork(ClipboardSerialBatch *cont);
 #endif
 
 private:

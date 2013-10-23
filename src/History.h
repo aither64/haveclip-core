@@ -48,6 +48,7 @@ public:
 	ClipboardItem* add(ClipboardItem *item, bool allowDuplicity);
 	bool isNew(ClipboardItem *item) const;
 #ifdef INCLUDE_SERIAL_MODE
+	void addBatch(ClipboardSerialBatch *batch);
 	void beginSerialMode(qint64 id = 0);
 	void endSerialMode();
 	qint64 preparedSerialbatchId() const;
@@ -63,6 +64,9 @@ public slots:
 	void clear();
 	void deleteFile();
 	void jumpTo(ClipboardItem* item);
+#ifdef INCLUDE_SERIAL_MODE
+	void restartSerialBatch(ClipboardSerialBatch *batch);
+#endif
 
 private:
 	ClipboardContainer *m_currentContainer;

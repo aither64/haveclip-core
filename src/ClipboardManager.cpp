@@ -527,6 +527,7 @@ void ClipboardManager::incomingConnection(int handle)
 	connect(c, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SLOT(serialModeNewBatch(ClipboardSerialBatch*)));
 	connect(c, SIGNAL(serialModeAppend(ClipboardItem*)), this, SLOT(serialModeAppend(ClipboardItem*)));
 	connect(c, SIGNAL(serialModeNext()), this, SLOT(serialModeNext()));
+	connect(c, SIGNAL(serialModeRestart(ClipboardSerialBatch*)), this, SLOT(serialModeRestartFromNetwork(ClipboardSerialBatch*)));
 #endif
 
 	c->setCertificateAndKey(m_certificate, m_privateKey);
@@ -691,7 +692,16 @@ void ClipboardManager::toggleSerialModeFromNetwork(bool enable, qint64 id)
 
 void ClipboardManager::serialModeNewBatch(ClipboardSerialBatch *batch)
 {
-	qDebug() << "New serial batcha, what shall I do?";
+	qDebug() << "New serial batch";
+
+	m_history->addBatch(batch);
+
+	clipboardChangedCalled = true;
+	updateClipboard(batch->item(), true);
+	clipboardChangedCalled = false;
+
+	m_serialMode = true;
+	emit serialModeChanged(m_serialMode);
 }
 
 void ClipboardManager::serialModeAppend(ClipboardItem *item)
@@ -711,6 +721,43 @@ void ClipboardManager::serialModeAppend(ClipboardItem *item)
 void ClipboardManager::serialModeNext()
 {
 	nextSerialClipboard(true);
+}
+
+void ClipboardManager::serialModeRestart(ClipboardContainer *cont)
+{
+	ClipboardSerialBatch *batch = static_cast<ClipboardSerialBatch*>(cont);
+
+	m_history->restartSerialBatch(batch);
+
+	clipboardChangedCalled = true;
+	updateClipboard(cont->item(), true);
+	clipboardChangedCalled = false;
+
+	m_serialMode = true;
+
+	foreach(Node *n, pool)
+	{
+		Sender *d = new Sender(m_history, m_encryption, n, this);
+		d->setPassword(m_password);
+
+		connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));
+		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
+
+		d->serialModeRestart(batch);
+	}
+
+	emit serialModeChanged(m_serialMode);
+}
+
+void ClipboardManager::serialModeRestartFromNetwork(ClipboardSerialBatch *cont)
+{
+	m_history->restartSerialBatch(cont);
+
+	clipboardChangedCalled = true;
+	updateClipboard(cont->item(), true);
+	clipboardChangedCalled = false;
+
+	m_serialMode = true;
 }
 
 #endif

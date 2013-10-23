@@ -65,5 +65,6 @@ void Receiver::conversationSignals()
 	connect(m_conversation, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)));
 	connect(m_conversation, SIGNAL(serialModeAppend(ClipboardItem*)), this, SIGNAL(serialModeAppend(ClipboardItem*)));
 	connect(m_conversation, SIGNAL(serialModeNext()), this, SIGNAL(serialModeNext()));
+	connect(m_conversation, SIGNAL(serialModeRestart(ClipboardSerialBatch*)), this, SIGNAL(serialModeRestart(ClipboardSerialBatch*)));
 #endif
 }

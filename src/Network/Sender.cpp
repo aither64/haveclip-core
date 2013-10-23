@@ -28,6 +28,7 @@
 #include "Conversations/SerialModeEnd.h"
 #include "Conversations/SerialModeAppend.h"
 #include "Conversations/SerialModeNext.h"
+#include "Conversations/SerialModeRestart.h"
 
 #ifdef INCLUDE_SERIAL_MODE
 #include "../ClipboardSerialBatch.h"
@@ -71,6 +72,14 @@ void Sender::serialModeNext(ClipboardSerialBatch *batch)
 
 	connectToPeer();
 }
+
+void Sender::serialModeRestart(ClipboardSerialBatch *batch)
+{
+	m_conversation = new Conversations::SerialModeRestart(batch->id(), Communicator::Send, batch, this);
+
+	connectToPeer();
+}
+
 #endif
 
 void Sender::onError(QAbstractSocket::SocketError socketError)

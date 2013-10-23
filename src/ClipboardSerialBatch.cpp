@@ -147,6 +147,11 @@ int ClipboardSerialBatch::count() const
 	return m_items.count();
 }
 
+void ClipboardSerialBatch::seek(int index)
+{
+	m_index = index;
+}
+
 qint64 ClipboardSerialBatch::createId()
 {
 	return QDateTime::currentMSecsSinceEpoch();

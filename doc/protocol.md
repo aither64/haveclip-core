@@ -50,6 +50,18 @@ Next step depends on status from reply:
   * not understood
     - morph into conversation [Clipboard update](#clipboard-update)
 
+#### Restart serial batch
+  1. Request: [SerialModeInfo](#serialmodeinfo)
+  2. Reply: [ClipboardUpdateConfirm](#clipboardupdateconfirm)
+
+Next step depends on status from reply:
+
+  * ok - close connection
+  * not exists / not matches
+    * morph into conversation [Copy serial batch](#copy-serial-batch)
+  * not understood
+    * morph into conversation [Clipboard update](#clipboard-update)
+
 #### Copy serial batch
   1. Request: [SerialModeInfo](#serialmodeinfo)  
        For each item command [ClipboardUpdateSend](#clipboardupdatesend)

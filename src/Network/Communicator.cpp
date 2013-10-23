@@ -24,13 +24,15 @@
 #include "Conversations/SerialModeEnd.h"
 #include "Conversations/SerialModeAppend.h"
 #include "Conversations/SerialModeNext.h"
+#include "Conversations/SerialModeRestart.h"
 
 Communicator::Communicator(History *history, QObject *parent) :
 	QSslSocket(parent),
 	m_history(history),
 	m_conversation(0),
 	haveHeader(false),
-	msgLen(0)
+	msgLen(0),
+	dataRead(0)
 {
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
@@ -109,8 +111,8 @@ void Communicator::receiveMessage()
 	buffer.remove(0, msgLen);
 
 	haveHeader = false;
+	dataRead -= msgLen;
 	msgLen = 0;
-	dataRead = 0;
 
 	continueConversation();
 }
@@ -186,6 +188,15 @@ void Communicator::readHeader()
 			break;
 		}
 
+		case Conversation::SerialModeRestart: {
+			qDebug() << "Initiating conversation SerialModeRestart";
+			Conversations::SerialModeRestart *c = new Conversations::SerialModeRestart(0, Communicator::Receive, 0, this);
+			c->setHistory(m_history);
+
+			m_conversation = c;
+			break;
+		}
+
 		default:
 			qDebug() << "Unknown conversation" << convType;
 			this->deleteLater();
@@ -225,6 +236,9 @@ void Communicator::continueConversation()
 
 	else if(m_conversation->currentRole() == Communicator::Send)
 		sendMessage();
+
+	else
+		onRead();
 }
 
 void Communicator::onError(QAbstractSocket::SocketError socketError)
@@ -277,6 +291,8 @@ void Communicator::morphConversation(Conversation *c)
 
 	m_conversation = c;
 	m_conversation->setParent(this);
+
+	conversationSignals();
 }
 
 void Communicator::onSslError(const QList<QSslError> &errors)

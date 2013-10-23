@@ -206,6 +206,18 @@ bool History::isNew(ClipboardItem *item) const
 }
 
 #ifdef INCLUDE_SERIAL_MODE
+void History::addBatch(ClipboardSerialBatch *batch)
+{
+	if(m_items.size() >= m_size)
+		delete m_items.takeFirst();
+
+	m_currentContainer = batch;
+
+	m_items << batch;
+
+	emit historyChanged();
+}
+
 void History::beginSerialMode(qint64 id)
 {
 	m_serialInit = true;
@@ -354,6 +366,26 @@ void History::jumpTo(ClipboardItem* item)
 {
 	popToFront(item);
 }
+
+#ifdef INCLUDE_SERIAL_MODE
+void History::restartSerialBatch(ClipboardSerialBatch *batch)
+{
+	int index = m_items.indexOf(batch);
+
+	if(index == -1)
+	{
+		qDebug() << "Batch not found!";
+		return;
+	}
+
+	popToFront(m_items[index]);
+	batch->seek(0);
+
+	m_currentContainer = batch;
+
+	emit historyChanged();
+}
+#endif
 
 QString History::filePath()
 {

@@ -41,6 +41,7 @@ public slots:
 	void serialMode(bool enable, qint64 id);
 	void serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item);
 	void serialModeNext(ClipboardSerialBatch *batch);
+	void serialModeRestart(ClipboardSerialBatch *batch);
 #endif
 
 protected slots:

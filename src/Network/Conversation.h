@@ -36,6 +36,7 @@ public:
 		SerialModeEnd,
 		SerialModeAppend,
 		SerialModeNext,
+		SerialModeRestart,
 		SerialModeCopy
 	};
 
@@ -71,6 +72,7 @@ signals:
 	void serialModeNewBatch(ClipboardSerialBatch *batch);
 	void serialModeAppend(ClipboardItem *item);
 	void serialModeNext();
+	void serialModeRestart(ClipboardSerialBatch *batch);
 #endif
 	void done();
 	void morphed(Conversation *c);

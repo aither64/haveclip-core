@@ -46,7 +46,7 @@ void ClipboardUpdateConfirm::receive(QDataStream &ds)
 
 void ClipboardUpdateConfirm::send(QDataStream &ds)
 {
-	writeStatus(ds, BaseCommand::Ok);
+	writeStatus(ds, status() == Undefined ? Ok : status());
 
 	ds << (qint32) 0;
 	ds << QStringList();
