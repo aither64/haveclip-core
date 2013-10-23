@@ -40,6 +40,7 @@
 #include <QHash>
 #include <QHostInfo>
 #include <QSslError>
+#include <QAbstractEventDispatcher>
 
 #include "PasteServices/BasePasteService.h"
 #include "ClipboardItem.h"
@@ -157,6 +158,7 @@ private:
 	bool clipboardChangedCalled;
 	bool uniteCalled;
 #ifdef INCLUDE_SERIAL_MODE
+	static QAbstractEventDispatcher::EventFilter prevEventFilter;
 	QTimer *serialTimer;
 	bool m_serialMode;
 #endif

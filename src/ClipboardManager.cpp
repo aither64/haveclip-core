@@ -28,7 +28,6 @@
 #include <QLabel>
 #include <QTimer>
 #include <QTextDocument>
-#include <QAbstractEventDispatcher>
 
 #include "Network/Receiver.h"
 #include "Network/Sender.h"
@@ -49,6 +48,10 @@ extern "C" {
 
 ClipboardManager *ClipboardManager::m_instance = 0;
 QStringList ClipboardManager::serialExceptions;
+
+#ifdef INCLUDE_SERIAL_MODE
+QAbstractEventDispatcher::EventFilter ClipboardManager::prevEventFilter = 0;
+#endif
 
 QString ClipboardManager::Node::toString()
 {
@@ -153,7 +156,7 @@ void ClipboardManager::start()
 	clipboardChanged();
 
 #ifdef INCLUDE_SERIAL_MODE
-	QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
+	prevEventFilter = QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
 #endif
 }
 
@@ -264,7 +267,12 @@ void ClipboardManager::gracefullyExit(int sig)
 bool ClipboardManager::eventFilter(void *message)
 {
 	if(!m_instance->m_serialMode)
+	{
+		if(prevEventFilter)
+			return prevEventFilter(message);
+
 		return false;
+	}
 
 	XEvent *event = static_cast<XEvent *>(message);
 
@@ -293,6 +301,9 @@ bool ClipboardManager::eventFilter(void *message)
 
 		m_instance->serialTimer->start(100);
 	}
+
+	if(prevEventFilter)
+		return prevEventFilter(message);
 
 	return false;
 }

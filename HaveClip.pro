@@ -7,6 +7,9 @@
 QT       += core gui network xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+unix: CONFIG += qxt
+unix: QXT += core gui
+
 TARGET = bin/HaveClip
 TEMPLATE = app
 

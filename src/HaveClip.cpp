@@ -28,6 +28,10 @@
 #include <QTextDocument>
 #include <QMessageBox>
 
+#ifdef INCLUDE_SERIAL_MODE
+#include <qxt/QxtGui/QxtGlobalShortcut>
+#endif
+
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
 #include "CertificateTrustDialog.h"
@@ -92,9 +96,13 @@ HaveClip::HaveClip(QObject *parent) :
 
 #ifdef INCLUDE_SERIAL_MODE
 	menu->addSeparator();
-	serialModeAction = menu->addAction(tr("Begin serial mode"), this, SLOT(userToggleSerialMode()));
+	serialModeAction = menu->addAction(tr("Begin serial mode"), this, SLOT(userToggleSerialMode()), QKeySequence("Ctrl+Alt+S"));
 
 	connect(manager, SIGNAL(serialModeChanged(bool)), this, SLOT(toggleSerialMode(bool)));
+
+	QxtGlobalShortcut *shortcut = new QxtGlobalShortcut(this);
+	connect(shortcut, SIGNAL(activated()), this, SLOT(userToggleSerialModeShortcut()));
+	shortcut->setShortcut(QKeySequence("Ctrl+Alt+S"));
 #endif // INCLUDE_SERIAL_MODE
 
 	menu->addSeparator();
@@ -259,10 +267,26 @@ void HaveClip::userToggleSerialMode()
 	toggleSerialMode(manager->isSerialModeEnabled());
 }
 
+void HaveClip::userToggleSerialModeShortcut()
+{
+	userToggleSerialMode();
+
+	QString msg;
+
+	if(manager->isSerialModeEnabled())
+		msg = tr("Serial mode enabled.");
+
+	else
+		msg = tr("Serial mode disabled.");
+
+	trayIcon->showMessage(tr("Serial mode"), msg, QSystemTrayIcon::Information, 4000);
+}
+
 void HaveClip::toggleSerialMode(bool enabled)
 {
 	if(enabled)
 		serialModeAction->setText(tr("End serial mode"));
+
 	else
 		serialModeAction->setText(tr("Begin serial mode"));
 }

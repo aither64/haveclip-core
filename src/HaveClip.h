@@ -76,6 +76,7 @@ private slots:
 	void historyActionClicked(QObject *obj);
 #ifdef INCLUDE_SERIAL_MODE
 	void userToggleSerialMode();
+	void userToggleSerialModeShortcut();
 	void toggleSerialMode(bool enabled);
 #endif
 	void showSettings();
