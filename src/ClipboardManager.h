@@ -30,7 +30,7 @@
 #include <QtGlobal>
 
 #ifdef Q_WS_X11
-//#define INCLUDE_SERIAL_MODE 1
+#define INCLUDE_SERIAL_MODE 1
 #endif
 
 #include <QTcpServer>
