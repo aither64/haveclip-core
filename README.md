@@ -29,6 +29,9 @@ HaveClip for desktop is written in C++ using the Qt framework.
 
  - Qt at least 4.7. It might work with older versions, but it's not tested.
    - modules core, gui, network and xml
+ - Linux version has additional dependencies
+   - [LibQxt](http://www.libqxt.org/) 0.6
+   - X11
 
 Download
 --------
@@ -36,8 +39,8 @@ Download
 
 Build
 -----
-    # tar -xzf HaveClip-0.8.0-src.tar.gz
-    # cd HaveClip-0.8.0-src
+    # tar -xzf HaveClip-0.9.0-src.tar.gz
+    # cd HaveClip-0.9.0-src
     # qmake
     # make
 
@@ -79,8 +82,8 @@ Features
 --------
 Where as the main functionality is present on all platforms,
 not all other features are. The most equipped is the Linux version. It can
-show you a preview of clipboard contents in tooltip of tray icon. This is not
-possible to easily implement on other platforms.
+show you a preview of clipboard contents in tooltip of tray icon and you can use
+serial batches. This is not possible to easily implement on other platforms.
 
 HaveClip can be handy even if not used for clipboard syncing. It saves
 clipboard history, allowing you to jump back and forth. It has integrated
@@ -93,9 +96,41 @@ Currently, HaveClip supports these paste services:
  - Stikked - [https://github.com/claudehohl/Stikked](https://github.com/claudehohl/Stikked)
  - Pastebin.com - [http://pastebin.com](http://pastebin.com)
 
-In Linux, when you copy something and then close the application, the copied
+### Linux specific features
+
+#### Persistance
+When you copy something and then close the application, the copied
 data is lost. HaveClip prevents that. If the clipboard contents suddenly
 disappears, it will be reset.
+
+#### Serial batches
+Copy a series of data into clipboard and then paste it in the same order.
+
+Serial mode can be enabled in tray icon's context menu (right click)
+or with a global keyboard shortcut Ctrl+Alt+S.
+
+How to use serial mode:
+
+  1. Enable serial mode
+  2. Copy the three strings below into clipboard
+    - one
+    - two
+    - three
+  3. Make three pastes, you will get the strings in the same order as you copied them
+    - one
+    - two
+    - three
+  4. Disable serial mode
+
+Serial batches are of course also synchronized on all PCs in your pool, that support
+them. Therefore it is possible to copy/paste data into/from the same batch from all
+PCs in pool.
+
+Serial mode has it's limitations. It does not work in all applications, especially
+applications which are checking clipboard contents whenever it changes, e.g. VirtualBox,
+Nautilus. HaveClip has problematic applications on blacklist and is ignoring them. Serial
+batches do not work in them. This blacklist is so far hardcoded, it will be user editable
+in the future versions.
 
 For planned features see TODO.
 
