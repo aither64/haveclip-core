@@ -435,6 +435,11 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 		{
 			lastItem->mode = ClipboardItem::ClipboardAndSelection;
 
+#ifdef INCLUDE_SERIAL_MODE
+			if(m_serialMode)
+				delayedEnsureTimer->start(100);
+#endif
+
 			if(shouldDistribute())
 				distributeClipboard(lastItem);
 		}
@@ -583,7 +588,7 @@ void ClipboardManager::uniteClipboards(ClipboardItem *content)
 
 void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode)
 {
-	qDebug() << "Ensure clipboard content" << content->toPlainText();
+	qDebug() << "Ensure clipboard content" << content->toPlainText() << mode;
 //	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
 //	{
 //		qDebug() << "Update" << mode;
@@ -837,7 +842,13 @@ void ClipboardManager::delayedClipboardEnsure()
 
 	clipboardChangedCalled = true;
 
-	ensureClipboardContent(delayedEnsureItem, ClipboardContainer::ownModeToQt(delayedEnsureItem->mode));
+	if(delayedEnsureItem->mode == ClipboardContainer::ClipboardAndSelection)
+	{
+		ensureClipboardContent(delayedEnsureItem, QClipboard::Selection);
+		ensureClipboardContent(delayedEnsureItem, QClipboard::Clipboard);
+
+	} else
+		ensureClipboardContent(delayedEnsureItem, ClipboardContainer::ownModeToQt(delayedEnsureItem->mode));
 
 	clipboardChangedCalled = false;
 }
