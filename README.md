@@ -128,7 +128,7 @@ PCs in pool.
 
 Serial mode has it's limitations. It does not work in all applications, especially
 applications which are checking clipboard contents whenever it changes, e.g. VirtualBox,
-Nautilus. HaveClip has problematic applications on blacklist and is ignoring them. Serial
+caja. HaveClip has problematic applications on blacklist and is ignoring them. Serial
 batches do not work in them. This blacklist is so far hardcoded, it will be user editable
 in the future versions.
 
