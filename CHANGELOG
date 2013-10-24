@@ -1,3 +1,10 @@
+* Thu Oct 24 2013 - version 0.9.0
+- Serial mode
+- Support for Qt5
+- Separate UI from core
+- New network protocol
+- Many fixes
+
 * Tue Jul 30 2013 - version 0.8.0
 - Sync also primary selection on X11
 - Option to unite selection and clipboard
