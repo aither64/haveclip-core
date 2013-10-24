@@ -18,6 +18,9 @@
 */
 
 #include "SerialModeCopy.h"
+
+#ifdef INCLUDE_SERIAL_MODE
+
 #include "../Commands/SerialModeInfo.h"
 #include "../../ClipboardSerialBatch.h"
 
@@ -106,3 +109,5 @@ void SerialModeCopy::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 		break;
 	}
 }
+
+#endif // INCLUDE_SERIAL_MODE

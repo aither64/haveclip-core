@@ -43,11 +43,13 @@ void SerialModeInfo::receive(QDataStream &ds)
 
 void SerialModeInfo::send(QDataStream &ds)
 {
+#ifdef INCLUDE_SERIAL_MODE
 	ClipboardSerialBatch *batch = static_cast<ClipboardSerialBatch*>(m_cont);
 
 	ds << m_batchId;
 	ds << (qint32) batch->count();
 	ds << (qint32) batch->currentIndex();
+#endif
 
 	finish();
 }

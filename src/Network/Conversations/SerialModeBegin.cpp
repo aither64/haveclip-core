@@ -53,10 +53,13 @@ void SerialModeBegin::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 	switch(lastCmd)
 	{
 	case BaseCommand::SerialModeToggle:
-		// Check serial mode availability
+#ifdef INCLUDE_SERIAL_MODE
 		m_cmds[index+1]->setStatus(BaseCommand::Ok);
 
 		emit serialModeToggled(true, static_cast<Commands::SerialModeBase*>(m_cmds[index])->batchId());
+#else
+		m_cmds[index+1]->setStatus(BaseCommand::NotUnderstood);
+#endif
 
 		break;
 

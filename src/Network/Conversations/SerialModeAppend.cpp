@@ -49,9 +49,12 @@ void SerialModeAppend::nextCommandSender(BaseCommand::Type lastCmd, int index)
 			addCommand(BaseCommand::ClipboardUpdateSend, m_role)->setContainer(m_cont->items().last());
 			addCommand(BaseCommand::Confirm, reverse(m_role));
 
-		} else if(s == BaseCommand::NotExists || s == BaseCommand::NotMatches) {
+		}
+#ifdef INCLUDE_SERIAL_MODE
+		else if(s == BaseCommand::NotExists || s == BaseCommand::NotMatches) {
 			morph(new Conversations::SerialModeCopy(m_batchId, m_role, m_cont));
 		}
+#endif
 
 		break;
 	}
@@ -71,6 +74,7 @@ void SerialModeAppend::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 	switch(lastCmd)
 	{
 	case BaseCommand::SerialModeAppendReady: {
+#ifdef INCLUDE_SERIAL_MODE
 		Commands::SerialModeAppendReady *cmd = static_cast<Commands::SerialModeAppendReady*>(m_cmds[index]);
 
 		ClipboardSerialBatch *batch = 0;
@@ -95,10 +99,14 @@ void SerialModeAppend::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 			m_cmds[index+1]->setStatus(BaseCommand::NotExists);
 			m_morph = true;
 		}
+#else
+		m_cmds[index+1]->setStatus(BaseCommand::NotUnderstood);
+#endif
 
 		break;
 	}
 
+#ifdef INCLUDE_SERIAL_MODE
 	case BaseCommand::ClipboardUpdateConfirm:
 		if(m_morph)
 			morph(new Conversations::SerialModeCopy(m_batchId, m_role, m_cont));
@@ -108,6 +116,7 @@ void SerialModeAppend::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 	case BaseCommand::ClipboardUpdateSend:
 		emit serialModeAppend(static_cast<ClipboardItem*>(m_cmds[2]->container()));
 		break;
+#endif
 
 	case BaseCommand::Confirm:
 		qDebug() << "Receiver::Confirmed";

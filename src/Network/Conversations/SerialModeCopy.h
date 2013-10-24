@@ -23,6 +23,8 @@
 #include "SerialModeBase.h"
 #include "../Commands/SerialModeInfo.h"
 
+#ifdef INCLUDE_SERIAL_MODE
+
 namespace Conversations {
 	class SerialModeCopy : public SerialModeBase
 	{
@@ -41,5 +43,7 @@ namespace Conversations {
 		Commands::SerialModeInfo *m_cmdInfo;
 	};
 }
+
+#endif // INCLUDE_SERIAL_MODE
 
 #endif // SERIALMODECOPY_H

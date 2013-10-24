@@ -42,8 +42,10 @@ void SerialModeAppendReady::receive(QDataStream &ds)
 
 void SerialModeAppendReady::send(QDataStream &ds)
 {
+#ifdef INCLUDE_SERIAL_MODE
 	ds << m_batchId;
 	ds << static_cast<ClipboardSerialBatch*>(m_cont)->items().count();
+#endif
 
 	finish();
 }

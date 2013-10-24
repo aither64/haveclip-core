@@ -21,6 +21,7 @@
 #include "../Commands/SerialModeInfo.h"
 #include "SerialModeCopy.h"
 #include "../../ClipboardSerialBatch.h"
+#include "ClipboardUpdate.h"
 
 using namespace Conversations;
 
@@ -39,6 +40,7 @@ Conversation::Type SerialModeNext::type() const
 
 void SerialModeNext::nextCommandSender(BaseCommand::Type lastCmd, int index)
 {
+#ifdef INCLUDE_SERIAL_MODE
 	switch(lastCmd)
 	{
 	case BaseCommand::Confirm: {
@@ -49,12 +51,16 @@ void SerialModeNext::nextCommandSender(BaseCommand::Type lastCmd, int index)
 		if(s == BaseCommand::NotExists || s == BaseCommand::NotMatches)
 			morph(new Conversations::SerialModeCopy(m_batchId, m_role, m_cont));
 
+		else if(s == BaseCommand::NotUnderstood)
+			morph(new Conversations::ClipboardUpdate(m_role, m_cont->item()));
+
 		break;
 	}
 
 	default:
 		break;
 	}
+#endif
 }
 
 void SerialModeNext::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
@@ -62,6 +68,7 @@ void SerialModeNext::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 	switch(lastCmd)
 	{
 	case BaseCommand::SerialModeInfo: {
+#ifdef INCLUDE_SERIAL_MODE
 		Commands::SerialModeInfo *cmd = static_cast<Commands::SerialModeInfo*>(m_cmds[index]);
 
 		ClipboardSerialBatch *batch;
@@ -81,21 +88,32 @@ void SerialModeNext::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 			m_cmds[index+1]->setStatus(BaseCommand::NotExists);
 			m_morph = true;
 		}
-
+#else
+		m_cmds[index+1]->setStatus(BaseCommand::NotUnderstood);
+		m_morph = true;
+#endif
 
 		break;
 	}
 
 	case BaseCommand::Confirm:
 		if(m_morph)
+		{
+#ifdef INCLUDE_SERIAL_MODE
 			morph(new Conversations::SerialModeCopy(m_batchId, m_role, m_cont));
+#else
+			morph(new Conversations::ClipboardUpdate(m_role, m_cont));
+#endif
+		}
 
 		break;
 
+#ifdef INCLUDE_SERIAL_MODE
 	case BaseCommand::ClipboardUpdateSend:
 		emit serialModeNext();
 
 		break;
+#endif
 
 	default:
 		break;
