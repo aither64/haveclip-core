@@ -135,9 +135,9 @@ QByteArray BasePasteService::buildPostData(QHash<QString, QString> &data)
 	}
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-	return post.toString(QUrl::FullyEncoded).replace('+', "%2B").toUtf8();
+	return post.toString(QUrl::FullyEncoded).replace('+', "%2B").replace(';', "%3B").toUtf8();
 #else
-	return post.encodedQuery().replace('+', "%2B");
+	return post.encodedQuery().replace('+', "%2B").replace(';', "%3B");
 #endif
 }
 

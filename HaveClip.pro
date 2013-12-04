@@ -54,7 +54,10 @@ SOURCES +=\
     src/Network/Commands/SerialModeInfo.cpp \
     src/Network/Conversations/HistoryMixin.cpp \
     src/Network/Conversations/SerialModeNext.cpp \
-    src/Network/Conversations/SerialModeRestart.cpp
+    src/Network/Conversations/SerialModeRestart.cpp \
+    src/PasteServices/HaveSnippet/HaveSnippet.cpp \
+    src/PasteServices/HaveSnippet/HaveSnippetSettings.cpp \
+    src/AutoCompleteLineEdit.cpp
 
 HEADERS  += src/HaveClip.h \
     src/AboutDialog.h \
@@ -95,7 +98,10 @@ HEADERS  += src/HaveClip.h \
     src/Network/Commands/SerialModeInfo.h \
     src/Network/Conversations/HistoryMixin.h \
     src/Network/Conversations/SerialModeNext.h \
-    src/Network/Conversations/SerialModeRestart.h
+    src/Network/Conversations/SerialModeRestart.h \
+    src/PasteServices/HaveSnippet/HaveSnippet.h \
+    src/PasteServices/HaveSnippet/HaveSnippetSettings.h \
+    src/AutoCompleteLineEdit.h
 
 FORMS    += src/AboutDialog.ui \
     src/SettingsDialog.ui \
@@ -104,7 +110,8 @@ FORMS    += src/AboutDialog.ui \
     src/PasteServices/PasteDialog.ui \
     src/PasteServices/Pastebin/PastebinSettings.ui \
     src/LoginDialog.ui \
-    src/PasteServices/PasteServiceEditDialog.ui
+    src/PasteServices/PasteServiceEditDialog.ui \
+    src/PasteServices/HaveSnippet/HaveSnippetSettings.ui
 
 RESOURCES += \
     HaveClip.qrc

@@ -39,6 +39,7 @@ public:
 	enum PasteService {
 		Stikked=0,
 		Pastebin,
+		HaveSnippet,
 		PasteServiceCount,
 		None
 	};

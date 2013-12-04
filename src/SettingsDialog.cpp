@@ -28,6 +28,7 @@
 #include "PasteServices/BasePasteService.h"
 #include "PasteServices/PasteServiceEditDialog.h"
 
+#include "PasteServices/HaveSnippet/HaveSnippet.h"
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
 
@@ -104,6 +105,9 @@ SettingsDialog::SettingsDialog(QSettings *settings, QWidget *parent) :
 
 		switch(settings->value("Type").toInt())
 		{
+		case BasePasteService::HaveSnippet:
+			s = new HaveSnippet(settings, this);
+			break;
 		case BasePasteService::Stikked:
 			s = new Stikked(settings, this);
 			break;
@@ -266,6 +270,9 @@ void SettingsDialog::addPasteService()
 
 		switch(dlg->type())
 		{
+		case BasePasteService::HaveSnippet:
+			s = new HaveSnippet(settings);
+			break;
 		case BasePasteService::Stikked:
 			s = new Stikked(settings);
 			break;
@@ -301,6 +308,10 @@ void SettingsDialog::editPasteService()
 
 			switch(dlg->type())
 			{
+			case BasePasteService::HaveSnippet:
+				s = new HaveSnippet();
+				break;
+
 			case BasePasteService::Stikked:
 				s = new Stikked();
 				break;

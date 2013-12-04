@@ -35,6 +35,7 @@
 #include "ClipboardSerialBatch.h"
 
 #include "PasteServices/PasteDialog.h"
+#include "PasteServices/HaveSnippet/HaveSnippet.h"
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
 
@@ -865,6 +866,9 @@ void ClipboardManager::loadPasteServices()
 
 		switch(m_settings->value("Type").toInt())
 		{
+		case BasePasteService::HaveSnippet:
+			s = new HaveSnippet(m_settings, this);
+			break;
 		case BasePasteService::Stikked:
 			s = new Stikked(m_settings, this);
 			break;

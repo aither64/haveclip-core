@@ -21,6 +21,8 @@
 #include "ui_PasteServiceEditDialog.h"
 
 #include "BasePasteServiceWidget.h"
+#include "HaveSnippet/HaveSnippet.h"
+#include "HaveSnippet/HaveSnippetSettings.h"
 #include "Stikked/Stikked.h"
 #include "Stikked/StikkedSettings.h"
 #include "Pastebin/Pastebin.h"
@@ -43,6 +45,9 @@ PasteServiceEditDialog::PasteServiceEditDialog(PasteServiceEditDialog::Action ac
 
 		switch(i)
 		{
+		case BasePasteService::HaveSnippet:
+			w = new HaveSnippetSettings(BasePasteServiceWidget::Settings, this);
+			break;
 		case BasePasteService::Stikked:
 			w = new StikkedSettings(BasePasteServiceWidget::Settings, this);
 			break;

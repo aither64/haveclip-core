@@ -20,6 +20,8 @@
 #include "PasteDialog.h"
 #include "ui_PasteDialog.h"
 
+#include "HaveSnippet/HaveSnippet.h"
+#include "HaveSnippet/HaveSnippetSettings.h"
 #include "Stikked/Stikked.h"
 #include "Stikked/StikkedSettings.h"
 #include "Pastebin/Pastebin.h"
@@ -34,6 +36,10 @@ PasteDialog::PasteDialog(QString data, BasePasteService *service, QWidget *paren
 
 	switch(service->type())
 	{
+	case BasePasteService::HaveSnippet:
+		serviceWidget = new HaveSnippetSettings(BasePasteServiceWidget::Paste, this);
+		serviceWidget->load(service);
+		break;
 	case BasePasteService::Stikked:
 		serviceWidget = new StikkedSettings(BasePasteServiceWidget::Paste, this);
 		serviceWidget->load(service);
