@@ -5,6 +5,10 @@
 
 #include <QDebug>
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <QUrlQuery>
+#endif
+
 HaveSnippetSettings::HaveSnippetSettings(BasePasteServiceWidget::Mode mode, QWidget *parent) :
 	BasePasteServiceWidget(mode, parent),
 	ui(new Ui::HaveSnippetSettings),
@@ -85,7 +89,12 @@ QHash<QString, QVariant> HaveSnippetSettings::settings()
 	s["Name"] = ui->nameLineEdit->text();
 	s["Title"] = ui->titleLineEdit->text();
 	s["ShortDescription"] = ui->shortDescriptionLineEdit->text();
-	s["Language"] = m_languages[ ui->langComboBox->currentIndex() ].toStringList()[0];
+
+	if(m_languages.size())
+		s["Language"] = m_languages[ ui->langComboBox->currentIndex() ].toStringList()[0];
+	else
+		s["Language"] = "text";
+
 	s["FullDescription"] = ui->fullDescriptionTextEdit->toPlainText();
 	s["Tags"] = clearTags(ui->tagsLineEdit->text());
 	s["Accessibility"] = ui->accessibilityComboBox->currentIndex();
@@ -161,10 +170,7 @@ int HaveSnippetSettings::expireIndexFromDuration(int d)
 
 void HaveSnippetSettings::fetchLanguages()
 {
-	QUrl url = HaveSnippet::apiUrl(ui->apiUrlLineEdit->text(), "languages");
-
-	if(!ui->apiKeyLineEdit->text().isEmpty())
-		url.addQueryItem("api_key", ui->apiKeyLineEdit->text());
+	QUrl url = addApikey(HaveSnippet::apiUrl(ui->apiUrlLineEdit->text(), "languages"));
 
 	languagesReply = manager->get(QNetworkRequest(url));
 
@@ -173,10 +179,7 @@ void HaveSnippetSettings::fetchLanguages()
 
 void HaveSnippetSettings::fetchTags()
 {
-	QUrl url = HaveSnippet::apiUrl(ui->apiUrlLineEdit->text(), "tags");
-
-	if(!ui->apiKeyLineEdit->text().isEmpty())
-		url.addQueryItem("api_key", ui->apiKeyLineEdit->text());
+	QUrl url = addApikey(HaveSnippet::apiUrl(ui->apiUrlLineEdit->text(), "tags"));
 
 	tagsReply = manager->get(QNetworkRequest(url));
 
@@ -243,4 +246,25 @@ QString HaveSnippetSettings::clearTags(QString raw)
 		cleaned << tag.trimmed();
 
 	return cleaned.join(",");
+}
+
+QUrl HaveSnippetSettings::addApikey(QUrl url)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	QUrlQuery tmp;
+#else
+	QUrl tmp = url;
+#endif
+
+	if(!ui->apiKeyLineEdit->text().isEmpty())
+		tmp.addQueryItem("api_key", ui->apiKeyLineEdit->text());
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	QUrl ret = url;
+	ret.setQuery(tmp);
+
+	return ret;
+#else
+	return tmp;
+#endif
 }

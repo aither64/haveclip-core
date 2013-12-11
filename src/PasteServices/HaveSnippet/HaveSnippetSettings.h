@@ -40,6 +40,7 @@ private:
 	void fetchLanguages();
 	void fetchTags();
 	QString clearTags(QString raw);
+	QUrl addApikey(QUrl url);
 
 private slots:
 	void languagesFetched();
