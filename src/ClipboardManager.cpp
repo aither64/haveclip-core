@@ -913,7 +913,10 @@ void ClipboardManager::receivePasteUrl(QUrl url)
 	mime->setText(url.toString());
 	mime->setHtml(html.arg(url.toString()));
 
-	clipboard->setMimeData(mime);
+	ClipboardItem *item = new ClipboardItem(ClipboardItem::Clipboard, mime);
+	item->init();
+
+	updateClipboard(item);
 }
 
 #ifdef INCLUDE_SERIAL_MODE
