@@ -1,3 +1,6 @@
+* Wed Dec 11 2013 - version 0.10.0
+- Add HaveSnippet to supported paste services
+
 * Thu Oct 24 2013 - version 0.9.0
 - Serial mode
 - Support for Qt5

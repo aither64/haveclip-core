@@ -39,8 +39,8 @@ Download
 
 Build
 -----
-    # tar -xzf HaveClip-0.9.0-src.tar.gz
-    # cd HaveClip-0.9.0-src
+    # tar -xzf HaveClip-0.10.0-src.tar.gz
+    # cd HaveClip-0.10.0-src
     # qmake
     # make
 
@@ -93,6 +93,7 @@ required.
 
 Currently, HaveClip supports these paste services:
 
+ - HaveSnippet - [http://www.havefun.cz/projects/havesnippet/](http://www.havefun.cz/projects/havesnippet/)
  - Stikked - [https://github.com/claudehohl/Stikked](https://github.com/claudehohl/Stikked)
  - Pastebin.com - [http://pastebin.com](http://pastebin.com)
 
