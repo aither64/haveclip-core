@@ -323,6 +323,8 @@ void HaveClip::showSettings()
 		manager->setSelectionMode(dlg->selectionMode());
 		manager->setSyncMode(dlg->synchronizationMode());
 
+		manager->setNodes(dlg->nodes());
+
 		manager->setListenHost(dlg->host(), dlg->port());
 		manager->setEncryption(dlg->encryption());
 		manager->setCertificate(dlg->certificate());
