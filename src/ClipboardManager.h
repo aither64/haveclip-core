@@ -83,7 +83,7 @@ public:
 
 	explicit ClipboardManager(QObject *parent = 0);
 	~ClipboardManager();
-	void start();
+	static ClipboardManager* instance();
 	QSettings *settings();
 	QList<BasePasteService*> pasteServices();
 	History* history();
@@ -94,6 +94,7 @@ public:
 #ifdef INCLUDE_SERIAL_MODE
 	bool isSerialModeEnabled() const;
 #endif
+	QString password();
 	void setNodes(QStringList nodes);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
@@ -120,6 +121,8 @@ signals:
 #endif
 
 public slots:
+	void start();
+	void delayedStart(int msecs);
 	void jumpTo(ClipboardItem *content);
 	void saveSettings();
 	void toggleSharedClipboard(bool enabled);

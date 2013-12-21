@@ -151,6 +151,11 @@ ClipboardManager::~ClipboardManager()
 	qDeleteAll(pool);
 }
 
+ClipboardManager* ClipboardManager::instance()
+{
+	return m_instance;
+}
+
 void ClipboardManager::start()
 {
 	// Load history
@@ -166,6 +171,11 @@ void ClipboardManager::start()
 #ifdef INCLUDE_SERIAL_MODE
 	prevEventFilter = QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
 #endif
+}
+
+void ClipboardManager::delayedStart(int msecs)
+{
+	QTimer::singleShot(msecs, this, SLOT(start()));
 }
 
 QSettings* ClipboardManager::settings()
@@ -204,6 +214,11 @@ bool ClipboardManager::isSerialModeEnabled() const
 	return m_serialMode;
 }
 #endif
+
+QString ClipboardManager::password()
+{
+	return m_password;
+}
 
 void ClipboardManager::setNodes(QStringList nodes)
 {
