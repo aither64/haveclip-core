@@ -41,7 +41,8 @@ ClipboardItem::ClipboardItem() :
 }
 
 ClipboardItem::ClipboardItem(ClipboardItem::Mode m, QMimeData *data) :
-	ClipboardItem()
+    ClipboardContainer(),
+    preview(0)
 {
 	mode = m;
 	m_mimeData = data;

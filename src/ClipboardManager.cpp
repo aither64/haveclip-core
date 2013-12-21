@@ -19,13 +19,17 @@
 
 #include "ClipboardManager.h"
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <QGuiApplication>
+#else
 #include <QApplication>
+#endif
+
 #include <QMimeData>
 #include <QStringList>
 #include <QUrl>
 #include <QImage>
 #include <QColor>
-#include <QLabel>
 #include <QTimer>
 #include <QTextDocument>
 
@@ -34,7 +38,6 @@
 
 #include "ClipboardSerialBatch.h"
 
-#include "PasteServices/PasteDialog.h"
 #include "PasteServices/HaveSnippet/HaveSnippet.h"
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
@@ -74,7 +77,11 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 		<< "main" // VirtualBox
 		<< "Caja";
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	clipboard = QGuiApplication::clipboard();
+#else
 	clipboard = QApplication::clipboard();
+#endif
 
 	m_history = new History(this);
 
