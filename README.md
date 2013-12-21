@@ -39,8 +39,8 @@ Download
 
 Build
 -----
-    # tar -xzf HaveClip-0.10.0-src.tar.gz
-    # cd HaveClip-0.10.0-src
+    # tar -xzf HaveClip-0.10.1-src.tar.gz
+    # cd HaveClip-0.10.1-src
     # qmake
     # make
 
