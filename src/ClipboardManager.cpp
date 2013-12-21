@@ -19,13 +19,17 @@
 
 #include "ClipboardManager.h"
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <QGuiApplication>
+#else
 #include <QApplication>
+#endif
+
 #include <QMimeData>
 #include <QStringList>
 #include <QUrl>
 #include <QImage>
 #include <QColor>
-#include <QLabel>
 #include <QTimer>
 #include <QTextDocument>
 
@@ -34,7 +38,6 @@
 
 #include "ClipboardSerialBatch.h"
 
-#include "PasteServices/PasteDialog.h"
 #include "PasteServices/HaveSnippet/HaveSnippet.h"
 #include "PasteServices/Stikked/Stikked.h"
 #include "PasteServices/Pastebin/Pastebin.h"
@@ -74,7 +77,11 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 		<< "main" // VirtualBox
 		<< "Caja";
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	clipboard = QGuiApplication::clipboard();
+#else
 	clipboard = QApplication::clipboard();
+#endif
 
 	m_history = new History(this);
 
@@ -144,6 +151,11 @@ ClipboardManager::~ClipboardManager()
 	qDeleteAll(pool);
 }
 
+ClipboardManager* ClipboardManager::instance()
+{
+	return m_instance;
+}
+
 void ClipboardManager::start()
 {
 	// Load history
@@ -159,6 +171,11 @@ void ClipboardManager::start()
 #ifdef INCLUDE_SERIAL_MODE
 	prevEventFilter = QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
 #endif
+}
+
+void ClipboardManager::delayedStart(int msecs)
+{
+	QTimer::singleShot(msecs, this, SLOT(start()));
 }
 
 QSettings* ClipboardManager::settings()
@@ -197,6 +214,11 @@ bool ClipboardManager::isSerialModeEnabled() const
 	return m_serialMode;
 }
 #endif
+
+QString ClipboardManager::password()
+{
+	return m_password;
+}
 
 void ClipboardManager::setNodes(QStringList nodes)
 {
