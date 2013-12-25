@@ -87,18 +87,6 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 
 	connect(qApp, SIGNAL(aboutToQuit()), m_history, SLOT(save()));
 
-#if defined Q_OS_LINUX
-	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
-#elif defined Q_OS_WIN32
-	// Signal change(QClipboard::Mode) is not sent on Windows
-	connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
-#elif defined Q_OS_MAC
-	// There's no notification about clipboard changes on OS X, active checking is needed
-	QTimer *timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
-	timer->start(300);
-#endif
-
 	delayedEnsureTimer = new QTimer(this);
 	delayedEnsureTimer->setSingleShot(true);
 
@@ -167,6 +155,20 @@ void ClipboardManager::start()
 
 	// Load contents of clipboard
 	clipboardChanged();
+
+#if defined(Q_OS_LINUX)
+	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
+
+#elif defined(Q_OS_WIN32)
+	// Signal change(QClipboard::Mode) is not sent on Windows
+	connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
+
+#elif defined(Q_OS_MAC)
+	// There's no notification about clipboard changes on OS X, active checking is needed
+	QTimer *timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
+	timer->start(1000);
+#endif
 
 #ifdef INCLUDE_SERIAL_MODE
 	prevEventFilter = QAbstractEventDispatcher::instance()->setEventFilter(eventFilter);
@@ -436,6 +438,13 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 	ClipboardItem::Mode mode = ClipboardItem::qtModeToOwn(m);
 	const QMimeData *mimeData = clipboard->mimeData(m);
 	QMimeData *copiedMimeData;
+
+	if(!mimeData)
+	{
+		qDebug() << "Clipboard is empty";
+		clipboardChangedCalled = false;
+		return;
+	}
 
 	if(m == QClipboard::Selection) // Selection has only text and html
 	{
