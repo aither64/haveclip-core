@@ -30,6 +30,10 @@ namespace Commands {
 		virtual Type type() const;
 		virtual void receive(QDataStream &ds);
 		virtual void send(QDataStream &ds);
+		ClipboardContainer::Mode mode();
+
+	private:
+		ClipboardContainer::Mode m_mode;
 	};
 }
 

@@ -36,7 +36,7 @@ void ClipboardUpdateReady::receive(QDataStream &ds)
 	qint32 mode;
 	ds >> mode;
 
-	// determine if we care about this mode
+	m_mode = (ClipboardContainer::Mode) mode;
 
 	finish();
 }
@@ -46,4 +46,9 @@ void ClipboardUpdateReady::send(QDataStream &ds)
 	ds << (qint32) m_cont->mode;
 
 	finish();
+}
+
+ClipboardContainer::Mode ClipboardUpdateReady::mode()
+{
+	return m_mode;
 }

@@ -35,10 +35,10 @@ public:
 	};
 
 	enum Mode {
-		Selection,
-		Clipboard,
-		FindBuffer,
-		ClipboardAndSelection
+		Selection=1,
+		Clipboard=2,
+		FindBuffer=4,
+		ClipboardAndSelection=8
 	};
 
 	Mode mode;

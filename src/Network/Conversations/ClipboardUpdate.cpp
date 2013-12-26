@@ -18,6 +18,7 @@
 */
 
 #include "ClipboardUpdate.h"
+#include "../Commands/ClipboardUpdateReady.h"
 
 using namespace Conversations;
 
@@ -37,6 +38,27 @@ void ClipboardUpdate::nextCommand(BaseCommand::Type lastCmd, int index)
 {
 	switch(lastCmd)
 	{
+	case BaseCommand::ClipboardUpdateReady: {
+		if(m_role == Communicator::Receive)
+		{
+			Commands::ClipboardUpdateReady *cmd = static_cast<Commands::ClipboardUpdateReady*>(m_cmds[index]);
+			qint32 supported = ClipboardManager::supportedModes();
+			ClipboardContainer::Mode mode = cmd->mode();
+
+			if(mode == ClipboardContainer::ClipboardAndSelection
+					&& ((supported & ClipboardContainer::Clipboard) == ClipboardContainer::Clipboard
+						|| (supported & ClipboardContainer::Selection) == ClipboardContainer::Selection)
+			)
+			; // pass
+			else if((supported & mode) != mode) {
+				qDebug() << "Mode" << mode << "not supported, ignored";
+				m_cmds[index+1]->setStatus(BaseCommand::Abort);
+			}
+		}
+
+		break;
+	}
+
 	case BaseCommand::ClipboardUpdateConfirm:
 		// Remove commands if confirm is not ok
 		if((m_role == Communicator::Send && m_cmds[index]->status() == BaseCommand::Ok)

@@ -20,12 +20,12 @@
 #ifndef CLIPBOARDMANAGER_H
 #define CLIPBOARDMANAGER_H
 
-#define VERSION "0.10.1"
+#define VERSION "0.11.0-dev"
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
-#define HISTORY_VERSION 2
+#define HISTORY_VERSION 3
 
 #define PROTO_MAGIC_NUMBER 0x84D3C117
-#define PROTO_VERSION 2
+#define PROTO_VERSION 3
 
 #include <QtGlobal>
 
@@ -105,6 +105,7 @@ public:
 	void setPassword(QString pass);
 	void setPasteServices(QList<BasePasteService*> services);
 	void distributeCurrentClipboard();
+	static qint32 supportedModes();
 	static void gracefullyExit(int sig);
 #ifdef INCLUDE_SERIAL_MODE
 	static bool eventFilter(void *message);
@@ -142,8 +143,8 @@ public slots:
 private:
 	static ClipboardManager *m_instance;
 	static QStringList serialExceptions;
+	static QClipboard *clipboard;
 	QSettings *m_settings;
-	QClipboard *clipboard;
 	QList<Node*> pool;
 	History* m_history;
 	bool m_clipSync;

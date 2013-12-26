@@ -52,6 +52,7 @@ extern "C" {
 
 ClipboardManager *ClipboardManager::m_instance = 0;
 QStringList ClipboardManager::serialExceptions;
+QClipboard *ClipboardManager::clipboard = 0;
 
 #ifdef INCLUDE_SERIAL_MODE
 QAbstractEventDispatcher::EventFilter ClipboardManager::prevEventFilter = 0;
@@ -279,6 +280,24 @@ void ClipboardManager::setPasteServices(QList<BasePasteService*> services)
 void ClipboardManager::distributeCurrentClipboard()
 {
 	distributeClipboard(m_history->currentItem());
+}
+
+qint32 ClipboardManager::supportedModes()
+{
+	return ClipboardContainer::Clipboard;
+
+	qint8 ret = ClipboardContainer::Clipboard;
+
+	if(clipboard->supportsSelection())
+	{
+		ret |= ClipboardContainer::Selection;
+		ret |= ClipboardContainer::ClipboardAndSelection;
+	}
+
+	if(clipboard->supportsFindBuffer())
+		ret |= ClipboardContainer::FindBuffer;
+
+	return ret;
 }
 
 void ClipboardManager::gracefullyExit(int sig)
