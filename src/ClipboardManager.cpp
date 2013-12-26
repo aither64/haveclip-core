@@ -218,6 +218,16 @@ bool ClipboardManager::isSerialModeEnabled() const
 }
 #endif
 
+QString ClipboardManager::host()
+{
+	return m_host;
+}
+
+quint16 ClipboardManager::port()
+{
+	return m_port;
+}
+
 QString ClipboardManager::password()
 {
 	return m_password;
@@ -250,6 +260,16 @@ void ClipboardManager::setListenHost(QString host, quint16 port)
 
 		startListening();
 	}
+}
+
+void ClipboardManager::setHost(QString host)
+{
+	setListenHost(host, m_port);
+}
+
+void ClipboardManager::setPort(quint16 port)
+{
+	setListenHost(m_host, port);
 }
 
 void ClipboardManager::setEncryption(Encryption encryption)

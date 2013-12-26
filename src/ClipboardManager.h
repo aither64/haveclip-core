@@ -94,11 +94,15 @@ public:
 #ifdef INCLUDE_SERIAL_MODE
 	bool isSerialModeEnabled() const;
 #endif
+	QString host();
+	quint16 port();
 	QString password();
 	void setNodes(QStringList nodes);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
 	void setListenHost(QString host, quint16 port);
+	void setHost(QString host);
+	void setPort(quint16 port);
 	void setEncryption(Encryption encryption);
 	void setCertificate(QString cert);
 	void setPrivateKey(QString key);
