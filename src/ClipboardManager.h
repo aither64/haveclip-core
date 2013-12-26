@@ -124,6 +124,7 @@ public slots:
 	void start();
 	void delayedStart(int msecs);
 	void jumpTo(ClipboardItem *content);
+	void jumpToItemAt(int index);
 	void saveSettings();
 	void toggleSharedClipboard(bool enabled);
 	void toggleClipboardSending(bool enabled, bool masterChange = false);

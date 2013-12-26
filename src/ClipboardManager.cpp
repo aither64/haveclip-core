@@ -353,6 +353,11 @@ void ClipboardManager::jumpTo(ClipboardItem *content)
 		distributeClipboard(content);
 }
 
+void ClipboardManager::jumpToItemAt(int index)
+{
+	jumpTo(m_history->containerAt(index)->item());
+}
+
 void ClipboardManager::saveSettings()
 {
 	m_settings->setValue("History/Enable", m_history->isEnabled());
