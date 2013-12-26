@@ -20,7 +20,7 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
-#include <QObject>
+#include <QAbstractListModel>
 
 #include "ClipboardManager.h"
 #include "ClipboardItem.h"
@@ -29,12 +29,18 @@
 class ClipboardSerialBatch;
 #endif
 
-class History : public QObject
+class History : public QAbstractListModel
 {
 	Q_OBJECT
 public:
 	explicit History(QObject *parent = 0);
 	void init();
+	int rowCount(const QModelIndex &parent) const;
+	QVariant data(const QModelIndex &index, int role) const;
+	Q_INVOKABLE void remove(int row);
+	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
+	Q_INVOKABLE int count() const;
+	ClipboardContainer* containerAt(int index);
 	QList<ClipboardContainer*> items();
 	ClipboardItem* currentItem();
 	ClipboardItem* lastItem();

@@ -29,7 +29,7 @@
 #endif
 
 History::History(QObject *parent) :
-	QObject(parent),
+	QAbstractListModel(parent),
 	m_track(true),
 	m_save(false),
 	m_size(30),
@@ -44,6 +44,61 @@ void History::init()
 		load();
 	else
 		deleteFile();
+}
+
+int History::rowCount(const QModelIndex &parent) const
+{
+	return m_items.count();
+}
+
+QVariant History::data(const QModelIndex &index, int role) const
+{
+	if(!index.isValid())
+		return QVariant();
+
+	switch(role)
+	{
+	case Qt::DisplayRole: {
+		return m_items[ m_items.count() - index.row() - 1 ]->item()->toPlainText();
+	}
+
+	default:
+		break;
+	}
+
+	return QVariant();
+}
+
+void History::remove(int row)
+{
+	removeRows(row, 1);
+}
+
+bool History::removeRows(int row, int count, const QModelIndex &parent)
+{
+	beginRemoveRows(parent, row, row+count-1);
+
+	int cnt = m_items.count();
+
+	for(int i = row; i < row+count; i++)
+		delete m_items.takeAt(cnt-i-1)->item();
+
+	endRemoveRows();
+
+	if(!m_items.count())
+		m_currentContainer = 0;
+
+	return true;
+}
+
+int History::count() const
+{
+	return m_items.count();
+}
+
+ClipboardContainer* History::containerAt(int index)
+{
+	return m_items[index];
 }
 
 QList<ClipboardContainer*> History::items()
@@ -184,14 +239,23 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 			}
 
 			if(m_items.size() >= m_size)
+			{
+				beginRemoveRows(QModelIndex(), m_items.size()-1, m_items.size()-1);
 				delete m_items.takeFirst();
+				endRemoveRows();
+			}
 
+			beginInsertRows(QModelIndex(), 0, 0);
 			m_items << item;
+			endInsertRows();
 
 			break;
 		}
-	} else
+	} else {
+		beginInsertRows(QModelIndex(), 0, 0);
 		m_items << item;
+		endInsertRows();
+	}
 
 	m_currentContainer = item;
 
@@ -304,12 +368,20 @@ void History::load()
 		return;
 	}
 
+	int index = 0;
+
 	while(!ds.atEnd())
 	{
 		ClipboardContainer *cnt = ClipboardContainer::load(ds);
 
 		if(cnt)
+		{
+			beginInsertRows(QModelIndex(), index, index);
 			m_items << cnt;
+			endInsertRows();
+
+			index++;
+		}
 	}
 
 	file.close();
@@ -354,7 +426,18 @@ void History::save()
 
 void History::clear()
 {
+	int cnt = m_items.count();
+
+	if(!cnt)
+		return;
+
+	beginRemoveRows(QModelIndex(), 0, cnt - 1);
+
+	qDeleteAll(m_items);
 	m_items.clear();
+	m_currentContainer = 0;
+
+	endRemoveRows();
 }
 
 void History::deleteFile()
@@ -398,6 +481,10 @@ QString History::filePath()
 
 void History::popToFront(ClipboardContainer *item)
 {
-	m_items.removeOne(item);
+	int i = m_items.indexOf(item);
+
+	m_items.removeAt(i);
 	m_items << item;
+
+	emit dataChanged(index(0, 0), index(i, 0));
 }
