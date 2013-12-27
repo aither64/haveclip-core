@@ -1,6 +1,6 @@
 QT       += core gui network
 
-TARGET = bin/libhaveclipcore
+TARGET = bin/haveclipcore
 TEMPLATE = lib
 
 SOURCES +=\
