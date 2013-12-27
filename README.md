@@ -44,13 +44,17 @@ Build
     # qmake
     # make
 
-You should now have executable at bin/haveclip
+You should now have executable at bin/haveclip and a library at haveclip-core/bin/libhaveclipcore.so.1.
 
 Installation
 ------------
 You can copy it to /usr/local/bin
 
     # cp bin/haveclip /usr/local/bin/
+
+and
+
+    # cp haveclip-core/bin/libhaveclipcore.so.1 /usr/lib/
 
 or wherever you want.
 
