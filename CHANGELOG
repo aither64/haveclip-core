@@ -1,3 +1,7 @@
+* Fri Dec 27 2013 - version 0.11.0
+- Core separated into a library
+- History and network protocol not compatible with older versions
+
 * Tue Dec 17 2013 - version 0.10.1
 - Fix saving nodes in pool
 

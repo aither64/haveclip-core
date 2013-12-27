@@ -39,18 +39,18 @@ Download
 
 Build
 -----
-    # tar -xzf HaveClip-0.10.1-src.tar.gz
-    # cd HaveClip-0.10.1-src
+    # tar -xzf HaveClip-0.11.0-src.tar.gz
+    # cd HaveClip-0.11.0-src
     # qmake
     # make
 
-You should now have executable at bin/HaveClip
+You should now have executable at bin/haveclip
 
 Installation
 ------------
 You can copy it to /usr/local/bin
 
-    # cp bin/HaveClip /usr/local/bin/
+    # cp bin/haveclip /usr/local/bin/
 
 or wherever you want.
 
@@ -132,6 +132,16 @@ applications which are checking clipboard contents whenever it changes, e.g. Vir
 caja. HaveClip has problematic applications on blacklist and is ignoring them. Serial
 batches do not work in them. This blacklist is so far hardcoded, it will be user editable
 in the future versions.
+
+### Sailfish OS
+Sailfish version does not support paste services, nor serial batches.
+
+Encryption is currently not supported neither.
+
+#### Known issues
+In order to sync clipboard from Sailfish to PC, one must bring HaveClip to foreground
+after copying text, or else HaveClip will not notice it. Sync from PC to Sailfish works
+fine.
 
 For planned features see TODO.
 

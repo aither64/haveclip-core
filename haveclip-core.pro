@@ -75,7 +75,8 @@ OTHER_FILES += \
     utils/pastebin_lang_generator.py \
     LICENSE \
     README.md \
-    doc/protocol.md
+    doc/protocol.md \
+    CHANGELOG
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += x11
