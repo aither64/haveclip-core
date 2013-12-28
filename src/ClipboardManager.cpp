@@ -254,6 +254,7 @@ void ClipboardManager::setListenHost(QString host, quint16 port)
 	if(host != m_host || port != m_port)
 	{
 		m_host = host;
+		m_port = port;
 
 		if(isListening())
 			close();
