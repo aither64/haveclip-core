@@ -97,8 +97,8 @@ bool History::removeRows(int row, int count, const QModelIndex &parent)
 
 	int cnt = m_items.count();
 
-	for(int i = row; i < row+count; i++)
-		delete m_items.takeAt(cnt-i-1)->item();
+	for(int i = row, j = row; i < row+count; i++)
+		delete m_items.takeAt(cnt-j-1)->item();
 
 	endRemoveRows();
 
