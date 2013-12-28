@@ -33,11 +33,17 @@ class History : public QAbstractListModel
 {
 	Q_OBJECT
 public:
+	enum HistoryRoles {
+		PlainTextRole = Qt::UserRole + 1,
+		ClipboardItemPointerRole
+	};
+
 	explicit History(QObject *parent = 0);
 	void init();
+	QHash<int, QByteArray> roleNames() const;
 	int rowCount(const QModelIndex &parent) const;
 	QVariant data(const QModelIndex &index, int role) const;
-	Q_INVOKABLE void remove(int row);
+	Q_INVOKABLE void remove(QVariant v);
 	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
 	Q_INVOKABLE int count() const;
 	ClipboardContainer* containerAt(int index);

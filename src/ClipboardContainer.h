@@ -72,4 +72,6 @@ inline QDataStream& operator<<(QDataStream &ds, const ClipboardContainer &cnt)
 	return ds;
 }
 
+Q_DECLARE_METATYPE(ClipboardContainer*)
+
 #endif // CLIPBOARDCONTAINER_H

@@ -46,6 +46,15 @@ void History::init()
 		deleteFile();
 }
 
+QHash<int, QByteArray> History::roleNames() const
+{
+	QHash<int, QByteArray> roles;
+	roles[PlainTextRole] = "plaintext";
+	roles[ClipboardItemPointerRole] = "pointer";
+
+	return roles;
+}
+
 int History::rowCount(const QModelIndex &parent) const
 {
 	return m_items.count();
@@ -58,9 +67,12 @@ QVariant History::data(const QModelIndex &index, int role) const
 
 	switch(role)
 	{
-	case Qt::DisplayRole: {
+	case Qt::DisplayRole:
+	case PlainTextRole:
 		return m_items[ m_items.count() - index.row() - 1 ]->item()->toPlainText();
-	}
+
+	case ClipboardItemPointerRole:
+		return QVariant::fromValue<ClipboardContainer*>(m_items[ m_items.count() - index.row() - 1 ]);
 
 	default:
 		break;
@@ -69,9 +81,14 @@ QVariant History::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-void History::remove(int row)
+void History::remove(QVariant v)
 {
-	removeRows(row, 1);
+	int index = m_items.indexOf(v.value<ClipboardContainer*>());
+
+	if(index == -1)
+		return;
+
+	removeRows(m_items.count() - index - 1, 1);
 }
 
 bool History::removeRows(int row, int count, const QModelIndex &parent)
