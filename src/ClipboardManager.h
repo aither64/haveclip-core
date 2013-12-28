@@ -20,7 +20,7 @@
 #ifndef CLIPBOARDMANAGER_H
 #define CLIPBOARDMANAGER_H
 
-#define VERSION "0.11.0"
+#define VERSION "0.12.0"
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
 #define HISTORY_VERSION 3
 
@@ -97,7 +97,9 @@ public:
 	QString host();
 	quint16 port();
 	QString password();
+	QList<Node*> nodes();
 	void setNodes(QStringList nodes);
+	void setNodes(QList<Node*> nodes);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
 	void setListenHost(QString host, quint16 port);
@@ -205,5 +207,7 @@ private slots:
 #endif
 	
 };
+
+Q_DECLARE_METATYPE(ClipboardManager::Node*)
 
 #endif // CLIPBOARDMANAGER_H

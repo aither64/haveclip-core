@@ -233,10 +233,27 @@ QString ClipboardManager::password()
 	return m_password;
 }
 
+QList<ClipboardManager::Node*> ClipboardManager::nodes()
+{
+	return pool;
+}
+
 void ClipboardManager::setNodes(QStringList nodes)
 {
 	m_settings->setValue("Pool/Nodes", nodes);
 	loadNodes();
+}
+
+void ClipboardManager::setNodes(QList<ClipboardManager::Node*> nodes)
+{
+	pool = nodes;
+
+	QStringList tmp;
+
+	foreach(Node *n, pool)
+		tmp << QString("%1:%2").arg(n->host).arg(n->port);
+
+	m_settings->setValue("Pool/Nodes", tmp);
 }
 
 void ClipboardManager::setSelectionMode(SelectionMode m)
