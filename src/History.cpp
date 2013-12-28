@@ -401,6 +401,8 @@ void History::load()
 		}
 	}
 
+	m_currentContainer = m_items.last();
+
 	file.close();
 }
 
