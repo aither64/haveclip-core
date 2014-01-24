@@ -3,6 +3,9 @@ QT       += core gui network
 TARGET = bin/haveclipcore
 TEMPLATE = lib
 
+target.path = /usr/lib/
+INSTALLS += target
+
 SOURCES +=\
     src/Network/Sender.cpp \
     src/Network/Receiver.cpp \
