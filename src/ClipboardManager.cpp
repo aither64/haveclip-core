@@ -322,8 +322,6 @@ void ClipboardManager::distributeCurrentClipboard()
 
 qint32 ClipboardManager::supportedModes()
 {
-	return ClipboardContainer::Clipboard;
-
 	qint8 ret = ClipboardContainer::Clipboard;
 
 	if(clipboard->supportsSelection())
