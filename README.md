@@ -12,13 +12,13 @@ Main features are:
  - synchronize clipboard on multiple devices
  - save clipboard history, easily get overwritten data
  - integration with paste services like Pastebin.com
+ - (Linux) [Serial batches](#serial-batches)
 
 Clipboard is instantly synchronized across all your devices. It can handle all
 forms of text, images and even application-specific data.
 
 HaveClip is multiplatform. Copy something in one OS, paste in another.
-Supports Windows, Linux and Mac OS X. Client for Android is a work in progress.
-It should also be possible to create client for iOS and other OSes, if desired.
+Supports Windows, Linux, Mac OS X and Sailfish OS.
 
 So far it is not possible to copy files over network with HaveClip. I would
 like to implement it though.
@@ -28,10 +28,18 @@ Requirements
 HaveClip for desktop is written in C++ using the Qt framework.
 
  - Qt at least 4.7. It might work with older versions, but it's not tested.
-   - modules core, gui, network and xml
+   - modules core, gui (widgets for Qt5) and network
  - Linux version has additional dependencies
    - [LibQxt](http://www.libqxt.org/) 0.6
-   - X11
+   - X11 header files
+
+### Debian based distributions
+
+    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev libqxt-dev
+
+### Fedora and other RPM based distributions
+
+    # yum install gcc-c++ qt-devel xorg-x11-proto-devel libqxt-devel
 
 Download
 --------
@@ -39,24 +47,20 @@ Download
 
 Build
 -----
-    # tar -xzf haveclip-desktop-0.12.0-src.tar.gz
-    # cd haveclip-desktop-0.12.0-src
-    # qmake
-    # make
+    $ tar -xzf haveclip-desktop-0.12.1-src.tar.gz
+    $ cd haveclip-desktop-0.12.1-src
+    $ qmake (or qmake-qt4, qmake-qt5)
+    $ make
 
 You should now have executable at bin/haveclip and a library at haveclip-core/bin/libhaveclipcore.so.1.
 
 Installation
 ------------
-You can copy it to /usr/local/bin
+    $ sudo make install
 
-    # cp bin/haveclip /usr/local/bin/
+or as root
 
-and
-
-    # cp haveclip-core/bin/libhaveclipcore.so.1 /usr/lib/
-
-or wherever you want.
+    # make install
 
 Usage
 -----
