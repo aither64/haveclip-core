@@ -9,9 +9,6 @@ INSTALLS += target
 SOURCES +=\
     src/Network/Sender.cpp \
     src/Network/Receiver.cpp \
-    src/PasteServices/BasePasteService.cpp \
-    src/PasteServices/Stikked/Stikked.cpp \
-    src/PasteServices/Pastebin/Pastebin.cpp \
     src/ClipboardManager.cpp \
     src/ClipboardItem.cpp \
     src/ClipboardSerialBatch.cpp \
@@ -36,15 +33,11 @@ SOURCES +=\
     src/Network/Commands/SerialModeInfo.cpp \
     src/Network/Conversations/HistoryMixin.cpp \
     src/Network/Conversations/SerialModeNext.cpp \
-    src/Network/Conversations/SerialModeRestart.cpp \
-    src/PasteServices/HaveSnippet/HaveSnippet.cpp
+    src/Network/Conversations/SerialModeRestart.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
     src/Network/Receiver.h \
-    src/PasteServices/BasePasteService.h \
-    src/PasteServices/Stikked/Stikked.h \
-    src/PasteServices/Pastebin/Pastebin.h \
     src/ClipboardManager.h \
     src/ClipboardItem.h \
     src/ClipboardSerialBatch.h \
@@ -69,13 +62,10 @@ HEADERS  += \
     src/Network/Commands/SerialModeInfo.h \
     src/Network/Conversations/HistoryMixin.h \
     src/Network/Conversations/SerialModeNext.h \
-    src/Network/Conversations/SerialModeRestart.h \
-    src/PasteServices/HaveSnippet/HaveSnippet.h
+    src/Network/Conversations/SerialModeRestart.h
 
 OTHER_FILES += \
     TODO \
-    utils/stikked_lang_generator.php \
-    utils/pastebin_lang_generator.py \
     LICENSE \
     README.md \
     doc/protocol.md \

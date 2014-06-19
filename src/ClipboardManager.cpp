@@ -38,10 +38,6 @@
 
 #include "ClipboardSerialBatch.h"
 
-#include "PasteServices/HaveSnippet/HaveSnippet.h"
-#include "PasteServices/Stikked/Stikked.h"
-#include "PasteServices/Pastebin/Pastebin.h"
-
 #ifdef Q_WS_X11
 #include <QX11Info>
 extern "C" {
@@ -131,8 +127,6 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	m_privateKey = m_settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
 
 	m_password = m_settings->value("AccessPolicy/Password").toString();
-
-	loadPasteServices();
 }
 
 ClipboardManager::~ClipboardManager()
@@ -184,11 +178,6 @@ void ClipboardManager::delayedStart(int msecs)
 QSettings* ClipboardManager::settings()
 {
 	return m_settings;
-}
-
-QList<BasePasteService*> ClipboardManager::pasteServices()
-{
-	return m_pasteServices;
 }
 
 History* ClipboardManager::history()
@@ -310,11 +299,6 @@ void ClipboardManager::setPassword(QString pass)
 	m_password = pass;
 }
 
-void ClipboardManager::setPasteServices(QList<BasePasteService*> services)
-{
-	m_pasteServices = services;
-}
-
 void ClipboardManager::distributeCurrentClipboard()
 {
 	distributeClipboard(m_history->currentItem());
@@ -432,26 +416,6 @@ void ClipboardManager::saveSettings()
 	m_settings->setValue("Connection/PrivateKey", m_privateKey);
 
 	m_settings->setValue("AccessPolicy/Password", m_password);
-
-	// Paste services
-	m_settings->beginGroup("PasteServices");
-	m_settings->remove("");
-
-	int i = 0;
-
-	foreach(BasePasteService *s, m_pasteServices)
-	{
-		m_settings->beginGroup(QString::number(i++));
-
-		s->saveSettings();
-
-		m_settings->endGroup();
-	}
-
-	m_settings->endGroup();
-
-	clearPasteServices();
-	loadPasteServices();
 }
 
 /**
@@ -943,71 +907,6 @@ void ClipboardManager::delayedClipboardEnsure()
 		ensureClipboardContent(delayedEnsureItem, ClipboardContainer::ownModeToQt(delayedEnsureItem->mode));
 
 	clipboardChangedCalled = false;
-}
-
-void ClipboardManager::loadPasteServices()
-{
-	m_settings->beginGroup("PasteServices");
-
-	foreach(QString i, m_settings->childGroups())
-	{
-		m_settings->beginGroup(i);
-
-		BasePasteService *s;
-
-		switch(m_settings->value("Type").toInt())
-		{
-		case BasePasteService::HaveSnippet:
-			s = new HaveSnippet(m_settings, this);
-			break;
-		case BasePasteService::Stikked:
-			s = new Stikked(m_settings, this);
-			break;
-		case BasePasteService::Pastebin:
-			s = new Pastebin(m_settings, this);
-			break;
-		default:
-			m_settings->endGroup();
-			continue;
-		}
-
-		// FIXME
-//		connect(s, SIGNAL(authenticationRequired(BasePasteService*,QString,bool,QString)), this, SLOT(pasteServiceRequiresAuthentication(BasePasteService*,QString,bool,QString)));
-		connect(s, SIGNAL(pasted(QUrl)), this, SLOT(receivePasteUrl(QUrl)));
-//		connect(s, SIGNAL(errorOccured(QString)), this, SLOT(pasteServiceError(QString)));
-//		connect(s, SIGNAL(untrustedCertificateError(BasePasteService*,QList<QSslError>)), this, SLOT(determineCertificateTrust(BasePasteService*,QList<QSslError>)));
-
-		m_pasteServices << s;
-
-		m_settings->endGroup();
-	}
-
-	m_settings->endGroup();
-}
-
-void ClipboardManager::clearPasteServices()
-{
-	m_pasteServices.clear();
-}
-
-void ClipboardManager::receivePasteUrl(QUrl url)
-{
-	QMimeData *mime = new QMimeData;
-
-	QString html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
-			"<html><head>"
-			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-			"</head><body>"
-			"<a href=\"%1\">%1</a>"
-			"</body></html>";
-
-	mime->setText(url.toString());
-	mime->setHtml(html.arg(url.toString()));
-
-	ClipboardItem *item = new ClipboardItem(ClipboardItem::Clipboard, mime);
-	item->init();
-
-	updateClipboard(item);
 }
 
 #ifdef INCLUDE_SERIAL_MODE

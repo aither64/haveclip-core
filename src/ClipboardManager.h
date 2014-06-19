@@ -20,7 +20,7 @@
 #ifndef CLIPBOARDMANAGER_H
 #define CLIPBOARDMANAGER_H
 
-#define VERSION "0.12.1"
+#define VERSION "0.13.0"
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
 #define HISTORY_VERSION 3
 
@@ -42,7 +42,6 @@
 #include <QSslError>
 #include <QAbstractEventDispatcher>
 
-#include "PasteServices/BasePasteService.h"
 #include "ClipboardItem.h"
 #include "History.h"
 
@@ -85,7 +84,6 @@ public:
 	~ClipboardManager();
 	static ClipboardManager* instance();
 	QSettings *settings();
-	QList<BasePasteService*> pasteServices();
 	History* history();
 	ClipboardItem *currentItem();
 	bool isSyncEnabled();
@@ -109,7 +107,6 @@ public:
 	void setCertificate(QString cert);
 	void setPrivateKey(QString key);
 	void setPassword(QString pass);
-	void setPasteServices(QList<BasePasteService*> services);
 	void distributeCurrentClipboard();
 	static qint32 supportedModes();
 	static void gracefullyExit(int sig);
@@ -164,7 +161,6 @@ private:
 	QString m_certificate;
 	QString m_privateKey;
 	QString m_password;
-	QList<BasePasteService*> m_pasteServices;
 	QTimer *selectionTimer;
 	QTimer *delayedEnsureTimer;
 	ClipboardItem *delayedEnsureItem;
@@ -186,8 +182,6 @@ private:
 	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
 	void startListening(QHostAddress addr = QHostAddress::Null);
-	void loadPasteServices();
-	void clearPasteServices();
 
 private slots:
 	void clipboardChanged();
@@ -200,7 +194,6 @@ private slots:
 #ifdef Q_WS_X11
 	void checkSelection();
 #endif
-	void receivePasteUrl(QUrl url);
 #ifdef INCLUDE_SERIAL_MODE
 	void nextSerialClipboard(bool fromNetwork = false);
 	void propagateSerialMode();
