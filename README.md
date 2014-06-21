@@ -22,16 +22,15 @@ HaveClip for desktop is written in C++ using the Qt framework.
  - Qt at least 4.7. It might work with older versions, but it's not tested.
    - modules core, gui (widgets for Qt5) and network
  - Linux version has additional dependencies
-   - [LibQxt](http://www.libqxt.org/) 0.6
    - X11 header files
 
 ### Debian based distributions
 
-    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev libqxt-dev
+    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev
 
 ### Fedora and other RPM based distributions
 
-    # yum install gcc-c++ qt-devel xorg-x11-proto-devel libqxt-devel
+    # yum install gcc-c++ qt-devel xorg-x11-proto-devel
 
 Download
 --------
