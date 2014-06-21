@@ -20,11 +20,6 @@
 #include "Communicator.h"
 
 #include "Conversations/ClipboardUpdate.h"
-#include "Conversations/SerialModeBegin.h"
-#include "Conversations/SerialModeEnd.h"
-#include "Conversations/SerialModeAppend.h"
-#include "Conversations/SerialModeNext.h"
-#include "Conversations/SerialModeRestart.h"
 
 Communicator::Communicator(History *history, QObject *parent) :
 	QSslSocket(parent),
@@ -159,43 +154,6 @@ void Communicator::readHeader()
 			qDebug() << "Initiating conversation ClipboardUpdate";
 			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
 			break;
-
-		case Conversation::SerialModeBegin:
-			qDebug() << "Initiating conversation SerialModeBegin";
-			m_conversation = new Conversations::SerialModeBegin(0, Communicator::Receive, 0, this);
-			break;
-
-		case Conversation::SerialModeEnd:
-			qDebug() << "Initiating conversation SerialModeEnd";
-			m_conversation = new Conversations::SerialModeEnd(0, Communicator::Receive, 0, this);
-			break;
-
-		case Conversation::SerialModeAppend: {
-			qDebug() << "Initiating conversation SerialModeAppend";
-			Conversations::SerialModeAppend *c = new Conversations::SerialModeAppend(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
-			break;
-		}
-
-		case Conversation::SerialModeNext: {
-			qDebug() << "Initiating conversation SerialModeNext";
-			Conversations::SerialModeNext *c = new Conversations::SerialModeNext(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
-			break;
-		}
-
-		case Conversation::SerialModeRestart: {
-			qDebug() << "Initiating conversation SerialModeRestart";
-			Conversations::SerialModeRestart *c = new Conversations::SerialModeRestart(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
-			break;
-		}
 
 		default:
 			qDebug() << "Unknown conversation" << convType;

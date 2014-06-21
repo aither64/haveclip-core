@@ -25,7 +25,6 @@
 
 #include "ClipboardManager.h"
 #include "ClipboardItem.h"
-#include "ClipboardSerialBatch.h"
 
 ClipboardContainer::ClipboardContainer()
 {
@@ -59,30 +58,6 @@ ClipboardContainer* ClipboardContainer::load(QDataStream &ds)
 
 		return it;
 	}
-
-#ifdef INCLUDE_SERIAL_MODE
-	case ClipboardContainer::SerialBatch: {
-		ClipboardContainer *cnt;
-		quint32 count;
-		qint64 id;
-
-		ds >> id;
-
-		cnt = new ClipboardSerialBatch(id);
-
-		ds >> count;
-
-		for(int i = 0; i < count; i++)
-		{
-			ClipboardContainer *it = load(ds);
-
-			if(it)
-				cnt->addItem(it->item(), true);
-		}
-
-		return cnt;
-	}
-#endif // INCLUDE_SERIAL_MODE
 
 	default:
 		qDebug() << "Failed to load container from history: unknown type" << ctype;

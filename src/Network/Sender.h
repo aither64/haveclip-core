@@ -25,8 +25,6 @@
 
 #include "Communicator.h"
 
-class ClipboardSerialBatch;
-
 class Sender : public Communicator
 {
 	Q_OBJECT
@@ -36,13 +34,6 @@ public:
 
 public slots:
 	void distribute(ClipboardItem *content);
-
-#ifdef INCLUDE_SERIAL_MODE
-	void serialMode(bool enable, qint64 id);
-	void serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item);
-	void serialModeNext(ClipboardSerialBatch *batch);
-	void serialModeRestart(ClipboardSerialBatch *batch);
-#endif
 
 protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);

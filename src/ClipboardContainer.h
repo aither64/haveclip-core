@@ -30,8 +30,7 @@ class ClipboardContainer
 {
 public:
 	enum ItemType {
-		BasicItem=0,
-		SerialBatch
+		BasicItem=0
 	};
 
 	enum Mode {

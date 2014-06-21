@@ -11,7 +11,6 @@ SOURCES +=\
     src/Network/Receiver.cpp \
     src/ClipboardManager.cpp \
     src/ClipboardItem.cpp \
-    src/ClipboardSerialBatch.cpp \
     src/History.cpp \
     src/ClipboardContainer.cpp \
     src/Network/Conversation.cpp \
@@ -22,25 +21,13 @@ SOURCES +=\
     src/Network/Commands/ClipboardUpdateConfirm.cpp \
     src/Network/Commands/Confirm.cpp \
     src/Network/Command.cpp \
-    src/Network/Conversations/SerialModeBegin.cpp \
-    src/Network/Conversations/SerialModeEnd.cpp \
-    src/Network/Conversations/SerialModeBase.cpp \
-    src/Network/Commands/Cmd_SerialModeBase.cpp \
-    src/Network/Commands/SerialModeToggle.cpp \
-    src/Network/Conversations/SerialModeAppend.cpp \
-    src/Network/Commands/SerialModeAppendReady.cpp \
-    src/Network/Conversations/SerialModeCopy.cpp \
-    src/Network/Commands/SerialModeInfo.cpp \
-    src/Network/Conversations/HistoryMixin.cpp \
-    src/Network/Conversations/SerialModeNext.cpp \
-    src/Network/Conversations/SerialModeRestart.cpp
+    src/Network/Conversations/HistoryMixin.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
     src/Network/Receiver.h \
     src/ClipboardManager.h \
     src/ClipboardItem.h \
-    src/ClipboardSerialBatch.h \
     src/History.h \
     src/ClipboardContainer.h \
     src/Network/Conversation.h \
@@ -51,18 +38,7 @@ HEADERS  += \
     src/Network/Commands/ClipboardUpdateConfirm.h \
     src/Network/Commands/Confirm.h \
     src/Network/Command.h \
-    src/Network/Conversations/SerialModeBegin.h \
-    src/Network/Conversations/SerialModeEnd.h \
-    src/Network/Conversations/SerialModeBase.h \
-    src/Network/Commands/Cmd_SerialModeBase.h \
-    src/Network/Commands/SerialModeToggle.h \
-    src/Network/Conversations/SerialModeAppend.h \
-    src/Network/Commands/SerialModeAppendReady.h \
-    src/Network/Conversations/SerialModeCopy.h \
-    src/Network/Commands/SerialModeInfo.h \
-    src/Network/Conversations/HistoryMixin.h \
-    src/Network/Conversations/SerialModeNext.h \
-    src/Network/Conversations/SerialModeRestart.h
+    src/Network/Conversations/HistoryMixin.h
 
 OTHER_FILES += \
     TODO \

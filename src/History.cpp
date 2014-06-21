@@ -24,17 +24,12 @@
 #include <QFileInfo>
 #include <QDesktopServices>
 
-#ifdef INCLUDE_SERIAL_MODE
-#include "ClipboardSerialBatch.h"
-#endif
-
 History::History(QObject *parent) :
 	QAbstractListModel(parent),
 	m_track(true),
 	m_save(false),
 	m_size(30),
-	m_currentContainer(0),
-	m_serialInit(false)
+	m_currentContainer(0)
 {
 }
 
@@ -183,7 +178,6 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 {
 	if(!m_track)
 	{
-		// FIXME: serial mode
 		if(m_currentContainer)
 			delete m_currentContainer;
 
@@ -198,40 +192,8 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 	{
 		switch(m_currentContainer->type())
 		{
-#ifdef INCLUDE_SERIAL_MODE
-		case ClipboardItem::SerialBatch:
-			if(!m_currentContainer->isSealed())
-			{
-				m_currentContainer->addItem(item, allowDuplicity);
-
-				emit historyChanged();
-
-				return m_currentContainer->item();
-			}
-
-			// do not add break
-			// if sealed, add as BasicItem
-#endif // INCLUDE_SERIAL_MODE
 
 		case ClipboardItem::BasicItem:
-#ifdef INCLUDE_SERIAL_MODE
-			if(m_serialInit)
-			{
-				m_currentContainer = new ClipboardSerialBatch(m_serialBatchId, item);
-				m_items << m_currentContainer;
-
-				m_serialInit = false;
-				m_serialBatchId = 0;
-
-				if(m_items.size() >= m_size)
-					delete m_items.takeFirst();
-
-				emit historyChanged();
-
-				return m_currentContainer->item();
-			}
-#endif // INCLUDE_SERIAL_MODE
-
 			foreach(ClipboardContainer *cont, m_items)
 			{
 				ClipboardItem *it = cont->item();
@@ -285,64 +247,6 @@ bool History::isNew(ClipboardItem *item) const
 {
 
 }
-
-#ifdef INCLUDE_SERIAL_MODE
-void History::addBatch(ClipboardSerialBatch *batch)
-{
-	if(m_items.size() >= m_size)
-		delete m_items.takeFirst();
-
-	m_currentContainer = batch;
-
-	m_items << batch;
-
-	emit historyChanged();
-}
-
-void History::beginSerialMode(qint64 id)
-{
-	m_serialInit = true;
-
-	if(!id)
-		id = ClipboardSerialBatch::createId();
-
-	m_serialBatchId = id;
-
-	qDebug() << "History: begun serial mode id = " << m_serialBatchId;
-}
-
-void History::endSerialMode()
-{
-	if(m_currentContainer->type() == ClipboardItem::SerialBatch)
-	{
-		m_currentContainer->seal();
-		qDebug() << "History: end serial mode id = " << static_cast<ClipboardSerialBatch*>(m_currentContainer)->id();
-	}
-
-	m_serialInit = false;
-}
-
-qint64 History::preparedSerialbatchId() const
-{
-	return m_serialBatchId;
-}
-
-ClipboardSerialBatch* History::searchBatchById(qint64 id)
-{
-	foreach(ClipboardContainer *cont, m_items)
-	{
-		if(cont->type() != ClipboardContainer::SerialBatch)
-			continue;
-
-		ClipboardSerialBatch *s = static_cast<ClipboardSerialBatch*>(cont);
-
-		if(s->id() == id)
-			return s;
-	}
-
-	return 0;
-}
-#endif // INCLUDE_SERIAL_MODE
 
 void History::load()
 {
@@ -468,26 +372,6 @@ void History::jumpTo(ClipboardItem* item)
 {
 	popToFront(item);
 }
-
-#ifdef INCLUDE_SERIAL_MODE
-void History::restartSerialBatch(ClipboardSerialBatch *batch)
-{
-	int index = m_items.indexOf(batch);
-
-	if(index == -1)
-	{
-		qDebug() << "Batch not found!";
-		return;
-	}
-
-	popToFront(m_items[index]);
-	batch->seek(0);
-
-	m_currentContainer = batch;
-
-	emit historyChanged();
-}
-#endif
 
 QString History::filePath()
 {

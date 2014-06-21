@@ -31,13 +31,7 @@ class Conversation : public QObject
 	Q_OBJECT
 public:
 	enum Type {
-		ClipboardUpdate,
-		SerialModeBegin,
-		SerialModeEnd,
-		SerialModeAppend,
-		SerialModeNext,
-		SerialModeRestart,
-		SerialModeCopy
+		ClipboardUpdate
 	};
 
 	Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
@@ -67,13 +61,6 @@ protected:
 
 signals:
 	void clipboardSync(ClipboardContainer *cont);
-#ifdef INCLUDE_SERIAL_MODE
-	void serialModeToggled(bool enabled, qint64 id);
-	void serialModeNewBatch(ClipboardSerialBatch *batch);
-	void serialModeAppend(ClipboardItem *item);
-	void serialModeNext();
-	void serialModeRestart(ClipboardSerialBatch *batch);
-#endif
 	void done();
 	void morphed(Conversation *c);
 };

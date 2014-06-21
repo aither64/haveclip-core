@@ -23,9 +23,6 @@
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
 #include "Commands/Confirm.h"
-#include "Commands/SerialModeToggle.h"
-#include "Commands/SerialModeAppendReady.h"
-#include "Commands/SerialModeInfo.h"
 
 Conversation::Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: QObject(parent),
@@ -96,18 +93,6 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 
 	case BaseCommand::Confirm:
 		cmd = new Confirm(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeToggle:
-		cmd = new Commands::SerialModeToggle(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeAppendReady:
-		cmd = new Commands::SerialModeAppendReady(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeInfo:
-		cmd = new Commands::SerialModeInfo(m_cont, r);
 		break;
 	}
 

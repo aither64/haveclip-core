@@ -24,15 +24,6 @@
 
 #include "Sender.h"
 #include "Conversations/ClipboardUpdate.h"
-#include "Conversations/SerialModeBegin.h"
-#include "Conversations/SerialModeEnd.h"
-#include "Conversations/SerialModeAppend.h"
-#include "Conversations/SerialModeNext.h"
-#include "Conversations/SerialModeRestart.h"
-
-#ifdef INCLUDE_SERIAL_MODE
-#include "../ClipboardSerialBatch.h"
-#endif
 
 Sender::Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
 	Communicator(history, parent),
@@ -47,40 +38,6 @@ void Sender::distribute(ClipboardItem *content)
 
 	connectToPeer();
 }
-
-#ifdef INCLUDE_SERIAL_MODE
-void Sender::serialMode(bool enable, qint64 id)
-{
-	if(enable)
-		m_conversation = new Conversations::SerialModeBegin(id, Communicator::Send, 0, this);
-	else
-		m_conversation = new Conversations::SerialModeEnd(id, Communicator::Send, 0, this);
-
-	connectToPeer();
-}
-
-void Sender::serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item)
-{
-	m_conversation = new Conversations::SerialModeAppend(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-void Sender::serialModeNext(ClipboardSerialBatch *batch)
-{
-	m_conversation = new Conversations::SerialModeNext(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-void Sender::serialModeRestart(ClipboardSerialBatch *batch)
-{
-	m_conversation = new Conversations::SerialModeRestart(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-#endif
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {

@@ -32,10 +32,7 @@ public:
 		ClipboardUpdateReady=0,
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,
-		Confirm,
-		SerialModeToggle,
-		SerialModeAppendReady,
-		SerialModeInfo
+		Confirm
 	};
 
 	enum Status {

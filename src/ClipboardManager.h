@@ -29,10 +29,6 @@
 
 #include <QtGlobal>
 
-#ifdef Q_WS_X11
-#define INCLUDE_SERIAL_MODE 1
-#endif
-
 #include <QTcpServer>
 #include <QClipboard>
 #include <QSettings>
@@ -46,10 +42,6 @@
 #include "History.h"
 
 class History;
-
-#ifdef INCLUDE_SERIAL_MODE
-class ClipboardSerialBatch;
-#endif
 
 class ClipboardManager : public QTcpServer
 {
@@ -89,9 +81,6 @@ public:
 	bool isSyncEnabled();
 	bool isSendingEnabled();
 	bool isReceivingEnabled();
-#ifdef INCLUDE_SERIAL_MODE
-	bool isSerialModeEnabled() const;
-#endif
 	QString host();
 	quint16 port();
 	QString password();
@@ -110,9 +99,6 @@ public:
 	void distributeCurrentClipboard();
 	static qint32 supportedModes();
 	static void gracefullyExit(int sig);
-#ifdef INCLUDE_SERIAL_MODE
-	static bool eventFilter(void *message);
-#endif
 	inline bool shouldDistribute() const;
 	inline bool shouldListen() const;
 
@@ -120,9 +106,6 @@ signals:
 	void listenFailed(QString error);
 	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
-#ifdef INCLUDE_SERIAL_MODE
-	void serialModeChanged(bool enabled);
-#endif
 
 public slots:
 	void start();
@@ -133,19 +116,9 @@ public slots:
 	void toggleSharedClipboard(bool enabled);
 	void toggleClipboardSending(bool enabled, bool masterChange = false);
 	void toggleClipboardReceiving(bool enabled, bool masterChange = false);
-#ifdef INCLUDE_SERIAL_MODE
-	void toggleSerialMode();
-	void toggleSerialModeFromNetwork(bool enable, qint64 id);
-	void serialModeNewBatch(ClipboardSerialBatch *batch);
-	void serialModeAppend(ClipboardItem *item);
-	void serialModeNext();
-	void serialModeRestart(ClipboardContainer *cont);
-	void serialModeRestartFromNetwork(ClipboardSerialBatch *cont);
-#endif
 
 private:
 	static ClipboardManager *m_instance;
-	static QStringList serialExceptions;
 	static QClipboard *clipboard;
 	QSettings *m_settings;
 	QList<Node*> pool;
@@ -166,11 +139,6 @@ private:
 	ClipboardItem *delayedEnsureItem;
 	bool clipboardChangedCalled;
 	bool uniteCalled;
-#ifdef INCLUDE_SERIAL_MODE
-	static QAbstractEventDispatcher::EventFilter prevEventFilter;
-	QTimer *serialTimer;
-	bool m_serialMode;
-#endif
 
 #ifdef Q_WS_X11
 	bool isUserSelecting();
@@ -193,10 +161,6 @@ private slots:
 	void delayedClipboardEnsure();
 #ifdef Q_WS_X11
 	void checkSelection();
-#endif
-#ifdef INCLUDE_SERIAL_MODE
-	void nextSerialClipboard(bool fromNetwork = false);
-	void propagateSerialMode();
 #endif
 	
 };

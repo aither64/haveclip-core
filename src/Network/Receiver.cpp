@@ -59,12 +59,4 @@ void Receiver::conversationSignals()
 	Communicator::conversationSignals();
 
 	connect(m_conversation, SIGNAL(clipboardSync(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
-
-#ifdef INCLUDE_SERIAL_MODE
-	connect(m_conversation, SIGNAL(serialModeToggled(bool,qint64)), this, SIGNAL(serialModeToggled(bool,qint64)));
-	connect(m_conversation, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)));
-	connect(m_conversation, SIGNAL(serialModeAppend(ClipboardItem*)), this, SIGNAL(serialModeAppend(ClipboardItem*)));
-	connect(m_conversation, SIGNAL(serialModeNext()), this, SIGNAL(serialModeNext()));
-	connect(m_conversation, SIGNAL(serialModeRestart(ClipboardSerialBatch*)), this, SIGNAL(serialModeRestart(ClipboardSerialBatch*)));
-#endif
 }
