@@ -472,7 +472,7 @@ bool ClipboardManager::isUserSelecting()
 		return true;
 	}
 
-	return false;#endif
+	return false;
 }
 #endif
 
