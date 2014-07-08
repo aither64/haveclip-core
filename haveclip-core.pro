@@ -21,7 +21,8 @@ SOURCES +=\
     src/Network/Commands/ClipboardUpdateConfirm.cpp \
     src/Network/Commands/Confirm.cpp \
     src/Network/Command.cpp \
-    src/Network/Conversations/HistoryMixin.cpp
+    src/Network/Conversations/HistoryMixin.cpp \
+    src/CertificateGenerator.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -38,7 +39,8 @@ HEADERS  += \
     src/Network/Commands/ClipboardUpdateConfirm.h \
     src/Network/Commands/Confirm.h \
     src/Network/Command.h \
-    src/Network/Conversations/HistoryMixin.h
+    src/Network/Conversations/HistoryMixin.h \
+    src/CertificateGenerator.h
 
 OTHER_FILES += \
     TODO \
@@ -49,3 +51,5 @@ OTHER_FILES += \
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += x11
+
+unix|win32: LIBS += -lqca
