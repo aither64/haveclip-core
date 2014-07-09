@@ -25,7 +25,7 @@
 #include "Sender.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Sender::Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
+Sender::Sender(History *history, ClipboardManager::Encryption enc, Node *node, QObject *parent) :
 	Communicator(history, parent),
 	m_node(node)
 {
@@ -41,7 +41,7 @@ void Sender::distribute(ClipboardItem *content)
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Unable to reach" << m_node->host << ":" << socketError;
+	qDebug() << "Unable to reach" << m_node->host() << ":" << socketError;
 	this->deleteLater();
 }
 
@@ -64,7 +64,7 @@ void Sender::onSslError(const QList<QSslError> &errors)
 			return;
 		}
 
-		if(e.certificate() != m_node->certificate)
+		if(e.certificate() != m_node->certificate())
 		{
 			exception = false;
 			break;
@@ -81,7 +81,7 @@ void Sender::onSslError(const QList<QSslError> &errors)
 	}
 }
 
-ClipboardManager::Node* Sender::node()
+Node* Sender::node()
 {
 	return m_node;
 }
@@ -110,12 +110,12 @@ void Sender::connectToPeer()
 			break;
 		}
 
-		connectToHostEncrypted(m_node->host, m_node->port);
+		connectToHostEncrypted(m_node->host(), m_node->port());
 
 	} else {
 		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
 
-		connectToHost(m_node->host, m_node->port);
+		connectToHost(m_node->host(), m_node->port());
 	}
 
 	/**

@@ -33,6 +33,7 @@
 #include <QTimer>
 #include <QTextDocument>
 
+#include "Node.h"
 #include "Network/Receiver.h"
 #include "Network/Sender.h"
 
@@ -46,11 +47,6 @@ extern "C" {
 
 ClipboardManager *ClipboardManager::m_instance = 0;
 QClipboard *ClipboardManager::clipboard = 0;
-
-QString ClipboardManager::Node::toString()
-{
-	return host + ":" + QString::number(port);
-}
 
 ClipboardManager::ClipboardManager(QObject *parent) :
 	QTcpServer(parent),
@@ -189,27 +185,30 @@ QString ClipboardManager::password()
 	return m_password;
 }
 
-QList<ClipboardManager::Node*> ClipboardManager::nodes()
+QList<Node*> ClipboardManager::nodes()
 {
 	return pool;
 }
 
-void ClipboardManager::setNodes(QStringList nodes)
-{
-	m_settings->setValue("Pool/Nodes", nodes);
-	loadNodes();
-}
-
-void ClipboardManager::setNodes(QList<ClipboardManager::Node*> nodes)
+void ClipboardManager::setNodes(QList<Node*> nodes)
 {
 	pool = nodes;
 
-	QStringList tmp;
+	m_settings->beginGroup("Pool/Nodes");
+	m_settings->remove("");
 
-	foreach(Node *n, pool)
-		tmp << QString("%1:%2").arg(n->host).arg(n->port);
+	int cnt = pool.count();
 
-	m_settings->setValue("Pool/Nodes", tmp);
+	for(int i = 0; i < cnt; i++)
+	{
+		m_settings->beginGroup(QString::number(i));
+
+		pool[i]->save(m_settings);
+
+		m_settings->endGroup();
+	}
+
+	m_settings->endGroup();
 }
 
 void ClipboardManager::setSelectionMode(SelectionMode m)
@@ -448,7 +447,7 @@ void ClipboardManager::distributeClipboard(ClipboardItem *content)
 		Sender *d = new Sender(m_history, m_encryption, n, this);
 		d->setPassword(m_password);
 
-		connect(d, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(ClipboardManager::Node*,QList<QSslError>)));
+		connect(d, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
 
 		d->distribute(content);
@@ -548,21 +547,23 @@ void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard
 
 void ClipboardManager::loadNodes()
 {
+	Node *n;
 	pool.clear();
 
-	foreach(QString node, m_settings->value("Pool/Nodes").toStringList())
+	m_settings->beginGroup("Pool/Nodes");
+
+	foreach(QString grp, m_settings->childGroups())
 	{
-		Node *n = new Node;
-		n->host = node.section(':', 0, 0);
-		n->port = node.section(':', 1, 1).toUShort();
+		m_settings->beginGroup(grp);
 
-		QByteArray cert = m_settings->value("Node:" + n->toString() + "/Certificate").toString().toUtf8();
+		n = Node::load(m_settings);
 
-		if(!cert.isEmpty())
-			n->certificate = QSslCertificate::fromData(cert).first();
+		if(n) pool << n;
 
-		pool << n;
+		m_settings->endGroup();
 	}
+
+	m_settings->endGroup();
 }
 
 void ClipboardManager::toggleSharedClipboard(bool enabled)

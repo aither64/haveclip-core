@@ -29,8 +29,8 @@ class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
-	ClipboardManager::Node *node();
+	explicit Sender(History *history, ClipboardManager::Encryption enc, Node *node, QObject *parent = 0);
+	Node *node();
 
 public slots:
 	void distribute(ClipboardItem *content);
@@ -40,7 +40,7 @@ protected slots:
 	virtual void onSslError(const QList<QSslError> &errors);
 
 private:
-	ClipboardManager::Node *m_node;
+	Node *m_node;
 
 	void connectToPeer();
 	

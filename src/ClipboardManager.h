@@ -42,19 +42,12 @@
 #include "History.h"
 
 class History;
+class Node;
 
 class ClipboardManager : public QTcpServer
 {
 	Q_OBJECT
 public:
-	struct Node {
-		QString host;
-		quint16 port;
-		QSslCertificate certificate;
-
-		QString toString();
-	};
-
 	enum Encryption {
 		None=0,
 		Ssl,
@@ -85,7 +78,6 @@ public:
 	quint16 port();
 	QString password();
 	QList<Node*> nodes();
-	void setNodes(QStringList nodes);
 	void setNodes(QList<Node*> nodes);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
@@ -104,7 +96,7 @@ public:
 
 signals:
 	void listenFailed(QString error);
-	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 
 public slots:
@@ -165,6 +157,6 @@ private slots:
 	
 };
 
-Q_DECLARE_METATYPE(ClipboardManager::Node*)
+Q_DECLARE_METATYPE(Node*)
 
 #endif // CLIPBOARDMANAGER_H

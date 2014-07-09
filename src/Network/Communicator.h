@@ -25,6 +25,7 @@
 #include <QSslSocket>
 
 #include "../ClipboardManager.h"
+#include "../Node.h"
 
 class Conversation;
 
@@ -39,12 +40,12 @@ public:
 
 	explicit Communicator(History *history, QObject *parent = 0);
 	~Communicator();
-	ClipboardManager::Node *node();
+	Node *node();
 	void setCertificateAndKey(QString cert, QString key);
 	void setPassword(QString m_password);
 
 signals:
-	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 
 protected:
