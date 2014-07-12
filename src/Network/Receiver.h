@@ -29,7 +29,7 @@ class Receiver : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Receiver(History *history, ClipboardManager::Encryption enc, QObject *parent = 0);
+	explicit Receiver(ConnectionManager::Encryption enc, QObject *parent = 0);
 	void communicate();
 
 protected:

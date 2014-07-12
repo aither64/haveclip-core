@@ -34,8 +34,6 @@
 #include <QTextDocument>
 
 #include "Node.h"
-#include "Network/Receiver.h"
-#include "Network/Sender.h"
 
 #ifdef Q_WS_X11
 #include <QX11Info>
@@ -49,7 +47,7 @@ ClipboardManager *ClipboardManager::m_instance = 0;
 QClipboard *ClipboardManager::clipboard = 0;
 
 ClipboardManager::ClipboardManager(QObject *parent) :
-	QTcpServer(parent),
+	QObject(parent),
 	clipboardChangedCalled(false),
 	uniteCalled(false)
 {
@@ -80,10 +78,7 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	// Load settings
 	m_settings = new QSettings(this);
 
-	loadNodes();
-
-	m_host = m_settings->value("Connection/Host", "0.0.0.0").toString();
-	m_port = m_settings->value("Connection/Port", 9999).toInt();
+	m_conman = new ConnectionManager(m_settings, this);
 
 	m_clipSync = m_settings->value("Sync/Enable", true).toBool();
 	m_clipSnd = m_settings->value("Sync/Send", true).toBool();
@@ -95,12 +90,6 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 
 	m_selectionMode = (ClipboardManager::SelectionMode) m_settings->value("Selection/Mode", ClipboardManager::Separate).toInt();
 	m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Sync/Synchronize", ClipboardManager::Both).toInt();
-
-	m_encryption = (ClipboardManager::Encryption) m_settings->value("Connection/Encryption", 0).toInt();
-	m_certificate = m_settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
-	m_privateKey = m_settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
-
-	m_password = m_settings->value("AccessPolicy/Password").toString();
 }
 
 ClipboardManager::~ClipboardManager()
@@ -120,7 +109,7 @@ void ClipboardManager::start()
 
 	// Start server
 	if(shouldListen())
-		startListening();
+		m_conman->startReceiving();
 
 	// Load contents of clipboard
 	clipboardChanged();
@@ -150,6 +139,11 @@ QSettings* ClipboardManager::settings()
 	return m_settings;
 }
 
+ConnectionManager* ClipboardManager::connectionManager()
+{
+	return m_conman;
+}
+
 History* ClipboardManager::history()
 {
 	return m_history;
@@ -170,47 +164,6 @@ bool ClipboardManager::isReceivingEnabled()
 	return m_clipRecv;
 }
 
-QString ClipboardManager::host()
-{
-	return m_host;
-}
-
-quint16 ClipboardManager::port()
-{
-	return m_port;
-}
-
-QString ClipboardManager::password()
-{
-	return m_password;
-}
-
-QList<Node*> ClipboardManager::nodes()
-{
-	return pool;
-}
-
-void ClipboardManager::setNodes(QList<Node*> nodes)
-{
-	pool = nodes;
-
-	m_settings->beginGroup("Pool/Nodes");
-	m_settings->remove("");
-
-	int cnt = pool.count();
-
-	for(int i = 0; i < cnt; i++)
-	{
-		m_settings->beginGroup(QString::number(i));
-
-		pool[i]->save(m_settings);
-
-		m_settings->endGroup();
-	}
-
-	m_settings->endGroup();
-}
-
 void ClipboardManager::setSelectionMode(SelectionMode m)
 {
 	m_selectionMode = m;
@@ -219,50 +172,6 @@ void ClipboardManager::setSelectionMode(SelectionMode m)
 void ClipboardManager::setSyncMode(SynchronizeMode m)
 {
 	m_syncMode = m;
-}
-
-void ClipboardManager::setListenHost(QString host, quint16 port)
-{
-	if(host != m_host || port != m_port)
-	{
-		m_host = host;
-		m_port = port;
-
-		if(isListening())
-			close();
-
-		startListening();
-	}
-}
-
-void ClipboardManager::setHost(QString host)
-{
-	setListenHost(host, m_port);
-}
-
-void ClipboardManager::setPort(quint16 port)
-{
-	setListenHost(m_host, port);
-}
-
-void ClipboardManager::setEncryption(Encryption encryption)
-{
-	m_encryption = encryption;
-}
-
-void ClipboardManager::setCertificate(QString cert)
-{
-	m_certificate = cert;
-}
-
-void ClipboardManager::setPrivateKey(QString key)
-{
-	m_privateKey = key;
-}
-
-void ClipboardManager::setPassword(QString pass)
-{
-	m_password = pass;
 }
 
 void ClipboardManager::distributeCurrentClipboard()
@@ -329,13 +238,7 @@ void ClipboardManager::saveSettings()
 	m_settings->setValue("Selection/Mode", m_selectionMode);
 	m_settings->setValue("Sync/Synchronize", m_syncMode);
 
-	m_settings->setValue("Connection/Host", m_host);
-	m_settings->setValue("Connection/Port", m_port);
-	m_settings->setValue("Connection/Encryption", m_encryption);
-	m_settings->setValue("Connection/Certificate", m_certificate);
-	m_settings->setValue("Connection/PrivateKey", m_privateKey);
-
-	m_settings->setValue("AccessPolicy/Password", m_password);
+	m_conman->saveSettings();
 }
 
 /**
@@ -442,16 +345,7 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 
 void ClipboardManager::distributeClipboard(ClipboardItem *content)
 {
-	foreach(Node *n, pool)
-	{
-		Sender *d = new Sender(m_history, m_encryption, n, this);
-		d->setPassword(m_password);
-
-		connect(d, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)));
-		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
-
-		d->distribute(content);
-	}
+	m_conman->syncClipboard(content);
 }
 
 #ifdef Q_WS_X11
@@ -474,18 +368,6 @@ bool ClipboardManager::isUserSelecting()
 	return false;
 }
 #endif
-
-void ClipboardManager::incomingConnection(int handle)
-{
-	Receiver *c = new Receiver(m_history, m_encryption, this);
-	c->setSocketDescriptor(handle);
-
-	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboardFromNetwork(ClipboardContainer*)));
-
-	c->setCertificateAndKey(m_certificate, m_privateKey);
-	c->setPassword(m_password);
-	c->communicate();
-}
 
 /**
   Called when new clipboard is received via network
@@ -545,27 +427,6 @@ void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard
 //	}
 }
 
-void ClipboardManager::loadNodes()
-{
-	Node *n;
-	pool.clear();
-
-	m_settings->beginGroup("Pool/Nodes");
-
-	foreach(QString grp, m_settings->childGroups())
-	{
-		m_settings->beginGroup(grp);
-
-		n = Node::load(m_settings);
-
-		if(n) pool << n;
-
-		m_settings->endGroup();
-	}
-
-	m_settings->endGroup();
-}
-
 void ClipboardManager::toggleSharedClipboard(bool enabled)
 {
 	toggleClipboardSending(enabled, true);
@@ -587,9 +448,10 @@ void ClipboardManager::toggleClipboardSending(bool enabled, bool masterChange)
 void ClipboardManager::toggleClipboardReceiving(bool enabled, bool masterChange)
 {
 	if(enabled && !shouldListen())
-		startListening();
+		m_conman->startReceiving();
+
 	else if(!enabled && shouldListen())
-		close();
+		m_conman->stopReceiving();
 
 	if(!masterChange)
 	{
@@ -624,47 +486,6 @@ QMimeData* ClipboardManager::copyMimeData(const QMimeData *mimeReference)
 	}
 
 	return mimeCopy;
-}
-
-void ClipboardManager::startListening(QHostAddress addr)
-{
-	if(addr.isNull())
-		addr.setAddress(m_host);
-
-	if(!addr.isNull())
-	{
-		if(!listen(addr, m_port))
-		{
-			//QMessageBox::warning(0, tr("Unable to start listening"), tr("Listening failed, clipboard receiving is not active!\n\n") + errorString());
-			emit listenFailed(tr("Listen failed: %1").arg(errorString()));
-			return;
-		}
-
-		qDebug() << "Listening on" << serverAddress() << serverPort();
-
-	} else {
-		QHostInfo::lookupHost(m_host, this, SLOT(listenOnHost(QHostInfo)));
-	}
-}
-
-void ClipboardManager::listenOnHost(const QHostInfo &host)
-{
-	if(host.error() != QHostInfo::NoError) {
-//		QMessageBox::warning(0, tr("Unable to resolve hostname"), tr("Resolving failed: ") + host.errorString());
-		emit listenFailed(tr("Resolving failed: %1").arg(host.errorString()));
-		return;
-	}
-
-	QList<QHostAddress> addrs = host.addresses();
-
-	if(addrs.size() == 0)
-	{
-//		QMessageBox::warning(0, tr("Hostname has no IP address"), tr("Hostname has no IP addresses. Clipboard receiving is not active."));
-		emit listenFailed(tr("Hostname has no IP addresses. Clipboard receiving is not active."));
-		return;
-	}
-
-	startListening(addrs.first());
 }
 
 void ClipboardManager::delayedClipboardEnsure()

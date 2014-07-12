@@ -19,6 +19,7 @@
 
 #include "Conversation.h"
 
+#include "Commands/Ping.h"
 #include "Commands/ClipboardUpdateReady.h"
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
@@ -79,6 +80,10 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 
 	switch(t)
 	{
+	case BaseCommand::Ping:
+		cmd = new Ping(m_cont, r);
+		break;
+
 	case BaseCommand::ClipboardUpdateReady:
 		cmd = new ClipboardUpdateReady(m_cont, r);
 		break;

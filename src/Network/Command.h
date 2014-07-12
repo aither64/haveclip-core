@@ -29,7 +29,8 @@ class BaseCommand
 {
 public:
 	enum Type {
-		ClipboardUpdateReady=0,
+		Ping=0,
+		ClipboardUpdateReady,
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,
 		Confirm

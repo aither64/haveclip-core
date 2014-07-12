@@ -17,33 +17,23 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DISTRIBUTOR_H
-#define DISTRIBUTOR_H
+#include "Introduction.h"
 
-#include <QSslSocket>
-#include <QMimeData>
+using namespace Conversations;
 
-#include "Communicator.h"
-
-class Sender : public Communicator
+Introduction::Introduction(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
+	: Conversation(r, cont, parent)
 {
-	Q_OBJECT
-public:
-	explicit Sender(ConnectionManager::Encryption enc, Node *node, QObject *parent = 0);
-	Node *node();
+	addCommand(BaseCommand::Ping, r);
+	addCommand(BaseCommand::Confirm, reverse(r));
+}
 
-public slots:
-	void distribute(ClipboardItem *content);
+Conversation::Type Introduction::type() const
+{
+	return Conversation::Introduction;
+}
 
-protected slots:
-	virtual void onError(QAbstractSocket::SocketError socketError);
-	virtual void onSslError(const QList<QSslError> &errors);
+void Introduction::nextCommand(BaseCommand::Type lastCmd, int index)
+{
 
-private:
-	Node *m_node;
-
-	void connectToPeer();
-	
-};
-
-#endif // DISTRIBUTOR_H
+}

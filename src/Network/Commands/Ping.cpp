@@ -17,33 +17,26 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DISTRIBUTOR_H
-#define DISTRIBUTOR_H
+#include "Ping.h"
 
-#include <QSslSocket>
-#include <QMimeData>
+using namespace Commands;
 
-#include "Communicator.h"
-
-class Sender : public Communicator
+Ping::Ping(ClipboardContainer *cont, Communicator::Role r)
+	: BaseCommand(cont, r)
 {
-	Q_OBJECT
-public:
-	explicit Sender(ConnectionManager::Encryption enc, Node *node, QObject *parent = 0);
-	Node *node();
+}
 
-public slots:
-	void distribute(ClipboardItem *content);
+BaseCommand::Type Ping::type() const
+{
+	return BaseCommand::Ping;
+}
 
-protected slots:
-	virtual void onError(QAbstractSocket::SocketError socketError);
-	virtual void onSslError(const QList<QSslError> &errors);
+void Ping::receive(QDataStream &ds)
+{
+	finish();
+}
 
-private:
-	Node *m_node;
-
-	void connectToPeer();
-	
-};
-
-#endif // DISTRIBUTOR_H
+void Ping::send(QDataStream &ds)
+{
+	finish();
+}

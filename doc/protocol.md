@@ -3,6 +3,26 @@
 Possible conversations
 ----------------------
 
+### Introduction
+Used when adding a node to the pool. Target node should open a dialog
+where user can type the security code shown on requestor.
+
+The requestor should also remember target node certificate and check
+it during verification.
+
+  1. Request: [Ping](#ping)
+  2. Reply: [Confirm](#confirm)
+
+### Verification
+Follows introduction, target node sends the security code back
+to requestor. If the code is correct, devices are paired.
+
+There are three tries after which security code becomes invalid
+and pairing failed.
+
+  1. Request: [SecurityCode](#securitycode)
+  2. Reply: [Confirm](#confirm)
+
 ### Clipboard update
 
 Requestor is sending ClipboardItem to replier.
@@ -28,6 +48,10 @@ Protocol structure
        -    QString      password
 
 ### Message types
+
+#### Ping
+Contains no data, sends just header.
+
 
 #### ClipboardUpdateReady
 

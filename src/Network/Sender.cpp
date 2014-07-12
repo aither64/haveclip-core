@@ -25,8 +25,8 @@
 #include "Sender.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Sender::Sender(History *history, ClipboardManager::Encryption enc, Node *node, QObject *parent) :
-	Communicator(history, parent),
+Sender::Sender(ConnectionManager::Encryption enc, Node *node, QObject *parent) :
+	Communicator(parent),
 	m_node(node)
 {
 	encryption = enc;
@@ -90,7 +90,7 @@ void Sender::connectToPeer()
 {
 	conversationSignals();
 
-	if(encryption != ClipboardManager::None)
+	if(encryption != ConnectionManager::None)
 	{
 		setPeerVerifyMode(QSslSocket::VerifyNone);
 
@@ -98,10 +98,10 @@ void Sender::connectToPeer()
 
 		switch(encryption)
 		{
-		case ClipboardManager::Ssl:
+		case ConnectionManager::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ClipboardManager::Tls:
+		case ConnectionManager::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else

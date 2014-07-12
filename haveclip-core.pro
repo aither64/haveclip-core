@@ -23,7 +23,10 @@ SOURCES +=\
     src/Network/Command.cpp \
     src/Network/Conversations/HistoryMixin.cpp \
     src/CertificateGenerator.cpp \
-    src/Node.cpp
+    src/Node.cpp \
+    src/Network/Conversations/Introduction.cpp \
+    src/Network/Commands/Ping.cpp \
+    src/Network/ConnectionManager.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -42,7 +45,10 @@ HEADERS  += \
     src/Network/Command.h \
     src/Network/Conversations/HistoryMixin.h \
     src/CertificateGenerator.h \
-    src/Node.h
+    src/Node.h \
+    src/Network/Conversations/Introduction.h \
+    src/Network/Commands/Ping.h \
+    src/Network/ConnectionManager.h
 
 OTHER_FILES += \
     TODO \

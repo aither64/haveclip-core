@@ -31,6 +31,7 @@ class Conversation : public QObject
 	Q_OBJECT
 public:
 	enum Type {
+		Introduction,
 		ClipboardUpdate
 	};
 

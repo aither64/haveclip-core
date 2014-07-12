@@ -29,31 +29,22 @@
 
 #include <QtGlobal>
 
-#include <QTcpServer>
 #include <QClipboard>
 #include <QSettings>
 #include <QList>
 #include <QHash>
-#include <QHostInfo>
-#include <QSslError>
-#include <QAbstractEventDispatcher>
 
+#include "Network/ConnectionManager.h"
 #include "ClipboardItem.h"
 #include "History.h"
 
 class History;
 class Node;
 
-class ClipboardManager : public QTcpServer
+class ClipboardManager : public QObject
 {
 	Q_OBJECT
 public:
-	enum Encryption {
-		None=0,
-		Ssl,
-		Tls
-	};
-
 	enum SelectionMode {
 		Separate,
 		United
@@ -69,35 +60,19 @@ public:
 	~ClipboardManager();
 	static ClipboardManager* instance();
 	QSettings *settings();
+	ConnectionManager* connectionManager();
 	History* history();
 	ClipboardItem *currentItem();
 	bool isSyncEnabled();
 	bool isSendingEnabled();
 	bool isReceivingEnabled();
-	QString host();
-	quint16 port();
-	QString password();
-	QList<Node*> nodes();
-	void setNodes(QList<Node*> nodes);
 	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
-	void setListenHost(QString host, quint16 port);
-	void setHost(QString host);
-	void setPort(quint16 port);
-	void setEncryption(Encryption encryption);
-	void setCertificate(QString cert);
-	void setPrivateKey(QString key);
-	void setPassword(QString pass);
 	void distributeCurrentClipboard();
 	static qint32 supportedModes();
 	static void gracefullyExit(int sig);
 	inline bool shouldDistribute() const;
 	inline bool shouldListen() const;
-
-signals:
-	void listenFailed(QString error);
-	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
-	void sslFatalError(const QList<QSslError> errors);
 
 public slots:
 	void start();
@@ -113,6 +88,7 @@ private:
 	static ClipboardManager *m_instance;
 	static QClipboard *clipboard;
 	QSettings *m_settings;
+	ConnectionManager *m_conman;
 	QList<Node*> pool;
 	History* m_history;
 	bool m_clipSync;
@@ -120,12 +96,6 @@ private:
 	bool m_clipRecv;
 	SelectionMode m_selectionMode;
 	SynchronizeMode m_syncMode;
-	QString m_host;
-	quint16 m_port;
-	Encryption m_encryption;
-	QString m_certificate;
-	QString m_privateKey;
-	QString m_password;
 	QTimer *selectionTimer;
 	QTimer *delayedEnsureTimer;
 	ClipboardItem *delayedEnsureItem;
@@ -139,17 +109,13 @@ private:
 	void ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode);
 	void distributeClipboard(ClipboardItem *content);
 	void updateToolTip();
-	void loadNodes();
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
-	void startListening(QHostAddress addr = QHostAddress::Null);
 
 private slots:
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
-	void incomingConnection(int handle);
 	void updateClipboard(ClipboardContainer *content, bool fromHistory = false);
 	void updateClipboardFromNetwork(ClipboardContainer *cont);
-	void listenOnHost(const QHostInfo &m_host);
 	void delayedClipboardEnsure();
 #ifdef Q_WS_X11
 	void checkSelection();

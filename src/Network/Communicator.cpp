@@ -19,11 +19,11 @@
 
 #include "Communicator.h"
 
+#include "Conversations/Introduction.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Communicator::Communicator(History *history, QObject *parent) :
+Communicator::Communicator(QObject *parent) :
 	QSslSocket(parent),
-	m_history(history),
 	m_conversation(0),
 	haveHeader(false),
 	msgLen(0),
@@ -150,6 +150,11 @@ void Communicator::readHeader()
 	{
 		switch(convType)
 		{
+		case Conversation::Introduction:
+			qDebug() << "Initiating conversation Introduction";
+			m_conversation = new Conversations::Introduction(Communicator::Receive, 0, this);
+			break;
+
 		case Conversation::ClipboardUpdate:
 			qDebug() << "Initiating conversation ClipboardUpdate";
 			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);

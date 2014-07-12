@@ -24,22 +24,22 @@
 #include "Receiver.h"
 #include "Conversation.h"
 
-Receiver::Receiver(History *history, ClipboardManager::Encryption enc, QObject *parent) :
-	Communicator(history, parent)
+Receiver::Receiver(ConnectionManager::Encryption enc, QObject *parent) :
+	Communicator(parent)
 {
 	encryption = enc;
 }
 
 void Receiver::communicate()
 {
-	if(encryption != ClipboardManager::None)
+	if(encryption != ConnectionManager::None)
 	{
 		switch(encryption)
 		{
-		case ClipboardManager::Ssl:
+		case ConnectionManager::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ClipboardManager::Tls:
+		case ConnectionManager::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else
