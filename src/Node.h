@@ -7,7 +7,7 @@
 class Node
 {
 public:
-	Node();
+	Node(Node *other = 0);
 	QString name();
 	QString host();
 	quint16 port();

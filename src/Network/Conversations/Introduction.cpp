@@ -19,13 +19,15 @@
 
 #include "Introduction.h"
 
+#include "../Commands/Introduce.h"
+
 using namespace Conversations;
 
 Introduction::Introduction(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: Conversation(r, cont, parent)
 {
-	addCommand(BaseCommand::Ping, r);
-	addCommand(BaseCommand::Confirm, reverse(r));
+	addCommand(BaseCommand::Introduce, r);
+	addCommand(BaseCommand::Introduce, reverse(r));
 }
 
 Conversation::Type Introduction::type() const
@@ -33,7 +35,25 @@ Conversation::Type Introduction::type() const
 	return Conversation::Introduction;
 }
 
-void Introduction::nextCommand(BaseCommand::Type lastCmd, int index)
+void Introduction::setPort(quint16 port)
 {
+	static_cast<Commands::Introduce*>(m_cmds[0])->setPort(port);
+}
 
+ConnectionManager::AuthMode Introduction::authenticate()
+{
+	return ConnectionManager::NoAuth;
+}
+
+void Introduction::postDoneSender()
+{
+	emit introductionFinished( static_cast<Commands::Introduce*>(m_cmds[1])->name() );
+}
+
+void Introduction::postDoneReceiver()
+{
+	Commands::Introduce *cmd = static_cast<Commands::Introduce*>(m_cmds[0]);
+
+	// show dialog to input security code
+	emit verificationRequested(cmd->name(), cmd->port());
 }

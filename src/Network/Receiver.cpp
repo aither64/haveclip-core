@@ -24,7 +24,7 @@
 #include "Receiver.h"
 #include "Conversation.h"
 
-Receiver::Receiver(ConnectionManager::Encryption enc, QObject *parent) :
+Receiver::Receiver(ConnectionManager::Encryption enc, ConnectionManager *parent) :
 	Communicator(parent)
 {
 	encryption = enc;
@@ -48,7 +48,7 @@ void Receiver::communicate()
 			break;
 		}
 
-		setPeerVerifyMode(QSslSocket::VerifyNone);
+		setPeerVerifyMode(QSslSocket::QueryPeer);
 
 		startServerEncryption();
 	}
@@ -58,5 +58,18 @@ void Receiver::conversationSignals()
 {
 	Communicator::conversationSignals();
 
+	connect(m_conversation, SIGNAL(verificationRequested(QString,quint16)), this, SLOT(interceptVerificationRequest(QString,quint16)));
+	connect(m_conversation, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)), this, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)));
 	connect(m_conversation, SIGNAL(clipboardSync(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
+}
+
+void Receiver::interceptVerificationRequest(QString name, quint16 port)
+{
+	Node *n = new Node;
+	n->setName(name);
+	n->setHost(peerAddress().toString());
+	n->setPort(port);
+	n->setCertificate(m_peerCertificate);
+
+	emit verificationRequested(n);
 }

@@ -17,16 +17,15 @@ It is not possible to copy files over network with HaveClip.
 
 Requirements
 ------------
-HaveClip for desktop is written in C++ using the Qt framework.
-
  - Qt at least 4.7. It might work with older versions, but it's not tested.
    - modules core, gui (widgets for Qt5) and network
+ - QCA (Qt Cryptographic Architecture)
  - Linux version has additional dependencies
    - X11 header files
 
 ### Debian based distributions
 
-    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev
+    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev make pkg-config libqca2-dev
 
 ### Fedora and other RPM based distributions
 

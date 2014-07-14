@@ -29,15 +29,26 @@ class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Sender(ConnectionManager::Encryption enc, Node *node, QObject *parent = 0);
+	explicit Sender(ConnectionManager::Encryption enc, Node *node, ConnectionManager *parent = 0);
 	Node *node();
 
+signals:
+	void introduceFinished(QString name, QSslCertificate cert);
+	void verificationFinished(bool success);
+
 public slots:
+	void introduce(quint16 port);
+	void verify(QString code);
 	void distribute(ClipboardItem *content);
+
+protected:
+	virtual void conversationSignals();
 
 protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);
-	virtual void onSslError(const QList<QSslError> &errors);
+
+private slots:
+	void interceptIntroductionFinish(QString name);
 
 private:
 	Node *m_node;

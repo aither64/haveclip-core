@@ -1,7 +1,14 @@
 #include "Node.h"
 
-Node::Node()
+Node::Node(Node *other)
 {
+	if(other)
+	{
+		m_name = other->m_name;
+		m_host = other->m_host;
+		m_port = other->m_port;
+		m_certificate = other->m_certificate;
+	}
 }
 
 QString Node::name()

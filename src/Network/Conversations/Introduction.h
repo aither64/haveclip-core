@@ -10,9 +10,12 @@ namespace Conversations {
 	public:
 		Introduction(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
 		virtual Type type() const;
+		void setPort(quint16 port);
+		virtual ConnectionManager::AuthMode authenticate();
 
 	protected:
-		virtual void nextCommand(BaseCommand::Type lastCmd, int index);
+		virtual void postDoneSender();
+		virtual void postDoneReceiver();
 
 	};
 }

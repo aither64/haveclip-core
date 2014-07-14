@@ -23,13 +23,35 @@
 #include <QDataStream>
 
 #include "Sender.h"
+#include "Conversations/Introduction.h"
+#include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Sender::Sender(ConnectionManager::Encryption enc, Node *node, QObject *parent) :
+Sender::Sender(ConnectionManager::Encryption enc, Node *node, ConnectionManager *parent) :
 	Communicator(parent),
 	m_node(node)
 {
 	encryption = enc;
+}
+
+void Sender::introduce(quint16 port)
+{
+	Conversations::Introduction *conv = new Conversations::Introduction(Communicator::Send, 0, this);
+	conv->setPort(port);
+
+	m_conversation = conv;
+
+	connectToPeer();
+}
+
+void Sender::verify(QString code)
+{
+	Conversations::Verification *conv = new Conversations::Verification(Communicator::Send, 0, this);
+	conv->setSecurityCode(code);
+
+	m_conversation = conv;
+
+	connectToPeer();
 }
 
 void Sender::distribute(ClipboardItem *content)
@@ -39,46 +61,21 @@ void Sender::distribute(ClipboardItem *content)
 	connectToPeer();
 }
 
+void Sender::conversationSignals()
+{
+	connect(m_conversation, SIGNAL(introductionFinished(QString)), this, SLOT(interceptIntroductionFinish(QString)));
+	connect(m_conversation, SIGNAL(verificationFinished(bool)), this, SIGNAL(verificationFinished(bool)));
+}
+
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Unable to reach" << m_node->host() << ":" << socketError;
 	this->deleteLater();
 }
 
-void Sender::onSslError(const QList<QSslError> &errors)
+void Sender::interceptIntroductionFinish(QString name)
 {
-	QList<QSslError::SslError> recoverable;
-	recoverable << QSslError::SelfSignedCertificate
-		<< QSslError::CertificateUntrusted
-		<< QSslError::HostNameMismatch
-		<< QSslError::CertificateExpired;
-
-	bool exception = true;
-
-	foreach(QSslError e, errors)
-	{
-		if(!recoverable.contains(e.error()))
-		{
-			qDebug() << "Unrecoverable SSL error" << e;
-			emit sslFatalError(errors);
-			return;
-		}
-
-		if(e.certificate() != m_node->certificate())
-		{
-			exception = false;
-			break;
-		}
-	}
-
-	if(exception)
-	{
-		qDebug() << "SSL errors ignored because of exception";
-		ignoreSslErrors();
-
-	} else {
-		emit untrustedCertificateError(m_node, errors);
-	}
+	emit introduceFinished(name, m_peerCertificate);
 }
 
 Node* Sender::node()
@@ -92,7 +89,7 @@ void Sender::connectToPeer()
 
 	if(encryption != ConnectionManager::None)
 	{
-		setPeerVerifyMode(QSslSocket::VerifyNone);
+		setPeerVerifyMode(QSslSocket::QueryPeer);
 
 		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
 

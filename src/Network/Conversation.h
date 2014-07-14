@@ -26,12 +26,17 @@
 #include "../ClipboardItem.h"
 #include "Command.h"
 
+namespace Conversations {
+	class Verification;
+}
+
 class Conversation : public QObject
 {
 	Q_OBJECT
 public:
 	enum Type {
 		Introduction,
+		Verification,
 		ClipboardUpdate
 	};
 
@@ -43,6 +48,8 @@ public:
 	virtual Type type() const = 0;
 	virtual void receive(QDataStream &ds);
 	virtual void send(QDataStream &ds);
+	virtual void postDone();
+	virtual ConnectionManager::AuthMode authenticate();
 
 protected:
 	Communicator::Role m_role;
@@ -57,10 +64,16 @@ protected:
 	virtual void nextCommand(BaseCommand::Type lastCmd, int index);
 	virtual void nextCommandSender(BaseCommand::Type lastCmd, int index);
 	virtual void nextCommandReceiver(BaseCommand::Type lastCmd, int index);
+	virtual void postDoneSender();
+	virtual void postDoneReceiver();
 	void confirm(BaseCommand::Status s);
 	void morph(Conversation *c);
 
 signals:
+	void introductionFinished(QString name);
+	void verificationRequested(QString name, quint16 port);
+	void verificationCodeReceived(Conversations::Verification *v, QString code);
+	void verificationFinished(bool ok);
 	void clipboardSync(ClipboardContainer *cont);
 	void done();
 	void morphed(Conversation *c);

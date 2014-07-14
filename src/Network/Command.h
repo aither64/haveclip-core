@@ -30,6 +30,8 @@ class BaseCommand
 public:
 	enum Type {
 		Ping=0,
+		Introduce,
+		SecurityCode,
 		ClipboardUpdateReady,
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,

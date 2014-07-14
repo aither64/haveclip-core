@@ -26,7 +26,10 @@ SOURCES +=\
     src/Node.cpp \
     src/Network/Conversations/Introduction.cpp \
     src/Network/Commands/Ping.cpp \
-    src/Network/ConnectionManager.cpp
+    src/Network/ConnectionManager.cpp \
+    src/Network/Commands/Introduce.cpp \
+    src/Network/Conversations/Verification.cpp \
+    src/Network/Commands/SecurityCode.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -48,7 +51,10 @@ HEADERS  += \
     src/Node.h \
     src/Network/Conversations/Introduction.h \
     src/Network/Commands/Ping.h \
-    src/Network/ConnectionManager.h
+    src/Network/ConnectionManager.h \
+    src/Network/Commands/Introduce.h \
+    src/Network/Conversations/Verification.h \
+    src/Network/Commands/SecurityCode.h
 
 OTHER_FILES += \
     TODO \

@@ -80,6 +80,8 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 
 	m_conman = new ConnectionManager(m_settings, this);
 
+	connect(m_conman, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboardFromNetwork(ClipboardContainer*)));
+
 	m_clipSync = m_settings->value("Sync/Enable", true).toBool();
 	m_clipSnd = m_settings->value("Sync/Send", true).toBool();
 	m_clipRecv = m_settings->value("Sync/Receive", true).toBool();

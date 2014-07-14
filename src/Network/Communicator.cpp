@@ -20,15 +20,19 @@
 #include "Communicator.h"
 
 #include "Conversations/Introduction.h"
+#include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Communicator::Communicator(QObject *parent) :
+Communicator::Communicator(ConnectionManager *parent) :
 	QSslSocket(parent),
+	m_conman(parent),
 	m_conversation(0),
 	haveHeader(false),
 	msgLen(0),
-	dataRead(0)
+	dataRead(0),
+	m_runPostDone(false)
 {
+	connect(this, SIGNAL(encrypted()), this, SLOT(onEncrypted()));
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
@@ -89,7 +93,8 @@ void Communicator::receiveMessage()
 
 	if(msgPassword != m_password)
 	{
-		qDebug() << "Password does not match!";
+		qDebug() << "Password does not match!" << msgPassword << m_password;
+		emit finished(PasswordNotMatches);
 		this->deleteLater();
 		return;
 	}
@@ -97,6 +102,7 @@ void Communicator::receiveMessage()
 	if(m_conversation->currentRole() != Communicator::Receive)
 	{
 		qDebug() << "Fuckup";
+		emit finished(UnknownError);
 		this->deleteLater();
 		return;
 	}
@@ -122,6 +128,7 @@ void Communicator::readHeader()
 	if(buffer.size() < HEADER_SIZE)
 	{
 		qDebug() << "Invalid message - incomplete header";
+		emit finished(IncompleteHeader);
 		this->deleteLater();
 		return;
 	}
@@ -131,6 +138,7 @@ void Communicator::readHeader()
 	if(magic != PROTO_MAGIC_NUMBER)
 	{
 		qDebug() << "Invalid message - magic number does not match";
+		emit finished(MagicNumberNotMatches);
 		this->deleteLater();
 		return;
 	}
@@ -140,6 +148,7 @@ void Communicator::readHeader()
 	if(version != PROTO_VERSION)
 	{
 		qDebug() << "Protocol version does not match. Supported is" << PROTO_VERSION << ", received" << version;
+		emit finished(ProtocolVersionMismatch);
 		this->deleteLater();
 		return;
 	}
@@ -155,6 +164,11 @@ void Communicator::readHeader()
 			m_conversation = new Conversations::Introduction(Communicator::Receive, 0, this);
 			break;
 
+		case Conversation::Verification:
+			qDebug() << "Initiating conversation Verification";
+			m_conversation = new Conversations::Verification(Communicator::Receive, 0, this);
+			break;
+
 		case Conversation::ClipboardUpdate:
 			qDebug() << "Initiating conversation ClipboardUpdate";
 			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
@@ -162,6 +176,15 @@ void Communicator::readHeader()
 
 		default:
 			qDebug() << "Unknown conversation" << convType;
+			emit finished(UnknownConversation);
+			this->deleteLater();
+			return;
+		}
+
+		if(!m_conman->isAuthenticated(m_conversation->authenticate(), m_peerCertificate))
+		{
+			qDebug() << "Authentication failed";
+			emit finished(NotAuthenticated);
 			this->deleteLater();
 			return;
 		}
@@ -170,6 +193,7 @@ void Communicator::readHeader()
 
 	} else if(convType != m_conversation->type()) {
 		qDebug() << "Invalid conversation: expected" << m_conversation->type() << ", received" << convType;
+		emit finished(InvalidConversation);
 		this->deleteLater();
 		return;
 	}
@@ -179,6 +203,7 @@ void Communicator::readHeader()
 	if(cmdType != m_conversation->currentCommandType())
 	{
 		qDebug() << "Unexpected message type: expected" << m_conversation->currentCommandType() << ", received" << cmdType;
+		emit finished(UnexpectedMessageType);
 		this->deleteLater();
 		return;
 	}
@@ -195,18 +220,22 @@ void Communicator::conversationSignals()
 void Communicator::continueConversation()
 {
 	if(m_conversation->isDone())
+	{
 		disconnectFromHost();
+		m_runPostDone = true;
 
-	else if(m_conversation->currentRole() == Communicator::Send)
+	} else if(m_conversation->currentRole() == Communicator::Send) {
 		sendMessage();
 
-	else
+	} else {
 		onRead();
+	}
 }
 
 void Communicator::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Connection error" << socketError;
+	emit finished(ConnectionFailed);
 	this->deleteLater();
 }
 
@@ -214,6 +243,19 @@ void Communicator::onConnect()
 {
 	if(m_conversation->currentRole() == Communicator::Send)
 		sendMessage();
+}
+
+void Communicator::onEncrypted()
+{
+	m_peerCertificate = peerCertificate();
+
+	if(m_conversation && !m_conman->isAuthenticated(m_conversation->authenticate(), m_peerCertificate))
+	{
+		qDebug() << "Authentication failed" << m_conversation->type() << m_conversation->authenticate();
+		emit finished(NotAuthenticated);
+		this->deleteLater();
+		return;
+	}
 }
 
 void Communicator::onRead()
@@ -239,7 +281,12 @@ void Communicator::onRead()
 
 void Communicator::onDisconnect()
 {
-//	qDebug() << "Communicator::onDisconnect";
+	qDebug() << "Communicator::onDisconnect";
+
+	if(m_runPostDone)
+		m_conversation->postDone();
+
+	emit finished(Ok);
 	this->deleteLater();
 }
 
@@ -260,5 +307,21 @@ void Communicator::morphConversation(Conversation *c)
 
 void Communicator::onSslError(const QList<QSslError> &errors)
 {
+	QList<QSslError::SslError> recoverable;
+	recoverable << QSslError::SelfSignedCertificate
+		<< QSslError::CertificateUntrusted
+		<< QSslError::HostNameMismatch;
+
+	foreach(QSslError e, errors)
+	{
+		if(!recoverable.contains(e.error()))
+		{
+			qDebug() << "Unrecoverable SSL error" << e;
+			emit sslFatalError(errors);
+			emit finished(UnrecoverableSslError);
+			return;
+		}
+	}
+
 	ignoreSslErrors();
 }

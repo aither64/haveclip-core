@@ -20,6 +20,8 @@
 #include "Conversation.h"
 
 #include "Commands/Ping.h"
+#include "Commands/Introduce.h"
+#include "Commands/SecurityCode.h"
 #include "Commands/ClipboardUpdateReady.h"
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
@@ -72,6 +74,20 @@ void Conversation::send(QDataStream &ds)
 	moveToNextCommand();
 }
 
+void Conversation::postDone()
+{
+	if(m_role == Communicator::Send)
+		postDoneSender();
+
+	else
+		postDoneReceiver();
+}
+
+ConnectionManager::AuthMode Conversation::authenticate()
+{
+	return ConnectionManager::Verified;
+}
+
 BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 {
 	BaseCommand *cmd;
@@ -82,6 +98,14 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 	{
 	case BaseCommand::Ping:
 		cmd = new Ping(m_cont, r);
+		break;
+
+	case BaseCommand::Introduce:
+		cmd = new Introduce(m_cont, r);
+		break;
+
+	case BaseCommand::SecurityCode:
+		cmd = new SecurityCode(m_cont, r);
 		break;
 
 	case BaseCommand::ClipboardUpdateReady:
@@ -142,6 +166,16 @@ void Conversation::nextCommandSender(BaseCommand::Type lastCmd, int index)
 }
 
 void Conversation::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
+{
+
+}
+
+void Conversation::postDoneSender()
+{
+
+}
+
+void Conversation::postDoneReceiver()
 {
 
 }

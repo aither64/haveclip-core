@@ -38,7 +38,22 @@ public:
 		Receive
 	};
 
-	explicit Communicator(QObject *parent = 0);
+	enum CommunicationStatus {
+		Ok,
+		ConnectionFailed,
+		UnrecoverableSslError,
+		IncompleteHeader,
+		MagicNumberNotMatches,
+		ProtocolVersionMismatch,
+		UnknownConversation,
+		InvalidConversation,
+		UnexpectedMessageType,
+		PasswordNotMatches,
+		NotAuthenticated,
+		UnknownError
+	};
+
+	explicit Communicator(ConnectionManager *parent = 0);
 	~Communicator();
 	Node *node();
 	void setCertificateAndKey(QString cert, QString key);
@@ -47,12 +62,15 @@ public:
 signals:
 	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
+	void finished(Communicator::CommunicationStatus status);
 
 protected:
+	ConnectionManager *m_conman;
 	ClipboardContainer *container;
 	ConnectionManager::Encryption encryption;
 	QString m_password;
 	Conversation *m_conversation;
+	QSslCertificate m_peerCertificate;
 
 	void sendMessage();
 	void receiveMessage();
@@ -64,6 +82,7 @@ protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);
 	virtual void onSslError(const QList<QSslError> &errors);
 	void onConnect();
+	void onEncrypted();
 	void onRead();
 	void onDisconnect();
 	virtual void conversationDone();
@@ -75,6 +94,7 @@ private:
 	QByteArray buffer;
 	bool haveHeader;
 	quint64 msgLen;
+	bool m_runPostDone;
 	
 };
 

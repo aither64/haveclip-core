@@ -24,19 +24,28 @@
 
 #include "Communicator.h"
 
+namespace Conversations {
+	class Verification;
+}
+
 /* Represents client connecting to this instance of HaveClip */
 class Receiver : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Receiver(ConnectionManager::Encryption enc, QObject *parent = 0);
+	explicit Receiver(ConnectionManager::Encryption enc, ConnectionManager *parent = 0);
 	void communicate();
 
 protected:
 	virtual void conversationSignals();
 	
 signals:
+	void verificationRequested(Node *n);
+	void verificationCodeReceived(Conversations::Verification *v, QString code);
 	void clipboardUpdated(ClipboardContainer *cont);
+
+private slots:
+	void interceptVerificationRequest(QString name, quint16 port);
 	
 };
 
