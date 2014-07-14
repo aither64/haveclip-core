@@ -43,7 +43,6 @@ public:
 	void setEncryption(Encryption encryption);
 	void setCertificate(QString cert);
 	void setPrivateKey(QString key);
-	void setPassword(QString pass);
 	void startReceiving();
 	void stopReceiving();
 	void syncClipboard(ClipboardItem *it);
@@ -71,7 +70,6 @@ private:
 	Encryption m_encryption;
 	QString m_certificate;
 	QString m_privateKey;
-	QString m_password;
 	QList<Node*> m_pool;
 
 	Sender *m_verifySender;

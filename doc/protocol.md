@@ -77,7 +77,6 @@ Protocol structure
        4    int32        conversation
        4    int32        message type
        8    quint64      message length
-       -    QString      password
 
 ### Message types
 

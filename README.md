@@ -93,5 +93,5 @@ HaveClip is released under GNU/GPL.
 WARNING
 -------
 The clipboard is definitely a private thing, so be careful where and how you use
-HaveClip. Be sure to use SSL/TLS encryption, generate your own certificate
-and use access password.
+HaveClip. Be sure to use SSL/TLS encryption, every computer/device should have
+it's own certificate and private key, use peer verification (pairing).

@@ -51,11 +51,6 @@ void Communicator::setCertificateAndKey(QString cert, QString key)
 	setPrivateKey(key);
 }
 
-void Communicator::setPassword(QString password)
-{
-	m_password = password;
-}
-
 void Communicator::sendMessage()
 {
 	QByteArray buf;
@@ -66,8 +61,6 @@ void Communicator::sendMessage()
 	ds << (qint32) m_conversation->type();
 	ds << (qint32) m_conversation->currentCommandType();
 	ds << (quint64) 0; // Filled later
-
-	ds << m_password;
 
 	m_conversation->send(ds);
 
@@ -86,18 +79,6 @@ void Communicator::receiveMessage()
 {
 	QDataStream ds(&buffer, QIODevice::ReadOnly);
 	ds.device()->seek(HEADER_SIZE); // skip header
-
-	QString msgPassword;
-
-	ds >> msgPassword;
-
-	if(msgPassword != m_password)
-	{
-		qDebug() << "Password does not match!" << msgPassword << m_password;
-		emit finished(PasswordNotMatches);
-		this->deleteLater();
-		return;
-	}
 
 	if(m_conversation->currentRole() != Communicator::Receive)
 	{

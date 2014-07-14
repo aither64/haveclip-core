@@ -20,8 +20,6 @@ ConnectionManager::ConnectionManager(QSettings *settings, QObject *parent) :
 	m_encryption = (ConnectionManager::Encryption) m_settings->value("Connection/Encryption", 0).toInt();
 	m_certificate = m_settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
 	m_privateKey = m_settings->value("Connection/PrivateKey", "certs/haveclip.key").toString();
-
-	m_password = m_settings->value("AccessPolicy/Password").toString();
 }
 
 void ConnectionManager::setNodes(QList<Node*> nodes)
@@ -90,11 +88,6 @@ void ConnectionManager::setPrivateKey(QString key)
 	m_privateKey = key;
 }
 
-void ConnectionManager::setPassword(QString pass)
-{
-	m_password = pass;
-}
-
 void ConnectionManager::startReceiving()
 {
 	startListening();
@@ -144,7 +137,6 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 	{
 		Sender *d = new Sender(m_encryption, n, this);
 		d->setCertificateAndKey(m_certificate, m_privateKey);
-		d->setPassword(m_password);
 
 		connect(d, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node*,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
@@ -160,8 +152,6 @@ void ConnectionManager::saveSettings()
 	m_settings->setValue("Connection/Encryption", m_encryption);
 	m_settings->setValue("Connection/Certificate", m_certificate);
 	m_settings->setValue("Connection/PrivateKey", m_privateKey);
-
-	m_settings->setValue("AccessPolicy/Password", m_password);
 }
 
 bool ConnectionManager::isAuthenticated(ConnectionManager::AuthMode mode, QSslCertificate &cert)
@@ -195,7 +185,6 @@ void ConnectionManager::incomingConnection(int handle)
 	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
 
 	c->setCertificateAndKey(m_certificate, m_privateKey);
-	c->setPassword(m_password);
 	c->communicate();
 }
 

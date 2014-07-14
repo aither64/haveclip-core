@@ -48,7 +48,6 @@ public:
 		UnknownConversation,
 		InvalidConversation,
 		UnexpectedMessageType,
-		PasswordNotMatches,
 		NotAuthenticated,
 		UnknownError
 	};
@@ -57,7 +56,6 @@ public:
 	~Communicator();
 	Node *node();
 	void setCertificateAndKey(QString cert, QString key);
-	void setPassword(QString m_password);
 
 signals:
 	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
@@ -68,7 +66,6 @@ protected:
 	ConnectionManager *m_conman;
 	ClipboardContainer *container;
 	ConnectionManager::Encryption encryption;
-	QString m_password;
 	Conversation *m_conversation;
 	QSslCertificate m_peerCertificate;
 
