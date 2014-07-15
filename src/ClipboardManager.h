@@ -38,11 +38,6 @@ class ClipboardManager : public QObject
 {
 	Q_OBJECT
 public:
-	enum SelectionMode {
-		Separate,
-		United
-	};
-
 	enum SynchronizeMode {
 		Selection,
 		Clipboard,
@@ -59,7 +54,6 @@ public:
 	bool isSyncEnabled();
 	bool isSendingEnabled();
 	bool isReceivingEnabled();
-	void setSelectionMode(SelectionMode m);
 	void setSyncMode(SynchronizeMode m);
 	void distributeCurrentClipboard();
 	static qint32 supportedModes();
@@ -87,7 +81,6 @@ private:
 	bool m_clipSync;
 	bool m_clipSnd;
 	bool m_clipRecv;
-	SelectionMode m_selectionMode;
 	SynchronizeMode m_syncMode;
 	QTimer *selectionTimer;
 	QTimer *delayedEnsureTimer;

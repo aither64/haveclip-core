@@ -90,7 +90,6 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	m_history->setStackSize(m_settings->value("History/Size", 10).toInt());
 	m_history->setSave(m_settings->value("History/Save", true).toBool());
 
-	m_selectionMode = (ClipboardManager::SelectionMode) m_settings->value("Selection/Mode", ClipboardManager::Separate).toInt();
 	m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Sync/Synchronize", ClipboardManager::Both).toInt();
 }
 
@@ -166,11 +165,6 @@ bool ClipboardManager::isReceivingEnabled()
 	return m_clipRecv;
 }
 
-void ClipboardManager::setSelectionMode(SelectionMode m)
-{
-	m_selectionMode = m;
-}
-
 void ClipboardManager::setSyncMode(SynchronizeMode m)
 {
 	m_syncMode = m;
@@ -239,7 +233,6 @@ void ClipboardManager::saveSettings()
 	if(!m_history->isEnabled())
 		m_history->deleteFile();
 
-	m_settings->setValue("Selection/Mode", m_selectionMode);
 	m_settings->setValue("Sync/Synchronize", m_syncMode);
 
 	m_conman->saveSettings();
@@ -338,9 +331,6 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 
 	lastItem = m_history->add(cnt, !fromSelection);
 
-	if(m_selectionMode == ClipboardManager::United)
-		uniteClipboards(lastItem);
-
 	if(shouldDistribute())
 		distributeClipboard(lastItem);
 
@@ -385,7 +375,7 @@ void ClipboardManager::updateClipboard(ClipboardContainer *cont, bool fromHistor
 	if(!fromHistory)
 		it = m_history->add(it, false);
 
-	if(m_selectionMode == ClipboardManager::United || it->mode == ClipboardItem::ClipboardAndSelection)
+	if(it->mode == ClipboardItem::ClipboardAndSelection)
 	{
 		uniteClipboards(it);
 	} else
