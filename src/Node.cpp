@@ -8,6 +8,7 @@ Node::Node(Node *other)
 		m_host = other->m_host;
 		m_port = other->m_port;
 		m_certificate = other->m_certificate;
+		m_compatible = other->m_compatible;
 	}
 }
 
@@ -31,6 +32,11 @@ QSslCertificate Node::certificate()
 	return m_certificate;
 }
 
+bool Node::isCompatible() const
+{
+	return m_compatible;
+}
+
 void Node::setName(QString name)
 {
 	m_name = name;
@@ -49,6 +55,11 @@ void Node::setPort(quint16 port)
 void Node::setCertificate(QSslCertificate cert)
 {
 	m_certificate = cert;
+}
+
+void Node::setCompatible(bool compat)
+{
+	m_compatible = compat;
 }
 
 Node* Node::load(QSettings *settings)

@@ -32,6 +32,12 @@ The levels are:
  - Verified - the peer must be verified, meaning it is in pool, has valid
 	      certificate and it matches
 
+Auto discovery
+--------------
+HaveClip can be auto discovered on LANs. The searching peer sends
+a broadcast. All HaveClips listen for this broadcast and they
+reply to the sender.
+
 Possible conversations
 ----------------------
 
@@ -77,6 +83,19 @@ Protocol structure
        4    int32        conversation
        4    int32        message type
        8    quint64      message length
+
+### Auto discovery request/reply
+
+The message contains no header.
+
+  Length    Type         Meaning
+ -------    -------      ------------------------------------------------
+       4    uint32       magic number, identifies correct data format
+       4    int32        version
+       4    int32        message type
+       4    int32        message identifier
+       -    QString      name
+       2    quint16      port
 
 ### Message types
 

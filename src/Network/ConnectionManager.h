@@ -10,6 +10,7 @@ class Sender;
 class Node;
 class ClipboardItem;
 class ClipboardContainer;
+class AutoDiscovery;
 
 namespace Conversations {
 	class Verification;
@@ -37,6 +38,7 @@ public:
 	quint16 port();
 	QString securityCode();
 	Node* verifiedNode();
+	AutoDiscovery* autoDiscovery();
 	void setListenHost(QString host, quint16 port);
 	void setHost(QString host);
 	void setPort(quint16 port);
@@ -65,6 +67,7 @@ public slots:
 
 private:
 	QSettings *m_settings;
+	AutoDiscovery *m_autoDiscovery;
 	QString m_host;
 	quint16 m_port;
 	Encryption m_encryption;

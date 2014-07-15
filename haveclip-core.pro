@@ -29,7 +29,8 @@ SOURCES +=\
     src/Network/ConnectionManager.cpp \
     src/Network/Commands/Introduce.cpp \
     src/Network/Conversations/Verification.cpp \
-    src/Network/Commands/SecurityCode.cpp
+    src/Network/Commands/SecurityCode.cpp \
+    src/Network/AutoDiscovery.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -54,7 +55,9 @@ HEADERS  += \
     src/Network/ConnectionManager.h \
     src/Network/Commands/Introduce.h \
     src/Network/Conversations/Verification.h \
-    src/Network/Commands/SecurityCode.h
+    src/Network/Commands/SecurityCode.h \
+    src/Network/AutoDiscovery.h \
+    src/Version.h
 
 OTHER_FILES += \
     TODO \

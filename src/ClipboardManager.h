@@ -20,13 +20,6 @@
 #ifndef CLIPBOARDMANAGER_H
 #define CLIPBOARDMANAGER_H
 
-#define VERSION "0.13.0"
-#define HISTORY_MAGIC_NUMBER 0x84D3C117
-#define HISTORY_VERSION 3
-
-#define PROTO_MAGIC_NUMBER 0x84D3C117
-#define PROTO_VERSION 3
-
 #include <QtGlobal>
 
 #include <QClipboard>

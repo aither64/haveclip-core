@@ -5,6 +5,7 @@
 #include "../Node.h"
 #include "Sender.h"
 #include "Receiver.h"
+#include "AutoDiscovery.h"
 
 #include "Conversations/Verification.h"
 
@@ -14,8 +15,13 @@ ConnectionManager::ConnectionManager(QSettings *settings, QObject *parent) :
 	m_verifySender(0),
 	m_verifiedNode(0)
 {
+	m_autoDiscovery = new AutoDiscovery(this);
+
 	m_host = m_settings->value("Connection/Host", "0.0.0.0").toString();
 	m_port = m_settings->value("Connection/Port", 9999).toInt();
+
+	m_autoDiscovery->setName(QHostInfo::localHostName());
+	m_autoDiscovery->setPort(m_port);
 
 	m_encryption = (ConnectionManager::Encryption) m_settings->value("Connection/Encryption", 0).toInt();
 	m_certificate = m_settings->value("Connection/Certificate", "certs/haveclip.crt").toString();
@@ -47,6 +53,11 @@ QString ConnectionManager::securityCode()
 Node* ConnectionManager::verifiedNode()
 {
 	return m_verifiedNode;
+}
+
+AutoDiscovery* ConnectionManager::autoDiscovery()
+{
+	return m_autoDiscovery;
 }
 
 void ConnectionManager::setListenHost(QString host, quint16 port)

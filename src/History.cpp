@@ -24,6 +24,8 @@
 #include <QFileInfo>
 #include <QDesktopServices>
 
+#include "Version.h"
+
 History::History(QObject *parent) :
 	QAbstractListModel(parent),
 	m_track(true),

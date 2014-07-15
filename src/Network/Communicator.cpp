@@ -19,6 +19,7 @@
 
 #include "Communicator.h"
 
+#include "../Version.h"
 #include "Conversations/Introduction.h"
 #include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
