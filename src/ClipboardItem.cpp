@@ -200,7 +200,8 @@ ClipboardItem* ClipboardItem::previousItem()
 
 void ClipboardItem::addItem(ClipboardItem *item, bool allowDuplicity)
 {
-
+	Q_UNUSED(item);
+	Q_UNUSED(allowDuplicity);
 }
 
 void ClipboardItem::seal()

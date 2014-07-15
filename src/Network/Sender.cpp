@@ -105,6 +105,9 @@ void Sender::connectToPeer()
 			setProtocol(QSsl::TlsV1);
 #endif
 			break;
+
+		default:
+			break;
 		}
 
 		connectToHostEncrypted(m_node->host(), m_node->port());

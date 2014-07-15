@@ -33,10 +33,14 @@ BaseCommand::Type Ping::type() const
 
 void Ping::receive(QDataStream &ds)
 {
+	Q_UNUSED(ds);
+
 	finish();
 }
 
 void Ping::send(QDataStream &ds)
 {
+	Q_UNUSED(ds);
+
 	finish();
 }

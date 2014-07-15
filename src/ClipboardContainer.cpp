@@ -30,6 +30,11 @@ ClipboardContainer::ClipboardContainer()
 {
 }
 
+ClipboardContainer::~ClipboardContainer()
+{
+
+}
+
 ClipboardContainer* ClipboardContainer::load(QDataStream &ds)
 {
 	qint32 ctype;
@@ -110,6 +115,8 @@ ClipboardContainer::Mode ClipboardContainer::qtModeToOwn(QClipboard::Mode m)
 	case QClipboard::FindBuffer:
 		return FindBuffer;
 	}
+
+	return Clipboard;
 }
 
 QClipboard::Mode ClipboardContainer::ownModeToQt(Mode m)
@@ -125,6 +132,8 @@ QClipboard::Mode ClipboardContainer::ownModeToQt(Mode m)
 	default:
 		return QClipboard::Clipboard;
 	}
+
+	return QClipboard::Clipboard;
 }
 
 void ClipboardContainer::saveType(QDataStream &ds) const

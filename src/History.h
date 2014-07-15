@@ -54,7 +54,6 @@ public:
 	int stackSize() const;
 	void setStackSize(int size);
 	ClipboardItem* add(ClipboardItem *item, bool allowDuplicity);
-	bool isNew(ClipboardItem *item) const;
 	
 signals:
 	void historyChanged();

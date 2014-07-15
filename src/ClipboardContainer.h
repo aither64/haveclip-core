@@ -44,6 +44,7 @@ public:
 	QString title;
 
 	ClipboardContainer();
+	virtual ~ClipboardContainer();
 	virtual ItemType type() const = 0;
 	virtual ClipboardItem* item() = 0;
 	virtual bool hasNext() const = 0;

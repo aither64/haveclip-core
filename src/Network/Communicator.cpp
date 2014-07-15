@@ -28,9 +28,9 @@ Communicator::Communicator(ConnectionManager *parent) :
 	QSslSocket(parent),
 	m_conman(parent),
 	m_conversation(0),
+	dataRead(0),
 	haveHeader(false),
 	msgLen(0),
-	dataRead(0),
 	m_runPostDone(false)
 {
 	connect(this, SIGNAL(encrypted()), this, SLOT(onEncrypted()));

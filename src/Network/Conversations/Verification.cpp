@@ -34,6 +34,8 @@ void Verification::setValid(bool v)
 
 void Verification::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 {
+	Q_UNUSED(lastCmd);
+
 	if(index == 0)
 	{
 		emit verificationCodeReceived(this, static_cast<Commands::SecurityCode*>(m_cmds[index])->code() );

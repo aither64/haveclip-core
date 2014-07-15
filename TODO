@@ -1,5 +1,25 @@
-- add Nodes submenu to context menu to quickly enable/disable nodes in pool
-- copy files using FUSE
-- add an option to set global shortcut which would trigger clipboard sync,
-  so the clipboard would be synchronised on demand, not always
-- user actions - configurable scripts that would be run when clipboard changes
+* v0.13.0
+- Warn the user if already verified node's certificate changes
+- Node verification:
+  - Connection page should raise en error on failure
+  - Check if there aren't any leaks of Node*
+  - Limit the number of tries the user has to enter the correct security
+    code
+- Node edit:
+  - Show certificate
+  - Allow certificate update
+  - Support multiple IP addresses
+- Configuration versioning and migrations
+- Generate certificate on first launch
+- Generate certificate if user has the old one that was shipped
+  with HaveClip
+- Do not crash if OpenSSL plugin in QCA is missing
+- Remove selection and clipboard unification
+- Button for on-demand clipboard sync (to be able to have clipbaord sending
+  OFF and sync manually, when needed)
+
+* Next version
+
+* Long-term wishlish
+- Relay server
+- Copy files using FUSE

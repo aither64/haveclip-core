@@ -49,7 +49,7 @@ private:
 	int m_identifier;
 
 	void createDatagram(QByteArray &where, MessageType type);
-	void parseDatagram(QByteArray &datagram, QHostAddress &sender, quint16 port);
+	void parseDatagram(QByteArray &datagram, QHostAddress &sender);
 	void reply(QHostAddress &host, quint16 port);
 	bool isAlreadyDiscovered(Node *n);
 	void resetDiscovery();

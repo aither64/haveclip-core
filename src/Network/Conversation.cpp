@@ -157,17 +157,20 @@ void Conversation::moveToNextCommand()
 
 void Conversation::nextCommand(BaseCommand::Type lastCmd, int index)
 {
-
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
 }
 
 void Conversation::nextCommandSender(BaseCommand::Type lastCmd, int index)
 {
-
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
 }
 
 void Conversation::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
 {
-
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
 }
 
 void Conversation::postDoneSender()

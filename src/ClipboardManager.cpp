@@ -199,6 +199,8 @@ qint32 ClipboardManager::supportedModes()
 
 void ClipboardManager::gracefullyExit(int sig)
 {
+	Q_UNUSED(sig);
+
 	qDebug() << "Gracefully exit";
 
 	qApp->quit();

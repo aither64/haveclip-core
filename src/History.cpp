@@ -28,10 +28,10 @@
 
 History::History(QObject *parent) :
 	QAbstractListModel(parent),
+	m_currentContainer(0),
 	m_track(true),
 	m_save(false),
-	m_size(30),
-	m_currentContainer(0)
+	m_size(30)
 {
 }
 
@@ -54,6 +54,8 @@ QHash<int, QByteArray> History::roleNames() const
 
 int History::rowCount(const QModelIndex &parent) const
 {
+	Q_UNUSED(parent);
+
 	return m_items.count();
 }
 
@@ -178,6 +180,8 @@ void History::setStackSize(int size)
 
 ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 {
+	Q_UNUSED(allowDuplicity);
+
 	if(!m_track)
 	{
 		if(m_currentContainer)
@@ -243,11 +247,6 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 	emit historyChanged();
 
 	return m_currentContainer->item();
-}
-
-bool History::isNew(ClipboardItem *item) const
-{
-
 }
 
 void History::load()

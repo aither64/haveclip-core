@@ -80,7 +80,7 @@ void AutoDiscovery::readPendingDatagrams()
 
 		readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
-		parseDatagram(datagram, sender, senderPort);
+		parseDatagram(datagram, sender);
 	}
 }
 
@@ -96,7 +96,7 @@ void AutoDiscovery::createDatagram(QByteArray &where, MessageType type)
 	ds << m_port;
 }
 
-void AutoDiscovery::parseDatagram(QByteArray &datagram, QHostAddress &sender, quint16 senderPort)
+void AutoDiscovery::parseDatagram(QByteArray &datagram, QHostAddress &sender)
 {
 	QDataStream ds(&datagram, QIODevice::ReadOnly);
 

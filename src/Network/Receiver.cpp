@@ -46,6 +46,9 @@ void Receiver::communicate()
 			setProtocol(QSsl::TlsV1);
 #endif
 			break;
+
+		default:
+			break;
 		}
 
 		setPeerVerifyMode(QSslSocket::QueryPeer);
