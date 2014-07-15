@@ -13,8 +13,6 @@
 - Generate certificate on first launch
 - Generate certificate if user has the old one that was shipped
   with HaveClip
-- Do not crash if OpenSSL plugin in QCA is missing
-- Remove selection and clipboard unification
 - Button for on-demand clipboard sync (to be able to have clipbaord sending
   OFF and sync manually, when needed)
 

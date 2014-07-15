@@ -18,6 +18,7 @@ public:
 signals:
 	void privateKeyGenerated();
 	void finished();
+	void unsupportedOperation();
 
 public slots:
 	void generateCertificate();

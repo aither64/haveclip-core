@@ -24,7 +24,8 @@ void CertificateGenerator::generate()
 		type = QCA::PKey::DSA;
 
 	} else {
-		Q_ASSERT_X(false, "CertificateGenerator::generate()", "no private key type available (rsa, dsa)");
+		emit unsupportedOperation();
+		return;
 	}
 
 	connect(this, SIGNAL(privateKeyGenerated()), this, SLOT(generateCertificate()));
