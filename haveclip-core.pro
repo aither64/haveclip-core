@@ -21,7 +21,6 @@ SOURCES +=\
     src/Network/Commands/ClipboardUpdateConfirm.cpp \
     src/Network/Commands/Confirm.cpp \
     src/Network/Command.cpp \
-    src/Network/Conversations/HistoryMixin.cpp \
     src/CertificateGenerator.cpp \
     src/Node.cpp \
     src/Network/Conversations/Introduction.cpp \
@@ -47,7 +46,6 @@ HEADERS  += \
     src/Network/Commands/ClipboardUpdateConfirm.h \
     src/Network/Commands/Confirm.h \
     src/Network/Command.h \
-    src/Network/Conversations/HistoryMixin.h \
     src/CertificateGenerator.h \
     src/Node.h \
     src/Network/Conversations/Introduction.h \
