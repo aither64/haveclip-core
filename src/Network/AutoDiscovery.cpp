@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 
+#include "../Settings.h"
 #include "../Node.h"
 #include "../Version.h"
 
@@ -10,6 +11,9 @@ AutoDiscovery::AutoDiscovery(QObject *parent) :
 	m_requestCounter(0),
 	m_replyCounter(0)
 {
+	m_name = QHostInfo::localHostName();
+	m_port = Settings::get()->port();
+
 	m_requestTimer = new QTimer(this);
 	m_requestTimer->setInterval(DISCOVERY_INTERVAL);
 
@@ -138,18 +142,16 @@ void AutoDiscovery::parseDatagram(QByteArray &datagram, QHostAddress &sender)
 		break;
 	}
 
-	Node *n = new Node;
+	Node n;
 
-	n->setCompatible(version == PROTO_VERSION);
-	n->setName(name);
-	n->setHost(sender.toString());
-	n->setPort(port);
+	n.setCompatible(version == PROTO_VERSION);
+	n.setName(name);
+	n.setHost(sender.toString());
+	n.setPort(port);
 
 	if(isAlreadyDiscovered(n))
 	{
 		qDebug() << "Discovery:" << name << "already discovered";
-
-		delete n;
 		return;
 	}
 
@@ -178,11 +180,11 @@ void AutoDiscovery::reply(QHostAddress &host, quint16 port)
 	m_replyTimer->start();
 }
 
-bool AutoDiscovery::isAlreadyDiscovered(Node *n)
+bool AutoDiscovery::isAlreadyDiscovered(Node &n)
 {
-	foreach(Node *d, m_discoveredNodes)
+	foreach(const Node &d, m_discoveredNodes)
 	{
-		if(d->host() == n->host() && d->port() == n->port())
+		if(d.host() == n.host() && d.port() == n.port())
 			return true;
 	}
 
@@ -191,9 +193,7 @@ bool AutoDiscovery::isAlreadyDiscovered(Node *n)
 
 void AutoDiscovery::resetDiscovery()
 {
-	qDeleteAll(m_discoveredNodes);
 	m_discoveredNodes.clear();
-
 	m_requestDatagram.clear();
 	m_requestCounter = 0;
 	m_requestTimer->stop();

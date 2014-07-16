@@ -7,7 +7,7 @@
 #include <QUdpSocket>
 #include <QTimer>
 
-class Node;
+#include "../Node.h"
 
 class AutoDiscovery : public QUdpSocket
 {
@@ -24,7 +24,7 @@ public:
 
 signals:
 	void aboutToDiscover();
-	void peerDiscovered(Node *node);
+	void peerDiscovered(const Node &node);
 
 public slots:
 	void discover();
@@ -41,7 +41,7 @@ private:
 	int m_replyCounter;
 	QHostAddress m_replyAddress;
 	quint16 m_replyPort;
-	QList<Node*> m_discoveredNodes;
+	QList<Node> m_discoveredNodes;
 	QString m_name;
 	quint16 m_port;
 	QByteArray m_requestDatagram;
@@ -51,7 +51,7 @@ private:
 	void createDatagram(QByteArray &where, MessageType type);
 	void parseDatagram(QByteArray &datagram, QHostAddress &sender);
 	void reply(QHostAddress &host, quint16 port);
-	bool isAlreadyDiscovered(Node *n);
+	bool isAlreadyDiscovered(Node &n);
 	void resetDiscovery();
 };
 

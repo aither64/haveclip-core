@@ -33,14 +33,14 @@ class Receiver : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Receiver(ConnectionManager::Encryption enc, ConnectionManager *parent = 0);
+	explicit Receiver(ConnectionManager *parent = 0);
 	void communicate();
 
 protected:
 	virtual void conversationSignals();
 	
 signals:
-	void verificationRequested(Node *n);
+	void verificationRequested(const Node &n);
 	void verificationCodeReceived(Conversations::Verification *v, QString code);
 	void clipboardUpdated(ClipboardContainer *cont);
 

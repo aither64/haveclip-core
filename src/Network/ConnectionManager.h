@@ -4,10 +4,10 @@
 #include <QTcpServer>
 #include <QHostInfo>
 #include <QSslError>
-#include <QSettings>
+
+#include "../Node.h"
 
 class Sender;
-class Node;
 class ClipboardItem;
 class ClipboardContainer;
 class AutoDiscovery;
@@ -32,63 +32,45 @@ public:
 		Verified
 	};
 
-	explicit ConnectionManager(QSettings *settings, QObject *parent = 0);
-	void setNodes(QList<Node*> nodes);
-	QString host();
-	quint16 port();
+	explicit ConnectionManager(QObject *parent = 0);
 	QString securityCode();
-	Node* verifiedNode();
+	Node& verifiedNode();
 	AutoDiscovery* autoDiscovery();
-	void setListenHost(QString host, quint16 port);
-	void setHost(QString host);
-	void setPort(quint16 port);
-	void setEncryption(Encryption encryption);
-	void setCertificate(QString cert);
-	void setPrivateKey(QString key);
 	void startReceiving();
 	void stopReceiving();
 	void syncClipboard(ClipboardItem *it);
-	void saveSettings();
 	bool isAuthenticated(AuthMode mode, QSslCertificate &cert);
 
 signals:
 	void listenFailed(QString error);
-	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void introductionFinished();
-	void verificationRequested(Node *n);
+	void verificationRequested(const Node &n);
 	void verificationFinished(bool ok);
 	void clipboardUpdated(ClipboardContainer *cont);
 
 public slots:
-	void verifyConnection(Node *n);
+	void verifyConnection(const Node &n);
 	void provideSecurityCode(QString code);
 	void cancelVerification();
 
 private:
-	QSettings *m_settings;
 	AutoDiscovery *m_autoDiscovery;
-	QString m_host;
-	quint16 m_port;
-	Encryption m_encryption;
-	QString m_certificate;
-	QString m_privateKey;
-	QList<Node*> m_pool;
 
 	Sender *m_verifySender;
-	Node *m_verifiedNode;
+	Node m_verifiedNode;
 	QString m_securityCode;
 
-	void loadNodes();
-	void saveNodes();
 	void startListening(QHostAddress addr = QHostAddress::Null);
 	QString generateSecurityCode(int len);
 
 private slots:
+	void hostAndPortChanged();
 	void incomingConnection(int handle);
 	void listenOnHost(const QHostInfo &m_host);
 	void introduceComplete(QString name, QSslCertificate cert);
-	void verificationRequest(Node *n);
+	void verificationRequest(const Node &n);
 	void verifySecurityCode(Conversations::Verification *v, QString code);
 	void verificationFinish(bool ok);
 	void verifySenderDestroy();

@@ -29,7 +29,10 @@ SOURCES +=\
     src/Network/Commands/Introduce.cpp \
     src/Network/Conversations/Verification.cpp \
     src/Network/Commands/SecurityCode.cpp \
-    src/Network/AutoDiscovery.cpp
+    src/Network/AutoDiscovery.cpp \
+    src/ConfigMigration.cpp \
+    src/Settings.cpp \
+    src/ConfigMigrations/V2Migration.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -55,7 +58,10 @@ HEADERS  += \
     src/Network/Conversations/Verification.h \
     src/Network/Commands/SecurityCode.h \
     src/Network/AutoDiscovery.h \
-    src/Version.h
+    src/Version.h \
+    src/ConfigMigration.h \
+    src/Settings.h \
+    src/ConfigMigrations/V2Migration.h
 
 OTHER_FILES += \
     TODO \

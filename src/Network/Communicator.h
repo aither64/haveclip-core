@@ -54,11 +54,10 @@ public:
 
 	explicit Communicator(ConnectionManager *parent = 0);
 	~Communicator();
-	Node *node();
-	void setCertificateAndKey(QString cert, QString key);
+	Node node();
 
 signals:
-	void untrustedCertificateError(Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void finished(Communicator::CommunicationStatus status);
 

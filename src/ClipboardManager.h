@@ -47,26 +47,23 @@ public:
 	explicit ClipboardManager(QObject *parent = 0);
 	~ClipboardManager();
 	static ClipboardManager* instance();
-	QSettings *settings();
 	ConnectionManager* connectionManager();
 	History* history();
 	ClipboardItem *currentItem();
 	bool isSyncEnabled();
 	bool isSendingEnabled();
 	bool isReceivingEnabled();
-	void setSyncMode(SynchronizeMode m);
 	void distributeCurrentClipboard();
 	static qint32 supportedModes();
 	static void gracefullyExit(int sig);
-	inline bool shouldDistribute() const;
-	inline bool shouldListen() const;
+	inline bool shouldDistribute();
+	inline bool shouldListen();
 
 public slots:
 	void start();
 	void delayedStart(int msecs);
 	void jumpTo(ClipboardItem *content);
 	void jumpToItemAt(int index);
-	void saveSettings();
 	void toggleSharedClipboard(bool enabled);
 	void toggleClipboardSending(bool enabled, bool masterChange = false);
 	void toggleClipboardReceiving(bool enabled, bool masterChange = false);
@@ -76,12 +73,7 @@ private:
 	static QClipboard *clipboard;
 	QSettings *m_settings;
 	ConnectionManager *m_conman;
-	QList<Node*> pool;
 	History* m_history;
-	bool m_clipSync;
-	bool m_clipSnd;
-	bool m_clipRecv;
-	SynchronizeMode m_syncMode;
 	QTimer *selectionTimer;
 	QTimer *delayedEnsureTimer;
 	ClipboardItem *delayedEnsureItem;
@@ -108,7 +100,5 @@ private slots:
 #endif
 	
 };
-
-Q_DECLARE_METATYPE(Node*)
 
 #endif // CLIPBOARDMANAGER_H

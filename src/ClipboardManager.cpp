@@ -33,6 +33,7 @@
 #include <QTimer>
 #include <QTextDocument>
 
+#include "Settings.h"
 #include "Node.h"
 
 #ifdef Q_WS_X11
@@ -76,26 +77,16 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 #endif
 
 	// Load settings
-	m_settings = new QSettings(this);
+	Settings::create(this);
 
-	m_conman = new ConnectionManager(m_settings, this);
+	m_conman = new ConnectionManager(this);
 
 	connect(m_conman, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboardFromNetwork(ClipboardContainer*)));
-
-	m_clipSync = m_settings->value("Sync/Enable", true).toBool();
-	m_clipSnd = m_settings->value("Sync/Send", true).toBool();
-	m_clipRecv = m_settings->value("Sync/Receive", true).toBool();
-
-	m_history->setEnabled(m_settings->value("History/Enable", true).toBool());
-	m_history->setStackSize(m_settings->value("History/Size", 10).toInt());
-	m_history->setSave(m_settings->value("History/Save", true).toBool());
-
-	m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Sync/Synchronize", ClipboardManager::Both).toInt();
 }
 
 ClipboardManager::~ClipboardManager()
 {
-	qDeleteAll(pool);
+
 }
 
 ClipboardManager* ClipboardManager::instance()
@@ -135,11 +126,6 @@ void ClipboardManager::delayedStart(int msecs)
 	QTimer::singleShot(msecs, this, SLOT(start()));
 }
 
-QSettings* ClipboardManager::settings()
-{
-	return m_settings;
-}
-
 ConnectionManager* ClipboardManager::connectionManager()
 {
 	return m_conman;
@@ -152,22 +138,17 @@ History* ClipboardManager::history()
 
 bool ClipboardManager::isSyncEnabled()
 {
-	return m_clipSync;
+	return Settings::get()->isSyncEnabled();
 }
 
 bool ClipboardManager::isSendingEnabled()
 {
-	return m_clipSnd;
+	return Settings::get()->isSendEnabled();
 }
 
 bool ClipboardManager::isReceivingEnabled()
 {
-	return m_clipRecv;
-}
-
-void ClipboardManager::setSyncMode(SynchronizeMode m)
-{
-	m_syncMode = m;
+	return Settings::get()->isRecvEnabled();
 }
 
 void ClipboardManager::distributeCurrentClipboard()
@@ -200,14 +181,14 @@ void ClipboardManager::gracefullyExit(int sig)
 	qApp->quit();
 }
 
-bool ClipboardManager::shouldDistribute() const
+bool ClipboardManager::shouldDistribute()
 {
-	return m_clipSync && m_clipSnd;
+	return isSyncEnabled() && isSendingEnabled();
 }
 
-bool ClipboardManager::shouldListen() const
+bool ClipboardManager::shouldListen()
 {
-	return m_clipSync && m_clipRecv;
+	return isSyncEnabled() && isReceivingEnabled();
 }
 
 void ClipboardManager::jumpTo(ClipboardItem *content)
@@ -222,20 +203,6 @@ void ClipboardManager::jumpTo(ClipboardItem *content)
 void ClipboardManager::jumpToItemAt(int index)
 {
 	jumpTo(m_history->containerAt(index)->item());
-}
-
-void ClipboardManager::saveSettings()
-{
-	m_settings->setValue("History/Enable", m_history->isEnabled());
-	m_settings->setValue("History/Size", m_history->stackSize());
-	m_settings->setValue("History/Save", m_history->isSaving());
-
-	if(!m_history->isEnabled())
-		m_history->deleteFile();
-
-	m_settings->setValue("Sync/Synchronize", m_syncMode);
-
-	m_conman->saveSettings();
 }
 
 /**
@@ -260,10 +227,11 @@ void ClipboardManager::clipboardChanged(QClipboard::Mode m, bool fromSelection)
 	}
 
 	clipboardChangedCalled = true;
+	ClipboardManager::SynchronizeMode syncMode = Settings::get()->syncMode();
 
 	if((m != QClipboard::Clipboard && m != QClipboard::Selection)
-			|| (m_syncMode != ClipboardManager::Both
-			    && ((m == QClipboard::Selection && m_syncMode == ClipboardManager::Clipboard) || (m == QClipboard::Clipboard && m_syncMode == ClipboardManager::Selection)))
+			|| (syncMode != ClipboardManager::Both
+			    && ((m == QClipboard::Selection && syncMode == ClipboardManager::Clipboard) || (m == QClipboard::Clipboard && syncMode == ClipboardManager::Selection)))
 	)
 	{
 		qDebug() << "Ignoring this clipboard";
@@ -426,8 +394,7 @@ void ClipboardManager::toggleSharedClipboard(bool enabled)
 	toggleClipboardSending(enabled, true);
 	toggleClipboardReceiving(enabled, true);
 
-	m_clipSync = enabled;
-	m_settings->setValue("Sync/Enable", m_clipSync);
+	Settings::get()->setSyncEnabled(enabled);
 }
 
 void ClipboardManager::toggleClipboardSending(bool enabled, bool masterChange)
@@ -435,8 +402,7 @@ void ClipboardManager::toggleClipboardSending(bool enabled, bool masterChange)
 	if(masterChange)
 		return;
 
-	m_clipSnd = enabled;
-	m_settings->setValue("Sync/Send", m_clipSnd);
+	Settings::get()->setSendEnabled(enabled);
 }
 
 void ClipboardManager::toggleClipboardReceiving(bool enabled, bool masterChange)
@@ -449,8 +415,7 @@ void ClipboardManager::toggleClipboardReceiving(bool enabled, bool masterChange)
 
 	if(!masterChange)
 	{
-		m_clipRecv = enabled;
-		m_settings->setValue("Sync/Receive", m_clipRecv);
+		Settings::get()->setRecvEnabled(enabled);
 	}
 }
 

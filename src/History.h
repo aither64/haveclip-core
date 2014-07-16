@@ -48,11 +48,8 @@ public:
 	ClipboardItem* lastItem();
 	ClipboardContainer* currentContainer();
 	bool isEnabled() const;
-	void setEnabled(bool enabled);
 	bool isSaving() const;
-	void setSave(bool save);
 	int stackSize() const;
-	void setStackSize(int size);
 	ClipboardItem* add(ClipboardItem *item, bool allowDuplicity);
 	
 signals:
@@ -65,12 +62,12 @@ public slots:
 	void deleteFile();
 	void jumpTo(ClipboardItem* item);
 
+private slots:
+	void saveChange(bool save);
+
 private:
 	ClipboardContainer *m_currentContainer;
 	QList<ClipboardContainer*> m_items;
-	bool m_track;
-	bool m_save;
-	int m_size;
 
 	QString filePath();
 	void popToFront(ClipboardContainer *item);

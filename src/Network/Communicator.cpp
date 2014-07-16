@@ -20,6 +20,7 @@
 #include "Communicator.h"
 
 #include "../Version.h"
+#include "../Settings.h"
 #include "Conversations/Introduction.h"
 #include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
@@ -33,6 +34,11 @@ Communicator::Communicator(ConnectionManager *parent) :
 	msgLen(0),
 	m_runPostDone(false)
 {
+	encryption = Settings::get()->encryption();
+
+	setLocalCertificate(Settings::get()->certificate());
+	setPrivateKey(Settings::get()->privateKey());
+
 	connect(this, SIGNAL(encrypted()), this, SLOT(onEncrypted()));
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
@@ -44,12 +50,6 @@ Communicator::~Communicator()
 {
 	if(m_conversation)
 		delete m_conversation;
-}
-
-void Communicator::setCertificateAndKey(QString cert, QString key)
-{
-	setLocalCertificate(cert);
-	setPrivateKey(key);
 }
 
 void Communicator::sendMessage()

@@ -25,19 +25,18 @@
 #include <QDesktopServices>
 
 #include "Version.h"
+#include "Settings.h"
 
 History::History(QObject *parent) :
 	QAbstractListModel(parent),
-	m_currentContainer(0),
-	m_track(true),
-	m_save(false),
-	m_size(30)
+	m_currentContainer(0)
 {
+	connect(Settings::get(), SIGNAL(saveHistoryChanged(bool)), this, SLOT(saveChange(bool)));
 }
 
 void History::init()
 {
-	if(m_track)
+	if(Settings::get()->isHistoryEnabled())
 		load();
 	else
 		deleteFile();
@@ -150,39 +149,24 @@ ClipboardContainer* History::currentContainer()
 
 bool History::isEnabled() const
 {
-	return m_track;
-}
-
-void History::setEnabled(bool enabled)
-{
-	m_track = enabled;
+	return Settings::get()->isHistoryEnabled();
 }
 
 bool History::isSaving() const
 {
-	return m_save;
-}
-
-void History::setSave(bool save)
-{
-	m_save = save;
+	return Settings::get()->saveHistory();
 }
 
 int History::stackSize() const
 {
-	return m_size;
-}
-
-void History::setStackSize(int size)
-{
-	m_size = size;
+	return Settings::get()->historySize();
 }
 
 ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 {
 	Q_UNUSED(allowDuplicity);
 
-	if(!m_track)
+	if( ! Settings::get()->isHistoryEnabled() )
 	{
 		if(m_currentContainer)
 			delete m_currentContainer;
@@ -223,7 +207,7 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 				}
 			}
 
-			if(m_items.size() >= m_size)
+			if(m_items.size() >= Settings::get()->historySize())
 			{
 				beginRemoveRows(QModelIndex(), m_items.size()-1, m_items.size()-1);
 				delete m_items.takeFirst();
@@ -251,7 +235,7 @@ ClipboardItem* History::add(ClipboardItem *item, bool allowDuplicity)
 
 void History::load()
 {
-	if(!m_track)
+	if( ! Settings::get()->isHistoryEnabled() )
 		return;
 
 	QFile file(filePath());
@@ -313,7 +297,7 @@ void History::load()
 
 void History::save()
 {
-	if(!m_save)
+	if(!Settings::get()->saveHistory())
 		return;
 
 	QFileInfo fi(filePath());
@@ -372,6 +356,12 @@ void History::deleteFile()
 void History::jumpTo(ClipboardItem* item)
 {
 	popToFront(item);
+}
+
+void History::saveChange(bool save)
+{
+	if(!save)
+		deleteFile();
 }
 
 QString History::filePath()

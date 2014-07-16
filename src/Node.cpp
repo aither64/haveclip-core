@@ -1,33 +1,35 @@
 #include "Node.h"
 
-Node::Node(Node *other)
+Node::Node()
 {
-	if(other)
-	{
-		m_name = other->m_name;
-		m_host = other->m_host;
-		m_port = other->m_port;
-		m_certificate = other->m_certificate;
-		m_compatible = other->m_compatible;
-	}
+
 }
 
-QString Node::name()
+Node::Node(const Node &other)
+{
+	m_name = other.m_name;
+	m_host = other.m_host;
+	m_port = other.m_port;
+	m_certificate = other.m_certificate;
+	m_compatible = other.m_compatible;
+}
+
+QString Node::name() const
 {
 	return m_name;
 }
 
-QString Node::host()
+QString Node::host() const
 {
 	return m_host;
 }
 
-quint16 Node::port()
+quint16 Node::port() const
 {
 	return m_port;
 }
 
-QSslCertificate Node::certificate()
+QSslCertificate Node::certificate() const
 {
 	return m_certificate;
 }
@@ -62,17 +64,17 @@ void Node::setCompatible(bool compat)
 	m_compatible = compat;
 }
 
-Node* Node::load(QSettings *settings)
+Node Node::load(QSettings *settings)
 {
-	Node *n = new Node();
-	n->m_name = settings->value("Name").toString();
-	n->m_host = settings->value("Host").toString();
-	n->m_port = settings->value("Port").toString().toUShort();
+	Node n;
+	n.m_name = settings->value("Name").toString();
+	n.m_host = settings->value("Host").toString();
+	n.m_port = settings->value("Port").toString().toUShort();
 
 	QByteArray cert = settings->value("Certificate").toString().toUtf8();
 
 	if(!cert.isEmpty())
-		n->m_certificate = QSslCertificate::fromData(cert).first();
+		n.m_certificate = QSslCertificate::fromData(cert).first();
 
 	return n;
 }

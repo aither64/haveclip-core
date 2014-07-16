@@ -24,10 +24,9 @@
 #include "Receiver.h"
 #include "Conversation.h"
 
-Receiver::Receiver(ConnectionManager::Encryption enc, ConnectionManager *parent) :
+Receiver::Receiver(ConnectionManager *parent) :
 	Communicator(parent)
 {
-	encryption = enc;
 }
 
 void Receiver::communicate()
@@ -68,11 +67,11 @@ void Receiver::conversationSignals()
 
 void Receiver::interceptVerificationRequest(QString name, quint16 port)
 {
-	Node *n = new Node;
-	n->setName(name);
-	n->setHost(peerAddress().toString());
-	n->setPort(port);
-	n->setCertificate(m_peerCertificate);
+	Node n;
+	n.setName(name);
+	n.setHost(peerAddress().toString());
+	n.setPort(port);
+	n.setCertificate(m_peerCertificate);
 
 	emit verificationRequested(n);
 }

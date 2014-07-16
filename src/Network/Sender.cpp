@@ -27,11 +27,10 @@
 #include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
 
-Sender::Sender(ConnectionManager::Encryption enc, Node *node, ConnectionManager *parent) :
+Sender::Sender(const Node &node, ConnectionManager *parent) :
 	Communicator(parent),
 	m_node(node)
 {
-	encryption = enc;
 }
 
 void Sender::introduce(quint16 port)
@@ -69,7 +68,7 @@ void Sender::conversationSignals()
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Unable to reach" << m_node->host() << ":" << socketError;
+	qDebug() << "Unable to reach" << m_node.host() << ":" << socketError;
 	this->deleteLater();
 }
 
@@ -78,7 +77,7 @@ void Sender::interceptIntroductionFinish(QString name)
 	emit introduceFinished(name, m_peerCertificate);
 }
 
-Node* Sender::node()
+Node Sender::node()
 {
 	return m_node;
 }
@@ -110,12 +109,12 @@ void Sender::connectToPeer()
 			break;
 		}
 
-		connectToHostEncrypted(m_node->host(), m_node->port());
+		connectToHostEncrypted(m_node.host(), m_node.port());
 
 	} else {
 		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
 
-		connectToHost(m_node->host(), m_node->port());
+		connectToHost(m_node.host(), m_node.port());
 	}
 
 	/**

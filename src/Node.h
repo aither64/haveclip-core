@@ -7,18 +7,19 @@
 class Node
 {
 public:
-	Node(Node *other = 0);
-	QString name();
-	QString host();
-	quint16 port();
-	QSslCertificate certificate();
+	Node();
+	Node(const Node &other);
+	QString name() const;
+	QString host() const;
+	quint16 port() const;
+	QSslCertificate certificate() const;
 	bool isCompatible() const;
 	void setName(QString name);
 	void setHost(QString host);
 	void setPort(quint16 port);
 	void setCertificate(QSslCertificate cert);
 	void setCompatible(bool compat);
-	static Node* load(QSettings *settings);
+	static Node load(QSettings *settings);
 	void save(QSettings *settings);
 
 private:

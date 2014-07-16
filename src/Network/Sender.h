@@ -29,8 +29,8 @@ class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Sender(ConnectionManager::Encryption enc, Node *node, ConnectionManager *parent = 0);
-	Node *node();
+	explicit Sender(const Node &node, ConnectionManager *parent = 0);
+	Node node();
 
 signals:
 	void introduceFinished(QString name, QSslCertificate cert);
@@ -51,7 +51,7 @@ private slots:
 	void interceptIntroductionFinish(QString name);
 
 private:
-	Node *m_node;
+	Node m_node;
 
 	void connectToPeer();
 	

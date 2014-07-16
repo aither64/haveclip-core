@@ -2,7 +2,6 @@
 - Warn the user if already verified node's certificate changes
 - Node verification:
   - Connection page should raise en error on failure
-  - Check if there aren't any leaks of Node*
   - Limit the number of tries the user has to enter the correct security
     code
 - Node edit:
