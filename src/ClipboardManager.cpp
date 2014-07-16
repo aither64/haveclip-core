@@ -54,6 +54,9 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 {
 	m_instance = this;
 
+	// Load settings
+	Settings::create(this);
+
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 	clipboard = QGuiApplication::clipboard();
 #else
@@ -75,9 +78,6 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 
 	connect(selectionTimer, SIGNAL(timeout()), this, SLOT(checkSelection()));
 #endif
-
-	// Load settings
-	Settings::create(this);
 
 	m_conman = new ConnectionManager(this);
 

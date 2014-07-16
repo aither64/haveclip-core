@@ -84,5 +84,5 @@ void Node::save(QSettings *settings)
 	settings->setValue("Name", m_name);
 	settings->setValue("Host", m_host);
 	settings->setValue("Port", m_port);
-	settings->setValue("Certificate", m_certificate.toPem());
+	settings->setValue("Certificate", QString(m_certificate.toPem()));
 }

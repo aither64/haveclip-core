@@ -13,7 +13,7 @@ public:
 	virtual void up();
 	virtual void down();
 
-private:
+protected:
 	QSettings *m_settings;
 
 };

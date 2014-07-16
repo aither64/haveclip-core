@@ -3,6 +3,8 @@
 #include <QDesktopServices>
 #include <QFile>
 
+#include "ConfigMigrations/V2Migration.h"
+
 Settings* Settings::m_instance = 0;
 
 Settings::Settings(QObject *parent) :
@@ -10,10 +12,12 @@ Settings::Settings(QObject *parent) :
 {
 	m_settings = new QSettings(this);
 
-	int v = m_settings->value("Version", 1).toInt();
+	int v = m_settings->value("Version", isFirstLaunch() ? CONFIG_VERSION : 1).toInt();
 
 	if(v != CONFIG_VERSION)
 		migrate(v);
+	else
+		m_settings->setValue("Version", CONFIG_VERSION);
 
 	load();
 }
@@ -302,7 +306,6 @@ void Settings::loadNodes()
 	}
 
 	m_settings->endGroup();
-
 }
 
 void Settings::reset()
@@ -312,12 +315,65 @@ void Settings::reset()
 
 void Settings::migrate(int from, int to)
 {
-	if(from < to)
+	qDebug() << "Migrate config from" << from << "to" << to;
+
+	if(from > to)
 	{
+		downgrade(from, to);
 
 	} else {
-
+		upgrade(from, to);
 	}
+}
+
+void Settings::upgrade(int from, int to)
+{
+	ConfigMigration *migration;
+
+	for(int v = from + 1; v <= to; v++)
+	{
+		qDebug() << "Upgrade to v" << v;
+
+		migration = createMigration(v);
+		migration->up();
+		delete migration;
+
+		m_settings->setValue("Version", v);
+	}
+}
+
+void Settings::downgrade(int from, int to)
+{
+	ConfigMigration *migration;
+
+	for(int v = from; v > to; v--)
+	{
+		qDebug() << "Downgrade to v" << v-1;
+
+		migration = createMigration(v);
+		migration->down();
+		delete migration;
+
+		m_settings->setValue("Version", v-1);
+	}
+}
+
+ConfigMigration* Settings::createMigration(int v)
+{
+	ConfigMigration *m;
+
+	switch(v)
+	{
+	case 2:
+		m = new ConfigMigrations::V2Migration(this);
+		break;
+	default:
+		return 0;
+	}
+
+	m->setSettings(m_settings);
+
+	return m;
 }
 
 QString Settings::dataStoragePath()
@@ -327,4 +383,11 @@ QString Settings::dataStoragePath()
 #else
 	return QDesktopServices::storageLocation(QDesktopServices::DataLocation);
 #endif
+}
+
+bool Settings::isFirstLaunch()
+{
+	// Key Version is not present until v0.13.0, therefore the check for another setting
+	// that was present in older versions.
+	return m_settings->value("Version").isNull() && m_settings->value("Connection/Host").isNull();
 }

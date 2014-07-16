@@ -10,7 +10,7 @@
 #include "ClipboardManager.h"
 #include "Node.h"
 
-#include "ConfigMigrations/V2Migration.h"
+class ConfigMigration;
 
 class Settings : public QObject
 {
@@ -121,7 +121,11 @@ private:
 	void loadNodes();
 	void saveNodes();
 	void migrate(int from, int to = CONFIG_VERSION);
+	void upgrade(int from, int to);
+	void downgrade(int from, int to);
+	ConfigMigration* createMigration(int v);
 	QString dataStoragePath();
+	bool isFirstLaunch();
 
 };
 

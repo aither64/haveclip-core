@@ -3,16 +3,18 @@
 
 #include "../ConfigMigration.h"
 
-class V2Migration : public ConfigMigration
-{
-	Q_OBJECT
-public:
-	explicit V2Migration(QObject *parent = 0);
+namespace ConfigMigrations {
+	class V2Migration : public ConfigMigration
+	{
+		Q_OBJECT
+	public:
+		explicit V2Migration(QObject *parent = 0);
+		void up();
 
-signals:
+	private:
+		QString storagePath();
 
-public slots:
-
-};
+	};
+}
 
 #endif // V2MIGRATION_H
