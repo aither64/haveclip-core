@@ -29,6 +29,14 @@ public:
 
 	void setHostAndPort(QString host, quint16 port);
 
+	Q_PROPERTY(bool allowAutoDiscovery READ allowAutoDiscovery WRITE setAllowAutoDiscovery NOTIFY allowAutoDiscoveryChanged)
+	bool allowAutoDiscovery() const;
+	void setAllowAutoDiscovery(bool allow);
+
+	Q_PROPERTY(QString networkName READ networkName WRITE setNetworkName NOTIFY networkNameChanged)
+	QString networkName();
+	void setNetworkName(QString name);
+
 	Q_PROPERTY(bool historyEnabled READ isHistoryEnabled WRITE setHistoryEnabled NOTIFY historyEnabledChanged)
 	bool isHistoryEnabled() const;
 	void setHistoryEnabled(bool enabled);
@@ -86,6 +94,8 @@ signals:
 	void hostChanged(QString host);
 	void portChanged(quint16 port);
 	void hostAndPortChanged(QString host, quint16 port);
+	void allowAutoDiscoveryChanged(bool allow);
+	void networkNameChanged(QString name);
 	void historyEnabledChanged(bool enabled);
 	void saveHistoryChanged(bool save);
 	void syncEnabledChanged(bool enabled);
@@ -101,6 +111,8 @@ private:
 	// properties
 	QString m_host;
 	quint16 m_port;
+	bool m_allowAutoDiscovery;
+	QString m_networkName;
 	ConnectionManager::Encryption m_encryption;
 	QString m_certificatePath;
 	QSslCertificate m_certificate;

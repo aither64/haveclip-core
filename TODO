@@ -8,7 +8,6 @@
   - Show certificate
   - Allow certificate update
   - Support multiple IP addresses
-- Configuration versioning and migrations
 - Generate certificate on first launch
 - Generate certificate if user has the old one that was shipped
   with HaveClip

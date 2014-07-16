@@ -11,9 +11,6 @@ AutoDiscovery::AutoDiscovery(QObject *parent) :
 	m_requestCounter(0),
 	m_replyCounter(0)
 {
-	m_name = QHostInfo::localHostName();
-	m_port = Settings::get()->port();
-
 	m_requestTimer = new QTimer(this);
 	m_requestTimer->setInterval(DISCOVERY_INTERVAL);
 
@@ -25,17 +22,9 @@ AutoDiscovery::AutoDiscovery(QObject *parent) :
 
 	connect(this, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
 
-	bind(DISCOVERY_PORT, QUdpSocket::ShareAddress);
-}
+	allowAutoDiscoveryChange( Settings::get()->allowAutoDiscovery() );
 
-void AutoDiscovery::setName(QString name)
-{
-	m_name = name;
-}
-
-void AutoDiscovery::setPort(quint16 port)
-{
-	m_port = port;
+	connect(Settings::get(), SIGNAL(allowAutoDiscoveryChanged(bool)), this, SLOT(allowAutoDiscoveryChange(bool)));
 }
 
 void AutoDiscovery::discover()
@@ -51,6 +40,17 @@ void AutoDiscovery::discover()
 	sendRequest();
 
 	m_requestTimer->start();
+}
+
+void AutoDiscovery::allowAutoDiscoveryChange(bool allow)
+{
+	if(allow && state() != QAbstractSocket::BoundState)
+	{
+		if(!bind(DISCOVERY_PORT, QUdpSocket::ShareAddress))
+			qDebug() << "Discovery: failed to bind";
+
+	} else if(!allow && state() == QAbstractSocket::BoundState)
+		close();
 }
 
 void AutoDiscovery::sendRequest()
@@ -96,8 +96,8 @@ void AutoDiscovery::createDatagram(QByteArray &where, MessageType type)
 	ds << (qint32) PROTO_VERSION;
 	ds << (qint32) type;
 	ds << (qint32) m_identifier;
-	ds << m_name;
-	ds << m_port;
+	ds << Settings::get()->networkName();
+	ds << Settings::get()->port();
 }
 
 void AutoDiscovery::parseDatagram(QByteArray &datagram, QHostAddress &sender)

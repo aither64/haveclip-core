@@ -75,6 +75,28 @@ void Settings::setHostAndPort(QString host, quint16 port)
 	emit hostAndPortChanged(host, port);
 }
 
+bool Settings::allowAutoDiscovery() const
+{
+	return m_allowAutoDiscovery;
+}
+
+void Settings::setAllowAutoDiscovery(bool allow)
+{
+	m_allowAutoDiscovery = allow;
+
+	emit allowAutoDiscoveryChanged(allow);
+}
+
+QString Settings::networkName()
+{
+	return m_networkName;
+}
+
+void Settings::setNetworkName(QString name)
+{
+	m_networkName = name;
+}
+
 bool Settings::isHistoryEnabled() const
 {
 	return m_historyEnabled;
@@ -235,6 +257,10 @@ void Settings::save()
 	m_settings->setValue("Connection/Certificate", m_certificatePath);
 	m_settings->setValue("Connection/PrivateKey", m_privateKeyPath);
 
+	// Auto discovery
+	m_settings->setValue("Connection/AutoDiscovery/Allow", m_allowAutoDiscovery);
+	m_settings->setValue("Connection/NetworkName", m_networkName);
+
 	// History
 	m_settings->setValue("History/Enable", m_historyEnabled);
 	m_settings->setValue("History/Size", m_historySize);
@@ -277,6 +303,10 @@ void Settings::load()
 	m_encryption = (ConnectionManager::Encryption) m_settings->value("Connection/Encryption", ConnectionManager::Tls).toInt();
 	setCertificatePath(m_settings->value("Connection/Certificate", dataStoragePath() + "/haveclip.crt").toString());
 	setPrivateKeyPath(m_settings->value("Connection/PrivateKey", dataStoragePath() + "/haveclip.key").toString());
+
+	// Auto discovery
+	m_allowAutoDiscovery = m_settings->value("Connection/AutoDiscovery/Allow", true).toBool();
+	m_networkName = m_settings->value("Connection/NetworkName", QHostInfo::localHostName()).toString();
 
 	// History
 	m_historyEnabled = m_settings->value("History/Enable", true).toBool();

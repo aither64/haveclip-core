@@ -19,8 +19,6 @@ public:
 	};
 
 	explicit AutoDiscovery(QObject *parent = 0);
-	void setName(QString name);
-	void setPort(quint16 port);
 
 signals:
 	void aboutToDiscover();
@@ -30,6 +28,7 @@ public slots:
 	void discover();
 
 private slots:
+	void allowAutoDiscoveryChange(bool allow);
 	void sendRequest();
 	void sendReply();
 	void readPendingDatagrams();
@@ -42,8 +41,6 @@ private:
 	QHostAddress m_replyAddress;
 	quint16 m_replyPort;
 	QList<Node> m_discoveredNodes;
-	QString m_name;
-	quint16 m_port;
 	QByteArray m_requestDatagram;
 	QByteArray m_replyDatagram;
 	int m_identifier;
