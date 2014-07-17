@@ -85,7 +85,9 @@ public:
 
 	QList<Node> nodes();
 	void setNodes(QList<Node> &nodes);
-	void addNode(const Node &n);
+	void addOrUpdateNode(Node &n);
+
+	unsigned int nextNodeId();
 
 	Q_INVOKABLE void save();
 	Q_INVOKABLE void reset();
@@ -103,6 +105,8 @@ signals:
 	void recvEnabledChanged(bool enabled);
 	void syncModeChanged(ClipboardManager::SynchronizeMode mode);
 	void encryptionChanged(ConnectionManager::Encryption encryption);
+	void nodeUpdated(const Node &node);
+	void nodeAdded(const Node &node);
 
 private:
 	static Settings *m_instance;
@@ -126,6 +130,7 @@ private:
 	bool m_recvEnabled;
 	ClipboardManager::SynchronizeMode m_syncMode;
 	QList<Node> m_nodes;
+	unsigned int m_nextNodeId;
 
 	Settings(QObject *parent = 0);
 	~Settings();

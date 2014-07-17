@@ -5,17 +5,13 @@
   - Limit the number of tries the user has to enter the correct security
     code
 - Node edit:
-  - Show certificate
-  - Allow certificate update
-  - Support multiple IP addresses
+  - Support multiple IP addresses (?)
 - Generate certificate on first launch
-- Generate certificate if user has the old one that was shipped
-  with HaveClip
 - Button for on-demand clipboard sync (to be able to have clipbaord sending
   OFF and sync manually, when needed)
 
 * Next version
 
-* Long-term wishlish
+* Long-term wishlist
 - Relay server
 - Copy files using FUSE

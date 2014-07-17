@@ -8,7 +8,8 @@
 Settings* Settings::m_instance = 0;
 
 Settings::Settings(QObject *parent) :
-        QObject(parent)
+	QObject(parent),
+	m_nextNodeId(1)
 {
 	m_settings = new QSettings(this);
 
@@ -243,9 +244,34 @@ void Settings::setNodes(QList<Node> &nodes)
 	m_nodes = nodes;
 }
 
-void Settings::addNode(const Node &n)
+void Settings::addOrUpdateNode(Node &n)
 {
+	int cnt = m_nodes.count();
+
+	for(int i = 0; i < cnt; i++)
+	{
+		if(
+			(n.hasId() && m_nodes[i].id() == n.id())
+			||
+			(m_nodes[i].host() == n.host() && m_nodes[i].port() == n.port())
+		)
+		{
+			m_nodes[i].update(n);
+
+			emit nodeUpdated(m_nodes[i]);
+			return;
+		}
+	}
+
+	n.setId();
 	m_nodes << n;
+
+	emit nodeAdded(n);
+}
+
+unsigned int Settings::nextNodeId()
+{
+	return m_nextNodeId++;
 }
 
 void Settings::save()
@@ -330,7 +356,7 @@ void Settings::loadNodes()
 	{
 		m_settings->beginGroup(grp);
 
-		m_nodes << Node::load(m_settings);
+		m_nodes << Node::load(m_settings, nextNodeId());
 
 		m_settings->endGroup();
 	}

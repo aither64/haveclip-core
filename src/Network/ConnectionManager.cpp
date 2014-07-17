@@ -217,7 +217,7 @@ void ConnectionManager::verifySecurityCode(Conversations::Verification *v, QStri
 
 	if(valid)
 	{
-		Settings::get()->addNode(m_verifiedNode);
+		Settings::get()->addOrUpdateNode(m_verifiedNode);
 		Settings::get()->save();
 
 		emit verificationFinished(valid);
@@ -236,7 +236,7 @@ void ConnectionManager::verificationFinish(bool ok)
 
 	if(ok)
 	{
-		Settings::get()->addNode(m_verifiedNode);
+		Settings::get()->addOrUpdateNode(m_verifiedNode);
 		Settings::get()->save();
 
 		emit verificationFinished(ok);

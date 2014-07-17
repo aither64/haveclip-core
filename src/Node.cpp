@@ -1,17 +1,26 @@
 #include "Node.h"
 
-Node::Node()
+#include "Settings.h"
+
+Node::Node() :
+	m_id(0)
 {
 
 }
 
 Node::Node(const Node &other)
 {
+	m_id = other.m_id;
 	m_name = other.m_name;
 	m_host = other.m_host;
 	m_port = other.m_port;
 	m_certificate = other.m_certificate;
 	m_compatible = other.m_compatible;
+}
+
+unsigned int Node::id() const
+{
+	return m_id;
 }
 
 QString Node::name() const
@@ -39,6 +48,16 @@ bool Node::isCompatible() const
 	return m_compatible;
 }
 
+bool Node::isValid() const
+{
+	return m_id > 0;
+}
+
+bool Node::hasId() const
+{
+	return m_id > 0;
+}
+
 void Node::setName(QString name)
 {
 	m_name = name;
@@ -64,9 +83,21 @@ void Node::setCompatible(bool compat)
 	m_compatible = compat;
 }
 
-Node Node::load(QSettings *settings)
+void Node::setId()
+{
+	if(!m_id)
+		m_id = Settings::get()->nextNodeId();
+}
+
+void Node::update(const Node &other)
+{
+	m_certificate = other.certificate();
+}
+
+Node Node::load(QSettings *settings, unsigned int id)
 {
 	Node n;
+	n.m_id = id;
 	n.m_name = settings->value("Name").toString();
 	n.m_host = settings->value("Host").toString();
 	n.m_port = settings->value("Port").toString().toUShort();
