@@ -6,6 +6,7 @@
 #include <QSslError>
 
 #include "../Node.h"
+#include "Communicator.h"
 
 class Sender;
 class ClipboardItem;
@@ -20,12 +21,6 @@ class ConnectionManager : public QTcpServer
 {
 	Q_OBJECT
 public:
-	enum Encryption {
-		None=0,
-		Ssl,
-		Tls
-	};
-
 	enum AuthMode {
 		NoAuth=0,
 		Introduced,
@@ -46,6 +41,7 @@ signals:
 	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void introductionFinished();
+	void introductionFailed(Communicator::CommunicationStatus status);
 	void verificationRequested(const Node &n);
 	void verificationFinished(bool ok);
 	void clipboardUpdated(ClipboardContainer *cont);
@@ -70,6 +66,7 @@ private slots:
 	void incomingConnection(int handle);
 	void listenOnHost(const QHostInfo &m_host);
 	void introduceComplete(QString name, QSslCertificate cert);
+	void introduceFinish(Communicator::CommunicationStatus status);
 	void verificationRequest(const Node &n);
 	void verifySecurityCode(Conversations::Verification *v, QString code);
 	void verificationFinish(bool ok);

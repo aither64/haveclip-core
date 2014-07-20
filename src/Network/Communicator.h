@@ -24,10 +24,11 @@
 
 #include <QSslSocket>
 
-#include "../ClipboardManager.h"
 #include "../Node.h"
 
+class ClipboardContainer;
 class Conversation;
+class ConnectionManager;
 
 class Communicator : public QSslSocket
 {
@@ -36,6 +37,12 @@ public:
 	enum Role {
 		Send,
 		Receive
+	};
+
+	enum Encryption {
+		None=0,
+		Ssl,
+		Tls
 	};
 
 	enum CommunicationStatus {
@@ -55,6 +62,7 @@ public:
 	explicit Communicator(ConnectionManager *parent = 0);
 	~Communicator();
 	Node node();
+	static QString statusToString(CommunicationStatus status);
 
 signals:
 	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
@@ -64,7 +72,7 @@ signals:
 protected:
 	ConnectionManager *m_conman;
 	ClipboardContainer *container;
-	ConnectionManager::Encryption encryption;
+	Encryption encryption;
 	Conversation *m_conversation;
 	QSslCertificate m_peerCertificate;
 

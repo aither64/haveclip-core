@@ -25,6 +25,8 @@
 
 #include "Communicator.h"
 
+class ClipboardItem;
+
 class Sender : public Communicator
 {
 	Q_OBJECT

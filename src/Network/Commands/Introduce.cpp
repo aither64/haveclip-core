@@ -1,5 +1,7 @@
 #include "Introduce.h"
 
+#include <QHostInfo>
+
 using namespace Commands;
 
 Introduce::Introduce(ClipboardContainer *cont, Communicator::Role r)
@@ -22,7 +24,7 @@ void Introduce::receive(QDataStream &ds)
 
 void Introduce::send(QDataStream &ds)
 {
-	ds << QHostInfo::localHostName();
+	ds << QHostInfo::localHostName(); // FIXME
 	ds << m_port;
 
 	finish();

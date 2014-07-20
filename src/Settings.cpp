@@ -172,12 +172,12 @@ void Settings::setSyncMode(ClipboardManager::SynchronizeMode mode)
 	m_syncMode = mode;
 }
 
-ConnectionManager::Encryption Settings::encryption() const
+Communicator::Encryption Settings::encryption() const
 {
 	return m_encryption;
 }
 
-void Settings::setEncryption(ConnectionManager::Encryption enc)
+void Settings::setEncryption(Communicator::Encryption enc)
 {
 	m_encryption = enc;
 
@@ -326,7 +326,7 @@ void Settings::load()
 	m_host = m_settings->value("Connection/Host", "0.0.0.0").toString();
 	m_port = m_settings->value("Connection/Port", 9999).toInt();
 
-	m_encryption = (ConnectionManager::Encryption) m_settings->value("Connection/Encryption", ConnectionManager::Tls).toInt();
+	m_encryption = (Communicator::Encryption) m_settings->value("Connection/Encryption", Communicator::Tls).toInt();
 	setCertificatePath(m_settings->value("Connection/Certificate", dataStoragePath() + "/haveclip.crt").toString());
 	setPrivateKeyPath(m_settings->value("Connection/PrivateKey", dataStoragePath() + "/haveclip.key").toString());
 

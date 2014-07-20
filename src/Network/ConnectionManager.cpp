@@ -55,6 +55,7 @@ void ConnectionManager::verifyConnection(const Node &n)
 	m_verifySender = new Sender(n, this);
 
 	connect(m_verifySender, SIGNAL(destroyed()), this, SLOT(verifySenderDestroy()));
+	connect(m_verifySender, SIGNAL(finished(Communicator::CommunicationStatus)), this, SLOT(introduceFinish(Communicator::CommunicationStatus)));
 	connect(m_verifySender, SIGNAL(introduceFinished(QString,QSslCertificate)), this, SLOT(introduceComplete(QString,QSslCertificate)));
 
 	m_verifySender->introduce(Settings::get()->port());
@@ -196,6 +197,12 @@ void ConnectionManager::introduceComplete(QString name, QSslCertificate cert)
 	m_securityCode = generateSecurityCode(6);
 
 	emit introductionFinished();
+}
+
+void ConnectionManager::introduceFinish(Communicator::CommunicationStatus status)
+{
+	if(status != Communicator::Ok)
+		emit introductionFailed(status);
 }
 
 void ConnectionManager::verificationRequest(const Node &node)

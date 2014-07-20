@@ -19,6 +19,7 @@
 
 #include "ClipboardUpdate.h"
 #include "../Commands/ClipboardUpdateReady.h"
+#include "../../ClipboardManager.h"
 
 using namespace Conversations;
 

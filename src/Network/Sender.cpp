@@ -69,7 +69,8 @@ void Sender::conversationSignals()
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Unable to reach" << m_node.host() << ":" << socketError;
-	this->deleteLater();
+
+	Communicator::onError(socketError);
 }
 
 void Sender::interceptIntroductionFinish(QString name)
@@ -86,7 +87,7 @@ void Sender::connectToPeer()
 {
 	conversationSignals();
 
-	if(encryption != ConnectionManager::None)
+	if(encryption != Communicator::None)
 	{
 		setPeerVerifyMode(QSslSocket::QueryPeer);
 
@@ -94,10 +95,10 @@ void Sender::connectToPeer()
 
 		switch(encryption)
 		{
-		case ConnectionManager::Ssl:
+		case Communicator::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ConnectionManager::Tls:
+		case Communicator::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else

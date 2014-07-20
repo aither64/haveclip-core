@@ -65,9 +65,9 @@ public:
 	ClipboardManager::SynchronizeMode syncMode() const;
 	void setSyncMode(ClipboardManager::SynchronizeMode mode);
 
-	Q_PROPERTY(ConnectionManager::Encryption encryption READ encryption WRITE setEncryption NOTIFY encryptionChanged)
-	ConnectionManager::Encryption encryption() const;
-	void setEncryption(ConnectionManager::Encryption enc);
+	Q_PROPERTY(Communicator::Encryption encryption READ encryption WRITE setEncryption NOTIFY encryptionChanged)
+	Communicator::Encryption encryption() const;
+	void setEncryption(Communicator::Encryption enc);
 
 	Q_PROPERTY(QString certificatePath READ certificatePath WRITE setCertificatePath)
 	QString certificatePath();
@@ -104,7 +104,7 @@ signals:
 	void sendEnabledChanged(bool enabled);
 	void recvEnabledChanged(bool enabled);
 	void syncModeChanged(ClipboardManager::SynchronizeMode mode);
-	void encryptionChanged(ConnectionManager::Encryption encryption);
+	void encryptionChanged(Communicator::Encryption encryption);
 	void nodeUpdated(const Node &node);
 	void nodeAdded(const Node &node);
 
@@ -117,7 +117,7 @@ private:
 	quint16 m_port;
 	bool m_allowAutoDiscovery;
 	QString m_networkName;
-	ConnectionManager::Encryption m_encryption;
+	Communicator::Encryption m_encryption;
 	QString m_certificatePath;
 	QSslCertificate m_certificate;
 	QString m_privateKeyPath;

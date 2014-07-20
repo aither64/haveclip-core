@@ -23,6 +23,7 @@
 #include <QObject>
 #include <QDataStream>
 
+#include "ConnectionManager.h"
 #include "../ClipboardItem.h"
 #include "Command.h"
 

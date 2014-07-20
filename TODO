@@ -1,7 +1,8 @@
 * v0.13.0
-- Warn the user if already verified node's certificate changes
+- Node status
+  - show if the node is ok, offline or misconfigured
 - Node verification:
-  - Connection page should raise en error on failure
+  - Security code prompt should report failure
   - Limit the number of tries the user has to enter the correct security
     code
 - Node edit:
@@ -9,8 +10,23 @@
 - Generate certificate on first launch
 - Button for on-demand clipboard sync (to be able to have clipbaord sending
   OFF and sync manually, when needed)
+- Settings
+  - Security tab
+- Sync
+  - Limit the size of sending/receiving clipboard
+  - Honor the MIME type filters when sending clipboard
 
 * Next version
+
+* Maybes
+- Solve the queueing problem in sync - currently, there may be more one
+  connection from one sender to one receiver. For example, when the user copies
+  something big that takes time to transfer and subsequently copies something
+  small. Now there are two transfers running with an uncertain result. The last
+  to finish will always override the clipboard content on the receiver.
+  Possible solutions:
+    - abort the previos transfer
+    - implement queueing
 
 * Long-term wishlist
 - Relay server

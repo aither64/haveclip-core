@@ -52,6 +52,37 @@ Communicator::~Communicator()
 		delete m_conversation;
 }
 
+QString Communicator::statusToString(CommunicationStatus status)
+{
+	switch(status)
+	{
+	case Ok:
+		return tr("Ok");
+
+	case ConnectionFailed:
+		return tr("Connection failed");
+
+	case UnrecoverableSslError:
+		return tr("Unrecoverable SSL error");
+
+	case IncompleteHeader:
+	case MagicNumberNotMatches:
+		return tr("Communication error");
+
+	case ProtocolVersionMismatch:
+	case UnknownConversation:
+	case InvalidConversation:
+	case UnexpectedMessageType:
+		return tr("Incompatible HaveClip version");
+
+	case NotAuthenticated:
+		return tr("Authentication failure");
+
+	default:
+		return tr("Unknown error");
+	}
+}
+
 void Communicator::sendMessage()
 {
 	QByteArray buf;

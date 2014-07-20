@@ -31,14 +31,14 @@ Receiver::Receiver(ConnectionManager *parent) :
 
 void Receiver::communicate()
 {
-	if(encryption != ConnectionManager::None)
+	if(encryption != Communicator::None)
 	{
 		switch(encryption)
 		{
-		case ConnectionManager::Ssl:
+		case Communicator::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ConnectionManager::Tls:
+		case Communicator::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else
