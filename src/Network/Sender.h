@@ -39,7 +39,7 @@ signals:
 	void verificationFinished(bool success);
 
 public slots:
-	void introduce(quint16 port);
+	void introduce(QString name, quint16 port);
 	void verify(QString code);
 	void distribute(ClipboardItem *content);
 

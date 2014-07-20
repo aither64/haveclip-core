@@ -12,6 +12,7 @@ namespace Commands {
 		virtual void receive(QDataStream &ds);
 		virtual void send(QDataStream &ds);
 		QString name();
+		void setName(QString name);
 		quint16 port();
 		void setPort(quint16 port);
 

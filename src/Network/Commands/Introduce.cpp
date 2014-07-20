@@ -24,7 +24,7 @@ void Introduce::receive(QDataStream &ds)
 
 void Introduce::send(QDataStream &ds)
 {
-	ds << QHostInfo::localHostName(); // FIXME
+	ds << m_name;
 	ds << m_port;
 
 	finish();
@@ -33,6 +33,11 @@ void Introduce::send(QDataStream &ds)
 QString Introduce::name()
 {
 	return m_name;
+}
+
+void Introduce::setName(QString name)
+{
+	m_name = name;
 }
 
 quint16 Introduce::port()

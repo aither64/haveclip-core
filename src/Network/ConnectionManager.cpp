@@ -58,7 +58,7 @@ void ConnectionManager::verifyConnection(const Node &n)
 	connect(m_verifySender, SIGNAL(finished(Communicator::CommunicationStatus)), this, SLOT(introduceFinish(Communicator::CommunicationStatus)));
 	connect(m_verifySender, SIGNAL(introduceFinished(QString,QSslCertificate)), this, SLOT(introduceComplete(QString,QSslCertificate)));
 
-	m_verifySender->introduce(Settings::get()->port());
+	m_verifySender->introduce(Settings::get()->networkName(), Settings::get()->port());
 }
 
 void ConnectionManager::provideSecurityCode(QString code)

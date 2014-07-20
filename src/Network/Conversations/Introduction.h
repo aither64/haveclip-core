@@ -10,8 +10,10 @@ namespace Conversations {
 	public:
 		Introduction(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
 		virtual Type type() const;
-		void setPort(quint16 port);
 		virtual ConnectionManager::AuthMode authenticate();
+
+		void setName(QString name);
+		void setPort(quint16 port);
 
 	protected:
 		virtual void postDoneSender();

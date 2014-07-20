@@ -35,9 +35,14 @@ Conversation::Type Introduction::type() const
 	return Conversation::Introduction;
 }
 
+void Introduction::setName(QString name)
+{
+	static_cast<Commands::Introduce*>(m_cmds[m_role == Communicator::Send ? 0 : 1])->setName(name);
+}
+
 void Introduction::setPort(quint16 port)
 {
-	static_cast<Commands::Introduce*>(m_cmds[0])->setPort(port);
+	static_cast<Commands::Introduce*>(m_cmds[m_role == Communicator::Send ? 0 : 1])->setPort(port);
 }
 
 ConnectionManager::AuthMode Introduction::authenticate()

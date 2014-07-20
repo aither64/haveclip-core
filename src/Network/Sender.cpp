@@ -33,9 +33,10 @@ Sender::Sender(const Node &node, ConnectionManager *parent) :
 {
 }
 
-void Sender::introduce(quint16 port)
+void Sender::introduce(QString name, quint16 port)
 {
 	Conversations::Introduction *conv = new Conversations::Introduction(Communicator::Send, 0, this);
+	conv->setName(name);
 	conv->setPort(port);
 
 	m_conversation = conv;

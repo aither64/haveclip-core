@@ -172,10 +172,15 @@ void Communicator::readHeader()
 	{
 		switch(convType)
 		{
-		case Conversation::Introduction:
+		case Conversation::Introduction: {
 			qDebug() << "Initiating conversation Introduction";
-			m_conversation = new Conversations::Introduction(Communicator::Receive, 0, this);
+			Conversations::Introduction *c = new Conversations::Introduction(Communicator::Receive, 0, this);
+			c->setName(Settings::get()->networkName());
+			c->setPort(Settings::get()->port());
+			m_conversation = c;
+
 			break;
+		}
 
 		case Conversation::Verification:
 			qDebug() << "Initiating conversation Verification";
