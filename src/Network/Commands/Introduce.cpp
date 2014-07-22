@@ -1,7 +1,5 @@
 #include "Introduce.h"
 
-#include <QHostInfo>
-
 using namespace Commands;
 
 Introduce::Introduce(ClipboardContainer *cont, Communicator::Role r)

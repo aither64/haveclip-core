@@ -65,7 +65,8 @@ void ConnectionManager::provideSecurityCode(QString code)
 {
 	Sender *s = new Sender(m_verifiedNode, this);
 
-	connect(s, SIGNAL(verificationFinished(bool)), this, SLOT(verificationFinish(bool)));
+	connect(s, SIGNAL(verificationFinished(bool)), this, SLOT(verificationComplete(bool)));
+	connect(s, SIGNAL(finished(Communicator::CommunicationStatus)), this, SLOT(verificationFinish(Communicator::CommunicationStatus)));
 
 	s->verify(code);
 }
@@ -237,7 +238,7 @@ void ConnectionManager::verifySecurityCode(Conversations::Verification *v, QStri
 	}
 }
 
-void ConnectionManager::verificationFinish(bool ok)
+void ConnectionManager::verificationComplete(bool ok)
 {
 	qDebug() << "Verification finished" << ok;
 
@@ -256,6 +257,12 @@ void ConnectionManager::verificationFinish(bool ok)
 	}
 
 //	qDebug() << "Still here :)";
+}
+
+void ConnectionManager::verificationFinish(Communicator::CommunicationStatus status)
+{
+	if(status != Communicator::Ok)
+		emit verificationFailed(status);
 }
 
 void ConnectionManager::verifySenderDestroy()

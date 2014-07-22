@@ -253,8 +253,12 @@ void Communicator::continueConversation()
 void Communicator::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Connection error" << socketError;
-	emit finished(ConnectionFailed);
-	this->deleteLater();
+
+	if(!m_conversation->isDone())
+	{
+		emit finished(ConnectionFailed);
+		this->deleteLater();
+	}
 }
 
 void Communicator::onConnect()

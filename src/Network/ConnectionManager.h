@@ -44,6 +44,7 @@ signals:
 	void introductionFailed(Communicator::CommunicationStatus status);
 	void verificationRequested(const Node &n);
 	void verificationFinished(bool ok);
+	void verificationFailed(Communicator::CommunicationStatus status);
 	void clipboardUpdated(ClipboardContainer *cont);
 
 public slots:
@@ -69,7 +70,8 @@ private slots:
 	void introduceFinish(Communicator::CommunicationStatus status);
 	void verificationRequest(const Node &n);
 	void verifySecurityCode(Conversations::Verification *v, QString code);
-	void verificationFinish(bool ok);
+	void verificationComplete(bool ok);
+	void verificationFinish(Communicator::CommunicationStatus status);
 	void verifySenderDestroy();
 
 };
