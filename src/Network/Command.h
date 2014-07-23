@@ -48,6 +48,7 @@ public:
 	};
 
 	BaseCommand(ClipboardContainer *cont, Communicator::Role r);
+	virtual ~BaseCommand();
 	Communicator::Role role() const;
 	bool isFinished() const;
 	Status status() const;

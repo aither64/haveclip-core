@@ -27,6 +27,11 @@ BaseCommand::BaseCommand(ClipboardContainer *cont, Communicator::Role r)
 {
 }
 
+BaseCommand::~BaseCommand()
+{
+
+}
+
 Communicator::Role BaseCommand::role() const
 {
 	return m_role;
