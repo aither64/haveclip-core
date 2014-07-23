@@ -41,7 +41,7 @@ public:
 	void startReceiving();
 	void stopReceiving();
 	void syncClipboard(ClipboardItem *it);
-	bool isAuthenticated(AuthMode mode, QSslCertificate &cert);
+	bool isAuthenticated(Communicator::Role role, AuthMode mode, QSslCertificate &cert);
 
 signals:
 	void listenFailed(QString error);

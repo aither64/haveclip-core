@@ -3,7 +3,9 @@
 #include "Settings.h"
 
 Node::Node() :
-	m_id(0)
+	m_id(0),
+	m_send(true),
+	m_recv(true)
 {
 
 }
@@ -14,6 +16,8 @@ Node::Node(const Node &other)
 	m_name = other.m_name;
 	m_host = other.m_host;
 	m_port = other.m_port;
+	m_send = other.m_send;
+	m_recv = other.m_recv;
 	m_certificate = other.m_certificate;
 	m_compatible = other.m_compatible;
 }
@@ -36,6 +40,16 @@ QString Node::host() const
 quint16 Node::port() const
 {
 	return m_port;
+}
+
+bool Node::isSendEnabled() const
+{
+	return m_send;
+}
+
+bool Node::isReceiveEnabled() const
+{
+	return m_recv;
 }
 
 QSslCertificate Node::certificate() const
@@ -73,6 +87,16 @@ void Node::setPort(quint16 port)
 	m_port = port;
 }
 
+void Node::setSendEnabled(bool send)
+{
+	m_send = send;
+}
+
+void Node::setReceiveEnabled(bool recv)
+{
+	m_recv = recv;
+}
+
 void Node::setCertificate(QSslCertificate cert)
 {
 	m_certificate = cert;
@@ -101,6 +125,8 @@ Node Node::load(QSettings *settings, unsigned int id)
 	n.m_name = settings->value("Name").toString();
 	n.m_host = settings->value("Host").toString();
 	n.m_port = settings->value("Port").toString().toUShort();
+	n.m_send = settings->value("Send", true).toBool();
+	n.m_recv = settings->value("Receive", true).toBool();
 
 	QByteArray cert = settings->value("Certificate").toString().toUtf8();
 
@@ -115,5 +141,7 @@ void Node::save(QSettings *settings)
 	settings->setValue("Name", m_name);
 	settings->setValue("Host", m_host);
 	settings->setValue("Port", m_port);
+	settings->setValue("Send", m_send);
+	settings->setValue("Receive", m_recv);
 	settings->setValue("Certificate", QString(m_certificate.toPem()));
 }

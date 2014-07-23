@@ -1,12 +1,8 @@
 * v0.13.0
 - Node status
   - show if the node is ok, offline or misconfigured
-- Node verification:
-  - Limit the number of tries the user has to enter the correct security
-    code
 - Node edit:
   - Support multiple IP addresses (?)
-  - Enable/disable clipboard sending/receiving per node
 - Generate certificate on first launch
 - Button for on-demand clipboard sync (to be able to have clipboard sending
   OFF and sync manually when needed)

@@ -93,6 +93,9 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 {
 	foreach(const Node &n, Settings::get()->nodes())
 	{
+		if(!n.isSendEnabled())
+			continue;
+
 		Sender *d = new Sender(n, this);
 
 		connect(d, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)));
@@ -102,7 +105,7 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 	}
 }
 
-bool ConnectionManager::isAuthenticated(ConnectionManager::AuthMode mode, QSslCertificate &cert)
+bool ConnectionManager::isAuthenticated(Communicator::Role role, ConnectionManager::AuthMode mode, QSslCertificate &cert)
 {
 	switch(mode)
 	{
@@ -116,7 +119,16 @@ bool ConnectionManager::isAuthenticated(ConnectionManager::AuthMode mode, QSslCe
 		foreach(const Node &n, Settings::get()->nodes())
 		{
 			if(n.certificate() == cert)
-				return true;
+			{
+				if(
+					( role == Communicator::Receive && n.isReceiveEnabled() )
+					||
+					( role == Communicator::Send    && n.isSendEnabled()    )
+				)
+					return true;
+
+				return false;
+			}
 		}
 	}
 
