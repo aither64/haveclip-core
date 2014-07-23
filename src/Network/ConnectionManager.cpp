@@ -12,7 +12,9 @@
 
 ConnectionManager::ConnectionManager(QObject *parent) :
 	QTcpServer(parent),
-	m_verifySender(0)
+	m_verifySender(0),
+	m_verifyTries(0),
+	m_verifiedNodeAdded(false)
 {
 	m_autoDiscovery = new AutoDiscovery(this);
 
@@ -33,6 +35,11 @@ Node& ConnectionManager::verifiedNode()
 	return m_verifiedNode;
 }
 
+int ConnectionManager::verifyTries()
+{
+	return m_verifyTries;
+}
+
 AutoDiscovery* ConnectionManager::autoDiscovery()
 {
 	return m_autoDiscovery;
@@ -51,6 +58,8 @@ void ConnectionManager::stopReceiving()
 void ConnectionManager::verifyConnection(const Node &n)
 {
 	m_verifiedNode = n;
+	m_verifyTries = 0;
+	m_verifiedNodeAdded = false;
 
 	m_verifySender = new Sender(n, this);
 
@@ -65,7 +74,7 @@ void ConnectionManager::provideSecurityCode(QString code)
 {
 	Sender *s = new Sender(m_verifiedNode, this);
 
-	connect(s, SIGNAL(verificationFinished(bool)), this, SLOT(verificationComplete(bool)));
+	connect(s, SIGNAL(verificationFinished(int)), this, SLOT(verificationComplete(int)));
 	connect(s, SIGNAL(finished(Communicator::CommunicationStatus)), this, SLOT(verificationFinish(Communicator::CommunicationStatus)));
 
 	s->verify(code);
@@ -129,6 +138,7 @@ void ConnectionManager::incomingConnection(int handle)
 
 	connect(c, SIGNAL(verificationRequested(Node)), this, SLOT(verificationRequest(Node)));
 	connect(c, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)), this, SLOT(verifySecurityCode(Conversations::Verification*,QString)));
+	connect(c, SIGNAL(verificationFinished(int)), this, SLOT(verificationComplete(int)));
 	connect(c, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
 
 	c->communicate();
@@ -219,44 +229,67 @@ void ConnectionManager::verifySecurityCode(Conversations::Verification *v, QStri
 {
 	qDebug() << "Verifying security code";
 
-	bool valid = m_securityCode == code;
+	if(++m_verifyTries == VERIFICATION_TRIES)
+	{
+		qDebug() << "Out of attempts";
 
-	v->setValid(valid);
+		m_verifiedNode = Node();
+		m_securityCode = "";
+
+		v->setValid(Refused);
+		return;
+	}
+
+	bool valid = m_securityCode == code;
+	ConnectionManager::CodeValidity validity = valid ? Valid : NotValid;
+
+	v->setValid(validity);
 
 	if(valid)
 	{
 		Settings::get()->addOrUpdateNode(m_verifiedNode);
 		Settings::get()->save();
 
-		emit verificationFinished(valid);
-
 		m_verifiedNode = Node();
 		m_securityCode = "";
-
-	} else {
-		emit verificationFinished(valid);
+		m_verifiedNodeAdded = true;
 	}
 }
 
-void ConnectionManager::verificationComplete(bool ok)
+void ConnectionManager::verificationComplete(int validity)
 {
-	qDebug() << "Verification finished" << ok;
+	qDebug() << "Verification finished" << validity;
 
-	if(ok)
+	ConnectionManager::CodeValidity v = (ConnectionManager::CodeValidity) validity;
+
+	if(m_verifiedNodeAdded)
+	{
+		// verifySecurityCode() has already been called.
+		emit verificationFinished(v);
+		return;
+	}
+
+	if(validity == Valid)
 	{
 		Settings::get()->addOrUpdateNode(m_verifiedNode);
 		Settings::get()->save();
 
-		emit verificationFinished(ok);
+		emit verificationFinished(v);
 
 		m_verifiedNode = Node();
 		m_securityCode = "";
 
-	} else {
-		emit verificationFinished(ok);
-	}
+	} else if(validity == Refused) {
+		qDebug() << "Out of attempts";
 
-//	qDebug() << "Still here :)";
+		m_verifiedNode = Node();
+		m_securityCode = "";
+
+		emit verificationFinished(v);
+
+	} else {
+		emit verificationFinished(v);
+	}
 }
 
 void ConnectionManager::verificationFinish(Communicator::CommunicationStatus status)

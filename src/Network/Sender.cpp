@@ -22,6 +22,7 @@
 #include <QDateTime>
 #include <QDataStream>
 
+#include "Communicator.h"
 #include "Sender.h"
 #include "Conversations/Introduction.h"
 #include "Conversations/Verification.h"
@@ -64,7 +65,7 @@ void Sender::distribute(ClipboardItem *content)
 void Sender::conversationSignals()
 {
 	connect(m_conversation, SIGNAL(introductionFinished(QString)), this, SLOT(interceptIntroductionFinish(QString)));
-	connect(m_conversation, SIGNAL(verificationFinished(bool)), this, SIGNAL(verificationFinished(bool)));
+	connect(m_conversation, SIGNAL(verificationFinished(int)), this, SIGNAL(verificationFinished(int)));
 }
 
 void Sender::onError(QAbstractSocket::SocketError socketError)

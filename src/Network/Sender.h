@@ -24,6 +24,7 @@
 #include <QMimeData>
 
 #include "Communicator.h"
+#include "ConnectionManager.h"
 
 class ClipboardItem;
 
@@ -36,7 +37,6 @@ public:
 
 signals:
 	void introduceFinished(QString name, QSslCertificate cert);
-	void verificationFinished(bool success);
 
 public slots:
 	void introduce(QString name, quint16 port);

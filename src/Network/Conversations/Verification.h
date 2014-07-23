@@ -13,14 +13,17 @@ namespace Conversations {
 		virtual Type type() const;
 		virtual ConnectionManager::AuthMode authenticate();
 		void setSecurityCode(QString code);
-		void setValid(bool v);
+		void setValid(ConnectionManager::CodeValidity v);
 
 	protected:
 		virtual void nextCommandReceiver(BaseCommand::Type lastCmd, int index);
-		virtual void postDoneSender();
+		virtual void postDone();
 
 	private:
-		bool m_valid;
+		ConnectionManager::CodeValidity m_valid;
+
+		BaseCommand::Status codeValidityToCommandStatus(ConnectionManager::CodeValidity v);
+		ConnectionManager::CodeValidity commandStatusToCodeValidity(BaseCommand::Status s);
 	};
 }
 

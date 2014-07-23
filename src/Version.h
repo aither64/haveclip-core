@@ -13,4 +13,6 @@
 
 #define DISCOVERY_PORT 9999
 
+#define VERIFICATION_TRIES 5
+
 #endif // VERSION_H

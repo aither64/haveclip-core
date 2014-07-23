@@ -26,9 +26,9 @@
 
 #include "../Node.h"
 
+class ConnectionManager;
 class ClipboardContainer;
 class Conversation;
-class ConnectionManager;
 
 class Communicator : public QSslSocket
 {
@@ -68,6 +68,7 @@ signals:
 	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
 	void finished(Communicator::CommunicationStatus status);
+	void verificationFinished(int validity);
 
 protected:
 	ConnectionManager *m_conman;

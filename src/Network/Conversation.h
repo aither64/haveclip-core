@@ -74,7 +74,7 @@ signals:
 	void introductionFinished(QString name);
 	void verificationRequested(QString name, quint16 port);
 	void verificationCodeReceived(Conversations::Verification *v, QString code);
-	void verificationFinished(bool ok);
+	void verificationFinished(int validity);
 	void clipboardSync(ClipboardContainer *cont);
 	void done();
 	void morphed(Conversation *c);

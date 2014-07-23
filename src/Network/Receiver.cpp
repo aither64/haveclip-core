@@ -62,6 +62,7 @@ void Receiver::conversationSignals()
 
 	connect(m_conversation, SIGNAL(verificationRequested(QString,quint16)), this, SLOT(interceptVerificationRequest(QString,quint16)));
 	connect(m_conversation, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)), this, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)));
+	connect(m_conversation, SIGNAL(verificationFinished(int)), this, SIGNAL(verificationFinished(int)));
 	connect(m_conversation, SIGNAL(clipboardSync(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
 }
 
