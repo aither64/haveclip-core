@@ -254,7 +254,7 @@ void Communicator::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Connection error" << socketError;
 
-	if(!m_conversation->isDone())
+	if(!m_conversation || (m_conversation && !m_conversation->isDone()))
 	{
 		emit finished(ConnectionFailed);
 		this->deleteLater();

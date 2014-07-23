@@ -250,7 +250,6 @@ void ConnectionManager::verifySecurityCode(Conversations::Verification *v, QStri
 		Settings::get()->addOrUpdateNode(m_verifiedNode);
 		Settings::get()->save();
 
-		m_verifiedNode = Node();
 		m_securityCode = "";
 		m_verifiedNodeAdded = true;
 	}
@@ -266,6 +265,9 @@ void ConnectionManager::verificationComplete(int validity)
 	{
 		// verifySecurityCode() has already been called.
 		emit verificationFinished(v);
+
+		m_verifiedNode = Node();
+
 		return;
 	}
 
