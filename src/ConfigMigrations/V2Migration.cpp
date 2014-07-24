@@ -43,13 +43,6 @@ void V2Migration::up()
 			m_settings->remove(sec);
 	}
 
-	// Change old and invalid certificate setting
-	if(m_settings->value("Connection/Certificate").toString() == "certs/haveclip.crt")
-		m_settings->setValue("Network/Certificate", storagePath() + "/haveclip.crt");
-
-	if(m_settings->value("Connection/PrivateKey").toString() == "certs/haveclip.key")
-		m_settings->setValue("Network/PrivateKey", storagePath() + "/haveclip.key");
-
 	// Split Connection to Network and Security
 	m_settings->setValue("Network/Host", m_settings->value("Connection/Host"));
 	m_settings->setValue("Network/Port", m_settings->value("Connection/Port"));
@@ -59,6 +52,13 @@ void V2Migration::up()
 	m_settings->setValue("Security/PrivateKey", m_settings->value("Connection/PrivateKey"));
 
 	m_settings->remove("Connection");
+
+	// Change old and invalid certificate setting
+	if(m_settings->value("Network/Certificate").toString() == "certs/haveclip.crt")
+		m_settings->setValue("Network/Certificate", storagePath() + "/haveclip.crt");
+
+	if(m_settings->value("Network/PrivateKey").toString() == "certs/haveclip.key")
+		m_settings->setValue("Network/PrivateKey", storagePath() + "/haveclip.key");
 
 	// Remove deprecated settings
 	m_settings->remove("PasteServices");
