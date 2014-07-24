@@ -78,6 +78,9 @@ QString Communicator::statusToString(CommunicationStatus status)
 	case NotAuthenticated:
 		return tr("Authentication failure");
 
+	case MessageTooLarge:
+		return tr("Message is too large");
+
 	default:
 		return tr("Unknown error");
 	}
@@ -87,6 +90,7 @@ void Communicator::sendMessage()
 {
 	QByteArray buf;
 	QDataStream ds(&buf, QIODevice::WriteOnly);
+	quint64 bufSize;
 
 	ds << (quint32) PROTO_MAGIC_NUMBER;
 	ds << (qint32) PROTO_VERSION;
@@ -98,9 +102,18 @@ void Communicator::sendMessage()
 
 	ds.device()->seek(16); // seek to message length field
 
-	ds << (quint64) buf.size();
+	bufSize = buf.size();
 
-	qDebug() << "Send message" << m_conversation->currentCommandType() << buf.size() << "bytes";
+	if(bufSize > Settings::get()->maxSendSize())
+	{
+		qDebug() << "Message too large:" << bufSize << "bytes";
+		emit finished(MessageTooLarge);
+		this->deleteLater();
+	}
+
+	ds << (quint64) bufSize;
+
+	qDebug() << "Send message" << m_conversation->currentCommandType() << bufSize << "bytes";
 
 	write(buf);
 
@@ -227,6 +240,13 @@ void Communicator::readHeader()
 	}
 
 	ds >> msgLen;
+
+	if(msgLen > Settings::get()->maxReceiveSize())
+	{
+		qDebug() << "Message too large:" << msgLen << "bytes";
+		emit finished(MessageTooLarge);
+		this->deleteLater();
+	}
 }
 
 void Communicator::conversationSignals()

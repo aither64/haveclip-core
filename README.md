@@ -13,8 +13,6 @@ forms of text, images and even application-specific data.
 HaveClip is multiplatform. Copy something in one OS, paste in another.
 Supports Windows, Linux, Mac OS X and Sailfish OS.
 
-It is not possible to copy files over network with HaveClip.
-
 Requirements
 ------------
  - Qt at least 4.7. It might work with older versions, but it's not tested.
@@ -25,11 +23,11 @@ Requirements
 
 ### Debian based distributions
 
-    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev make pkg-config libqca2-dev
+    # apt-get install g++ libqt4-dev libqt4-dev-bin libX11-dev make pkg-config libqca2-dev libqca2-plugin-ossl
 
 ### Fedora and other RPM based distributions
 
-    # yum install gcc-c++ qt-devel xorg-x11-proto-devel
+    # yum install gcc-c++ qt-devel xorg-x11-proto-devel qca2-devel qca-ossl
 
 Download
 --------
@@ -48,33 +46,24 @@ Installation
 ------------
     $ sudo make install
 
-or as root
-
-    # make install
-
 Usage
 -----
-HaveClip runs in background. There is no window when you launch it, only tray
+HaveClip runs in the background. There is no window when launched, only tray
 icon will show up.
 
-If you left-click the tray icon, menu with clipboard history will pop up.
-Right-click triggers menu with options and pasting. These two menus are merged
+Left-click on the tray icon will pop up a menu with clipboard history.
+Right-click triggers a menu with options. These two menus are merged
 in one in OS X.
 
-First thing you want to do is to setup devices where the clipboard will be
-synced. Right-click on the tray icon and select Settings. Go to tab Pool
-and add IP addresses of your devices. The format for each entry is
-IP address:port. For example:
+First thing to do is to setup devices where the clipboard will be
+synced. Right-click on the tray icon and select Settings. Go to tab Pool,
+click on "Add" button and follow the verification process.
 
-    1.2.3.4:9999
+If the verification process is successful, the clipboard will be synchronized
+between the two computers.
 
-Now when you copy something into clipboard, it will be sent to all devices
-listed in Pool.
-
-It is not recommended to use HaveClip over slow or network connections with FUP,
-since it can transfer a lot of data. For instance, image copied from GIMP
-is saved to clipboard in multiple formats, so the size can exceed a few
-tens of MB.
+Please remember, that for HaveClip to work properly, encryption has to be used
+and all computers should have unique private key and certificate.
 
 Sailfish OS
 -----------
@@ -82,16 +71,18 @@ Sailfish version does not support encryption.
 
 In order to sync clipboard from Sailfish to PC, one must bring HaveClip to foreground
 after copying text, or else HaveClip will not notice it. Sync from PC to Sailfish works
-fine.
+as expected.
 
-For planned features see TODO.
+Security
+--------
+It is strongly recommended to use the encryption and have unique private key
+and certificate on every computer. HaveClip then ensures, that the clipboard
+will be sent and received only to/from authenticated peers (those listed in Pool
+with appropriate certificates) and that the transfer will be encrypted.
+
+If one does not use the encryption, literally everyone can change the content
+of the clipboard or receive it without user's knowledge.
 
 License
 -------
 HaveClip is released under GNU/GPL.
-
-WARNING
--------
-The clipboard is definitely a private thing, so be careful where and how you use
-HaveClip. Be sure to use SSL/TLS encryption, every computer/device should have
-it's own certificate and private key, use peer verification (pairing).

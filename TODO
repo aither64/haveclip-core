@@ -1,18 +1,15 @@
 * v0.13.0
 - Node status
   - show if the node is ok, offline or misconfigured
-- Node edit:
-  - Support multiple IP addresses (?)
 - Generate certificate on first launch
-- Button for on-demand clipboard sync (to be able to have clipboard sending
-  OFF and sync manually when needed)
 - Settings
   - Security tab
 - Sync
-  - Limit the size of sending/receiving clipboard
   - Honor the MIME type filters when sending clipboard
 
 * Next version
+- Node edit:
+  - Support multiple IP addresses
 
 * Maybes
 - Solve the queueing problem in sync - currently, there may be more one

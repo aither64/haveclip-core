@@ -56,6 +56,7 @@ public:
 		InvalidConversation,
 		UnexpectedMessageType,
 		NotAuthenticated,
+		MessageTooLarge,
 		UnknownError
 	};
 
@@ -100,7 +101,7 @@ private:
 	bool haveHeader;
 	quint64 msgLen;
 	bool m_runPostDone;
-	
+
 };
 
 #endif // COMMUNICATOR_H

@@ -37,6 +37,14 @@ public:
 	QString networkName();
 	void setNetworkName(QString name);
 
+	Q_PROPERTY(quint32 maxSendSize READ maxSendSize WRITE setMaxSendSize)
+	quint32 maxSendSize() const;
+	void setMaxSendSize(quint32 size);
+
+	Q_PROPERTY(quint32 maxReceiveSize READ maxReceiveSize WRITE setMaxReceiveSize)
+	quint32 maxReceiveSize() const;
+	void setMaxReceiveSize(quint32 size);
+
 	Q_PROPERTY(bool historyEnabled READ isHistoryEnabled WRITE setHistoryEnabled NOTIFY historyEnabledChanged)
 	bool isHistoryEnabled() const;
 	void setHistoryEnabled(bool enabled);
@@ -117,6 +125,8 @@ private:
 	quint16 m_port;
 	bool m_allowAutoDiscovery;
 	QString m_networkName;
+	quint32 m_maxSendSize;
+	quint32 m_maxRecvSize;
 	Communicator::Encryption m_encryption;
 	QString m_certificatePath;
 	QSslCertificate m_certificate;

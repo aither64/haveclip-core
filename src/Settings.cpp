@@ -98,6 +98,27 @@ void Settings::setNetworkName(QString name)
 	m_networkName = name;
 }
 
+
+quint32 Settings::maxSendSize() const
+{
+	return m_maxSendSize;
+}
+
+void Settings::setMaxSendSize(quint32 size)
+{
+	m_maxSendSize = size;
+}
+
+quint32 Settings::maxReceiveSize() const
+{
+	return m_maxRecvSize;
+}
+
+void Settings::setMaxReceiveSize(quint32 size)
+{
+	m_maxRecvSize = size;
+}
+
 bool Settings::isHistoryEnabled() const
 {
 	return m_historyEnabled;
@@ -287,6 +308,10 @@ void Settings::save()
 	m_settings->setValue("Connection/AutoDiscovery/Allow", m_allowAutoDiscovery);
 	m_settings->setValue("Connection/NetworkName", m_networkName);
 
+	// Limits
+	m_settings->setValue("Network/MaxSendSize", m_maxSendSize);
+	m_settings->setValue("Network/MaxReceiveSize", m_maxRecvSize);
+
 	// History
 	m_settings->setValue("History/Enable", m_historyEnabled);
 	m_settings->setValue("History/Size", m_historySize);
@@ -333,6 +358,10 @@ void Settings::load()
 	// Auto discovery
 	m_allowAutoDiscovery = m_settings->value("Connection/AutoDiscovery/Allow", true).toBool();
 	m_networkName = m_settings->value("Connection/NetworkName", QHostInfo::localHostName()).toString();
+
+	// Limits
+	m_maxSendSize = m_settings->value("Network/MaxSendSize", 100*1024*1024).toUInt();
+	m_maxRecvSize = m_settings->value("Network/MaxReceiveSize", 100*1024*1024).toUInt();
 
 	// History
 	m_historyEnabled = m_settings->value("History/Enable", true).toBool();

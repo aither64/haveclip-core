@@ -75,6 +75,11 @@ Protocol structure
 ------------------
 
 ### Message header
+All messages except auto discovery contain this header, identifying
+correct data format, protocl version, conversation type, message type
+and length.
+
+The actual message follows the header.
 
   Length    Type         Meaning
  -------    -------      ------------------------------------------------
@@ -86,7 +91,7 @@ Protocol structure
 
 ### Auto discovery request/reply
 
-The message contains no header.
+The message has no header.
 
   Length    Type         Meaning
  -------    -------      ------------------------------------------------
