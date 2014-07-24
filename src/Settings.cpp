@@ -297,38 +297,56 @@ unsigned int Settings::nextNodeId()
 
 void Settings::save()
 {
-	// Connection
-	m_settings->setValue("Connection/Host", m_host);
-	m_settings->setValue("Connection/Port", m_port);
-	m_settings->setValue("Connection/Encryption", m_encryption);
-	m_settings->setValue("Connection/Certificate", m_certificatePath);
-	m_settings->setValue("Connection/PrivateKey", m_privateKeyPath);
+	// Network
+	m_settings->beginGroup(SETTINGS_NETWORK);
+	{
+		m_settings->setValue("Host", m_host);
+		m_settings->setValue("Port", m_port);
 
-	// Auto discovery
-	m_settings->setValue("Connection/AutoDiscovery/Allow", m_allowAutoDiscovery);
-	m_settings->setValue("Connection/NetworkName", m_networkName);
+		// Auto discovery
+		m_settings->setValue("AutoDiscovery/Allow", m_allowAutoDiscovery);
+		m_settings->setValue("NetworkName", m_networkName);
 
-	// Limits
-	m_settings->setValue("Network/MaxSendSize", m_maxSendSize);
-	m_settings->setValue("Network/MaxReceiveSize", m_maxRecvSize);
+		// Limits
+		m_settings->setValue("MaxSendSize", m_maxSendSize);
+		m_settings->setValue("MaxReceiveSize", m_maxRecvSize);
+	}
+	m_settings->endGroup();
+
+	// Security
+	m_settings->beginGroup(SETTINGS_SECURITY);
+	{
+		m_settings->setValue("Encryption", m_encryption);
+		m_settings->setValue("Certificate", m_certificatePath);
+		m_settings->setValue("PrivateKey", m_privateKeyPath);
+	}
+	m_settings->endGroup();
 
 	// History
-	m_settings->setValue("History/Enable", m_historyEnabled);
-	m_settings->setValue("History/Size", m_historySize);
-	m_settings->setValue("History/Save", m_saveHistory);
+	m_settings->beginGroup(SETTINGS_HISTORY);
+	{
+		m_settings->setValue("Enable", m_historyEnabled);
+		m_settings->setValue("Size", m_historySize);
+		m_settings->setValue("Save", m_saveHistory);
+	}
+	m_settings->endGroup();
 
 	// Sync
-	m_settings->setValue("Sync/Enable", m_syncEnabled);
-	m_settings->setValue("Sync/Send", m_sendEnabled);
-	m_settings->setValue("Sync/Receive", m_recvEnabled);
-	m_settings->setValue("Sync/Synchronize", m_syncMode);
+	m_settings->beginGroup(SETTINGS_SYNC);
+	{
+		m_settings->setValue("Enable", m_syncEnabled);
+		m_settings->setValue("Send", m_sendEnabled);
+		m_settings->setValue("Receive", m_recvEnabled);
+		m_settings->setValue("Synchronize", m_syncMode);
+	}
+	m_settings->endGroup();
 
 	saveNodes();
 }
 
 void Settings::saveNodes()
 {
-	m_settings->beginGroup("Pool/Nodes");
+	m_settings->beginGroup(SETTINGS_NODES);
 	m_settings->remove("");
 
 	int cnt = m_nodes.count();
@@ -347,39 +365,56 @@ void Settings::saveNodes()
 
 void Settings::load()
 {
-	// Connection
-	m_host = m_settings->value("Connection/Host", "0.0.0.0").toString();
-	m_port = m_settings->value("Connection/Port", 9999).toInt();
+	// Network
+	m_settings->beginGroup(SETTINGS_NETWORK);
+	{
+		m_host = m_settings->value("Host", "0.0.0.0").toString();
+		m_port = m_settings->value("Port", 9999).toInt();
 
-	m_encryption = (Communicator::Encryption) m_settings->value("Connection/Encryption", Communicator::Tls).toInt();
-	setCertificatePath(m_settings->value("Connection/Certificate", dataStoragePath() + "/haveclip.crt").toString());
-	setPrivateKeyPath(m_settings->value("Connection/PrivateKey", dataStoragePath() + "/haveclip.key").toString());
+		// Auto discovery
+		m_allowAutoDiscovery = m_settings->value("AutoDiscovery/Allow", true).toBool();
+		m_networkName = m_settings->value("NetworkName", QHostInfo::localHostName()).toString();
 
-	// Auto discovery
-	m_allowAutoDiscovery = m_settings->value("Connection/AutoDiscovery/Allow", true).toBool();
-	m_networkName = m_settings->value("Connection/NetworkName", QHostInfo::localHostName()).toString();
+		// Limits
+		m_maxSendSize = m_settings->value("MaxSendSize", 100*1024*1024).toUInt();
+		m_maxRecvSize = m_settings->value("MaxReceiveSize", 100*1024*1024).toUInt();
+	}
+	m_settings->endGroup();
 
-	// Limits
-	m_maxSendSize = m_settings->value("Network/MaxSendSize", 100*1024*1024).toUInt();
-	m_maxRecvSize = m_settings->value("Network/MaxReceiveSize", 100*1024*1024).toUInt();
+	// Security
+	m_settings->beginGroup(SETTINGS_SECURITY);
+	{
+		m_encryption = (Communicator::Encryption) m_settings->value("Encryption", Communicator::Tls).toInt();
+		setCertificatePath(m_settings->value("Certificate", dataStoragePath() + "/haveclip.crt").toString());
+		setPrivateKeyPath(m_settings->value("PrivateKey", dataStoragePath() + "/haveclip.key").toString());
+	}
+	m_settings->endGroup();
 
 	// History
-	m_historyEnabled = m_settings->value("History/Enable", true).toBool();
-	m_historySize = m_settings->value("History/Size", 10).toInt();
-	m_saveHistory = m_settings->value("History/Save", true).toBool();
+	m_settings->beginGroup(SETTINGS_HISTORY);
+	{
+		m_historyEnabled = m_settings->value("Enable", true).toBool();
+		m_historySize = m_settings->value("Size", 10).toInt();
+		m_saveHistory = m_settings->value("Save", true).toBool();
+	}
+	m_settings->endGroup();
 
 	// Sync
-	m_syncEnabled = m_settings->value("Sync/Enable", true).toBool();
-	m_sendEnabled = m_settings->value("Sync/Send", true).toBool();
-	m_recvEnabled = m_settings->value("Sync/Receive", true).toBool();
-	m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Sync/Synchronize", ClipboardManager::Both).toInt();
+	m_settings->beginGroup(SETTINGS_SYNC);
+	{
+		m_syncEnabled = m_settings->value("Enable", true).toBool();
+		m_sendEnabled = m_settings->value("Send", true).toBool();
+		m_recvEnabled = m_settings->value("Receive", true).toBool();
+		m_syncMode = (ClipboardManager::SynchronizeMode) m_settings->value("Synchronize", ClipboardManager::Both).toInt();
+	}
+	m_settings->endGroup();
 
 	loadNodes();
 }
 
 void Settings::loadNodes()
 {
-	m_settings->beginGroup("Pool/Nodes");
+	m_settings->beginGroup(SETTINGS_NODES);
 
 	foreach(QString grp, m_settings->childGroups())
 	{

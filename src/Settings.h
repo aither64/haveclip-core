@@ -1,6 +1,13 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#define SETTINGS_NETWORK "Network"
+#define SETTINGS_HISTORY "History"
+#define SETTINGS_SYNC "Sync"
+#define SETTINGS_SECURITY "Security"
+#define SETTINGS_POOL "Pool"
+#define SETTINGS_NODES "Pool/Nodes"
+
 #include <QObject>
 #include <QSettings>
 #include <QSslCertificate>

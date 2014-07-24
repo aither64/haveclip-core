@@ -379,7 +379,7 @@ void ClipboardManager::uniteClipboards(ClipboardItem *content)
 
 void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard::Mode mode)
 {
-	qDebug() << "Ensure clipboard content" << content->toPlainText() << mode;
+	qDebug() << "Ensure clipboard content" << mode;
 //	if(!ClipboardContent::compareMimeData(content->mimeData, clipboard->mimeData(mode), mode == QClipboard::Selection))
 //	{
 //		qDebug() << "Update" << mode;
