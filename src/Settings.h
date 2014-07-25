@@ -44,11 +44,11 @@ public:
 	QString networkName();
 	void setNetworkName(QString name);
 
-	Q_PROPERTY(quint32 maxSendSize READ maxSendSize WRITE setMaxSendSize)
+	Q_PROPERTY(quint32 maxSendSize READ maxSendSize WRITE setMaxSendSize NOTIFY maxSendSizeChanged)
 	quint32 maxSendSize() const;
 	void setMaxSendSize(quint32 size);
 
-	Q_PROPERTY(quint32 maxReceiveSize READ maxReceiveSize WRITE setMaxReceiveSize)
+	Q_PROPERTY(quint32 maxReceiveSize READ maxReceiveSize WRITE setMaxReceiveSize NOTIFY maxReceiveSizeChanged)
 	quint32 maxReceiveSize() const;
 	void setMaxReceiveSize(quint32 size);
 
@@ -56,7 +56,7 @@ public:
 	bool isHistoryEnabled() const;
 	void setHistoryEnabled(bool enabled);
 
-	Q_PROPERTY(int historySize READ historySize WRITE setHistorySize)
+	Q_PROPERTY(int historySize READ historySize WRITE setHistorySize NOTIFY historySizeChanged)
 	int historySize() const;
 	void setHistorySize(int size);
 
@@ -113,7 +113,10 @@ signals:
 	void hostAndPortChanged(QString host, quint16 port);
 	void allowAutoDiscoveryChanged(bool allow);
 	void networkNameChanged(QString name);
+	void maxSendSizeChanged(quint32 size);
+	void maxReceiveSizeChanged(quint32 size);
 	void historyEnabledChanged(bool enabled);
+	void historySizeChanged(int size);
 	void saveHistoryChanged(bool save);
 	void syncEnabledChanged(bool enabled);
 	void sendEnabledChanged(bool enabled);
