@@ -290,7 +290,8 @@ void History::load()
 		}
 	}
 
-	m_currentContainer = m_items.last();
+	if(!m_items.isEmpty())
+		m_currentContainer = m_items.last();
 
 	file.close();
 }
