@@ -60,10 +60,13 @@ public:
 		UnknownError
 	};
 
+	Q_ENUMS(Encryption)
+	Q_ENUMS(CommunicationStatus)
+
 	explicit Communicator(ConnectionManager *parent = 0);
 	~Communicator();
 	Node node();
-	static QString statusToString(CommunicationStatus status);
+	Q_INVOKABLE static QString statusToString(CommunicationStatus status);
 
 signals:
 	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);

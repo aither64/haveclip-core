@@ -25,7 +25,7 @@ signals:
 	void peerDiscovered(const Node &node);
 
 public slots:
-	void discover();
+	Q_INVOKABLE void discover();
 
 private slots:
 	void allowAutoDiscoveryChange(bool allow);
