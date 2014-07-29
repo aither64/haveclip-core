@@ -12,15 +12,6 @@ Settings::Settings(QObject *parent) :
 	m_nextNodeId(1)
 {
 	m_settings = new QSettings(this);
-
-	int v = m_settings->value("Version", isFirstLaunch() ? CONFIG_VERSION : 1).toInt();
-
-	if(v != CONFIG_VERSION)
-		migrate(v);
-	else
-		m_settings->setValue("Version", CONFIG_VERSION);
-
-	load();
 }
 
 Settings::~Settings()
@@ -39,6 +30,22 @@ Settings* Settings::create(QObject *parent)
 Settings* Settings::get()
 {
 	return m_instance;
+}
+
+void Settings::init()
+{
+	bool firstLaunch = isFirstLaunch();
+	int v = m_settings->value("Version", firstLaunch ? CONFIG_VERSION : 1).toInt();
+
+	if(v != CONFIG_VERSION)
+		migrate(v);
+	else
+		m_settings->setValue("Version", CONFIG_VERSION);
+
+	load();
+
+	if(firstLaunch)
+		emit firstStart();
 }
 
 QString Settings::host()
@@ -359,8 +366,12 @@ void Settings::save()
 		m_settings->setValue("NetworkName", m_networkName);
 
 		// Limits
-		m_settings->setValue("MaxSendSize", m_maxSendSize);
-		m_settings->setValue("MaxReceiveSize", m_maxRecvSize);
+		m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
+		{
+			m_settings->setValue("MaxSendSize", m_maxSendSize);
+			m_settings->setValue("MaxReceiveSize", m_maxRecvSize);
+		}
+		m_settings->endGroup();
 	}
 	m_settings->endGroup();
 
@@ -427,8 +438,12 @@ void Settings::load()
 		m_networkName = m_settings->value("NetworkName", QHostInfo::localHostName()).toString();
 
 		// Limits
-		m_maxSendSize = m_settings->value("MaxSendSize", 100*1024*1024).toUInt();
-		m_maxRecvSize = m_settings->value("MaxReceiveSize", 100*1024*1024).toUInt();
+		m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
+		{
+			m_maxSendSize = m_settings->value("MaxSendSize", SETTINGS_DEFAULT_MAX_SEND_SIZE).toUInt();
+			m_maxRecvSize = m_settings->value("MaxReceiveSize", SETTINGS_DEFAULT_MAX_RECV_SIZE).toUInt();
+		}
+		m_settings->endGroup();
 	}
 	m_settings->endGroup();
 
