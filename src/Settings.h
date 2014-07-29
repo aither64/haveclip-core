@@ -84,18 +84,18 @@ public:
 	Communicator::Encryption encryption() const;
 	void setEncryption(Communicator::Encryption enc);
 
-	Q_PROPERTY(QString certificatePath READ certificatePath WRITE setCertificatePath)
+	Q_PROPERTY(QString certificatePath READ certificatePath WRITE setCertificatePath NOTIFY certificatePathChanged)
 	QString certificatePath();
 	void setCertificatePath(QString cert);
 
-	Q_PROPERTY(QSslCertificate certificate READ certificate)
+	Q_PROPERTY(QSslCertificate certificate READ certificate NOTIFY certificateChanged)
 	QSslCertificate& certificate();
 
-	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath)
+	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath NOTIFY privateKeyPathChanged())
 	QString privateKeyPath();
 	void setPrivateKeyPath(QString key);
 
-	Q_PROPERTY(QSslKey privateKey READ privateKey)
+	Q_PROPERTY(QSslKey privateKey READ privateKey NOTIFY privateKeyChanged)
 	QSslKey& privateKey();
 
 	QList<Node> nodes();
@@ -123,6 +123,10 @@ signals:
 	void recvEnabledChanged(bool enabled);
 	void syncModeChanged(ClipboardManager::SynchronizeMode mode);
 	void encryptionChanged(Communicator::Encryption encryption);
+	void certificatePathChanged();
+	void certificateChanged(const QSslCertificate &certificate);
+	void privateKeyPathChanged();
+	void privateKeyChanged(const QSslKey &key);
 	void nodeUpdated(const Node &node);
 	void nodeAdded(const Node &node);
 

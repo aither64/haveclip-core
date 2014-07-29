@@ -250,7 +250,12 @@ QString Settings::certificatePath()
 
 void Settings::setCertificatePath(QString cert)
 {
+	if(m_certificatePath == cert)
+		return;
+
 	m_certificatePath = cert;
+
+	emit certificatePathChanged();
 
 	QList<QSslCertificate> certs = QSslCertificate::fromPath(cert);
 
@@ -259,6 +264,7 @@ void Settings::setCertificatePath(QString cert)
 	else
 		m_certificate = certs.first();
 
+	emit certificateChanged(m_certificate);
 }
 
 QSslCertificate& Settings::certificate()
@@ -273,7 +279,12 @@ QString Settings::privateKeyPath()
 
 void Settings::setPrivateKeyPath(QString key)
 {
+	if(m_privateKeyPath == key)
+		return;
+
 	m_privateKeyPath = key;
+
+	emit privateKeyPathChanged();
 
 	QFile f(key);
 
@@ -286,6 +297,8 @@ void Settings::setPrivateKeyPath(QString key)
 	m_privateKey = QSslKey(&f, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey);
 
 	f.close();
+
+	emit privateKeyChanged(m_privateKey);
 }
 
 QSslKey& Settings::privateKey()
