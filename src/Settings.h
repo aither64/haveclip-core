@@ -32,6 +32,7 @@ class Settings : public QObject
 {
 	Q_OBJECT
 public:
+	~Settings();
 	static Settings* create(QObject *parent = 0);
 	static Settings* get();
 
@@ -169,7 +170,6 @@ private:
 	unsigned int m_nextNodeId;
 
 	Settings(QObject *parent = 0);
-	~Settings();
 	void load();
 	void loadNodes();
 	void saveNodes();
