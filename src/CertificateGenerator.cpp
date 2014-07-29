@@ -20,8 +20,8 @@ void CertificateGenerator::generate()
 	{
 		type = QCA::PKey::RSA;
 
-	} else if(QCA::isSupported("dsa")) {
-		type = QCA::PKey::DSA;
+//	} else if(QCA::isSupported("dsa")) { // would have to save key type
+//		type = QCA::PKey::DSA;
 
 	} else {
 		emit unsupportedOperation();
