@@ -1,5 +1,8 @@
 #include "CertificateGenerator.h"
 
+#include <QFileInfo>
+#include <QDir>
+
 CertificateGenerator::CertificateGenerator(QObject *parent) :
         QObject(parent)
 {
@@ -24,7 +27,9 @@ void CertificateGenerator::generate()
 //		type = QCA::PKey::DSA;
 
 	} else {
-		emit unsupportedOperation();
+		QString err;
+
+		emit errorOccured(UnsupportedKeyType, err);
 		return;
 	}
 
@@ -82,12 +87,35 @@ void CertificateGenerator::privateKeyReady()
 	emit privateKeyGenerated();
 }
 
+bool CertificateGenerator::mkpath(QString &path)
+{
+	QFileInfo f(path);
+	QDir d;
+
+	if(d.mkpath(f.absolutePath()))
+	{
+		return true;
+
+	} else {
+		emit errorOccured(MkpathFailed, f.absolutePath());
+		return false;
+	}
+}
+
 void CertificateGenerator::savePrivateKeyToFile(QString path)
 {
-	m_key.toPEMFile(path);
+	if(!mkpath(path))
+		return;
+
+	if(!m_key.toPEMFile(path))
+		emit errorOccured(SaveFailed, path);
 }
 
 void CertificateGenerator::saveCertificateToFile(QString path)
 {
-	m_cert.toPEMFile(path);
+	if(!mkpath(path))
+		return;
+
+	if(!m_cert.toPEMFile(path))
+		emit errorOccured(SaveFailed, path);
 }

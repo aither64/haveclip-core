@@ -8,6 +8,12 @@ class CertificateGenerator : public QObject
 {
 	Q_OBJECT
 public:
+	enum ErrorType {
+		UnsupportedKeyType,
+		MkpathFailed,
+		SaveFailed
+	};
+
 	explicit CertificateGenerator(QObject *parent = 0);
 	~CertificateGenerator();
 	void generate();
@@ -18,7 +24,7 @@ public:
 signals:
 	void privateKeyGenerated();
 	void finished();
-	void unsupportedOperation();
+	void errorOccured(CertificateGenerator::ErrorType type, const QString &msg);
 
 public slots:
 	void generateCertificate();
@@ -34,6 +40,8 @@ private:
 	QCA::DLGroupSet m_set;
 	QCA::DLGroup m_group;
 	QCA::Certificate m_cert;
+
+	bool mkpath(QString &path);
 
 };
 
