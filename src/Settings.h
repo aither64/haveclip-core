@@ -44,11 +44,11 @@ public:
 	QString networkName();
 	void setNetworkName(QString name);
 
-	Q_PROPERTY(quint32 maxSendSize READ maxSendSize WRITE setMaxSendSize)
+	Q_PROPERTY(quint32 maxSendSize READ maxSendSize WRITE setMaxSendSize NOTIFY maxSendSizeChanged)
 	quint32 maxSendSize() const;
 	void setMaxSendSize(quint32 size);
 
-	Q_PROPERTY(quint32 maxReceiveSize READ maxReceiveSize WRITE setMaxReceiveSize)
+	Q_PROPERTY(quint32 maxReceiveSize READ maxReceiveSize WRITE setMaxReceiveSize NOTIFY maxReceiveSizeChanged)
 	quint32 maxReceiveSize() const;
 	void setMaxReceiveSize(quint32 size);
 
@@ -56,7 +56,7 @@ public:
 	bool isHistoryEnabled() const;
 	void setHistoryEnabled(bool enabled);
 
-	Q_PROPERTY(int historySize READ historySize WRITE setHistorySize)
+	Q_PROPERTY(int historySize READ historySize WRITE setHistorySize NOTIFY historySizeChanged)
 	int historySize() const;
 	void setHistorySize(int size);
 
@@ -84,18 +84,18 @@ public:
 	Communicator::Encryption encryption() const;
 	void setEncryption(Communicator::Encryption enc);
 
-	Q_PROPERTY(QString certificatePath READ certificatePath WRITE setCertificatePath)
+	Q_PROPERTY(QString certificatePath READ certificatePath WRITE setCertificatePath NOTIFY certificatePathChanged)
 	QString certificatePath();
 	void setCertificatePath(QString cert);
 
-	Q_PROPERTY(QSslCertificate certificate READ certificate)
+	Q_PROPERTY(QSslCertificate certificate READ certificate NOTIFY certificateChanged)
 	QSslCertificate& certificate();
 
-	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath)
+	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath NOTIFY privateKeyPathChanged())
 	QString privateKeyPath();
 	void setPrivateKeyPath(QString key);
 
-	Q_PROPERTY(QSslKey privateKey READ privateKey)
+	Q_PROPERTY(QSslKey privateKey READ privateKey NOTIFY privateKeyChanged)
 	QSslKey& privateKey();
 
 	QList<Node> nodes();
@@ -113,13 +113,20 @@ signals:
 	void hostAndPortChanged(QString host, quint16 port);
 	void allowAutoDiscoveryChanged(bool allow);
 	void networkNameChanged(QString name);
+	void maxSendSizeChanged(quint32 size);
+	void maxReceiveSizeChanged(quint32 size);
 	void historyEnabledChanged(bool enabled);
+	void historySizeChanged(int size);
 	void saveHistoryChanged(bool save);
 	void syncEnabledChanged(bool enabled);
 	void sendEnabledChanged(bool enabled);
 	void recvEnabledChanged(bool enabled);
 	void syncModeChanged(ClipboardManager::SynchronizeMode mode);
 	void encryptionChanged(Communicator::Encryption encryption);
+	void certificatePathChanged();
+	void certificateChanged(const QSslCertificate &certificate);
+	void privateKeyPathChanged();
+	void privateKeyChanged(const QSslKey &key);
 	void nodeUpdated(const Node &node);
 	void nodeAdded(const Node &node);
 

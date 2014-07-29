@@ -48,6 +48,9 @@ QString Settings::host()
 
 void Settings::setHost(QString host)
 {
+	if(m_host == host)
+		return;
+
 	m_host = host;
 
 	emit hostChanged(host);
@@ -60,6 +63,9 @@ quint16 Settings::port()
 
 void Settings::setPort(quint16 port)
 {
+	if(m_port == port)
+		return;
+
 	m_port = port;
 
 	emit portChanged(port);
@@ -83,6 +89,9 @@ bool Settings::allowAutoDiscovery() const
 
 void Settings::setAllowAutoDiscovery(bool allow)
 {
+	if(m_allowAutoDiscovery == allow)
+		return;
+
 	m_allowAutoDiscovery = allow;
 
 	emit allowAutoDiscoveryChanged(allow);
@@ -106,17 +115,27 @@ quint32 Settings::maxSendSize() const
 
 void Settings::setMaxSendSize(quint32 size)
 {
+	if(m_maxSendSize == size)
+		return;
+
 	m_maxSendSize = size;
+
+	emit maxSendSizeChanged(size);
 }
 
 quint32 Settings::maxReceiveSize() const
-{
+{   
 	return m_maxRecvSize;
 }
 
 void Settings::setMaxReceiveSize(quint32 size)
 {
+	if(m_maxRecvSize == size)
+		return;
+
 	m_maxRecvSize = size;
+
+	emit maxReceiveSizeChanged(size);
 }
 
 bool Settings::isHistoryEnabled() const
@@ -126,7 +145,12 @@ bool Settings::isHistoryEnabled() const
 
 void Settings::setHistoryEnabled(bool enabled)
 {
+	if(m_historyEnabled == enabled)
+		return;
+
 	m_historyEnabled = enabled;
+
+	emit historyEnabledChanged(enabled);
 }
 
 int Settings::historySize() const
@@ -136,7 +160,12 @@ int Settings::historySize() const
 
 void Settings::setHistorySize(int size)
 {
+	if(m_historySize == size)
+		return;
+
 	m_historySize = size;
+
+	emit historySizeChanged(size);
 }
 
 bool Settings::saveHistory() const
@@ -146,6 +175,9 @@ bool Settings::saveHistory() const
 
 void Settings::setSaveHistory(bool save)
 {
+	if(m_saveHistory == save)
+		return;
+
 	m_saveHistory = save;
 
 	emit saveHistoryChanged(save);
@@ -158,6 +190,9 @@ bool Settings::isSyncEnabled() const
 
 void Settings::setSyncEnabled(bool enabled)
 {
+	if(m_syncEnabled == enabled)
+		return;
+
 	m_syncEnabled = enabled;
 
 	emit syncEnabledChanged(enabled);
@@ -200,6 +235,9 @@ Communicator::Encryption Settings::encryption() const
 
 void Settings::setEncryption(Communicator::Encryption enc)
 {
+	if(m_encryption == enc)
+		return;
+
 	m_encryption = enc;
 
 	emit encryptionChanged(enc);
@@ -212,7 +250,12 @@ QString Settings::certificatePath()
 
 void Settings::setCertificatePath(QString cert)
 {
+	if(m_certificatePath == cert)
+		return;
+
 	m_certificatePath = cert;
+
+	emit certificatePathChanged();
 
 	QList<QSslCertificate> certs = QSslCertificate::fromPath(cert);
 
@@ -221,6 +264,7 @@ void Settings::setCertificatePath(QString cert)
 	else
 		m_certificate = certs.first();
 
+	emit certificateChanged(m_certificate);
 }
 
 QSslCertificate& Settings::certificate()
@@ -235,7 +279,12 @@ QString Settings::privateKeyPath()
 
 void Settings::setPrivateKeyPath(QString key)
 {
+	if(m_privateKeyPath == key)
+		return;
+
 	m_privateKeyPath = key;
+
+	emit privateKeyPathChanged();
 
 	QFile f(key);
 
@@ -248,6 +297,8 @@ void Settings::setPrivateKeyPath(QString key)
 	m_privateKey = QSslKey(&f, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey);
 
 	f.close();
+
+	emit privateKeyChanged(m_privateKey);
 }
 
 QSslKey& Settings::privateKey()

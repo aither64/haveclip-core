@@ -2,8 +2,6 @@
 - Node status
   - show if the node is ok, offline or misconfigured
 - Generate certificate on first launch
-- Settings
-  - Security tab
 - Sync
   - Honor the MIME type filters when sending clipboard
 

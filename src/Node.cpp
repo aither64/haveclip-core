@@ -115,6 +115,11 @@ void Node::setId()
 
 void Node::update(const Node &other)
 {
+	m_name = other.m_name;
+	m_host = other.m_host;
+	m_port = other.m_port;
+	m_send = other.m_send;
+	m_recv = other.m_recv;
 	m_certificate = other.certificate();
 }
 

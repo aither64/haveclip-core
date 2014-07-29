@@ -69,6 +69,7 @@ void Receiver::conversationSignals()
 void Receiver::interceptVerificationRequest(QString name, quint16 port)
 {
 	Node n;
+	n.setId();
 	n.setName(name);
 	n.setHost(peerAddress().toString());
 	n.setPort(port);

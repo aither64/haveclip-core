@@ -33,9 +33,15 @@ public:
 		Refused
 	};
 
+	Q_ENUMS(CodeValidity)
+
 	explicit ConnectionManager(QObject *parent = 0);
+
+	Q_PROPERTY(QString securityCode READ securityCode NOTIFY securityCodeChanged)
 	QString securityCode();
+
 	Node& verifiedNode();
+
 	int verifyTries();
 	AutoDiscovery* autoDiscovery();
 	void startReceiving();
@@ -53,11 +59,13 @@ signals:
 	void verificationFinished(ConnectionManager::CodeValidity validity);
 	void verificationFailed(Communicator::CommunicationStatus status);
 	void clipboardUpdated(ClipboardContainer *cont);
+	void securityCodeChanged(QString code);
 
 public slots:
-	void verifyConnection(const Node &n);
-	void provideSecurityCode(QString code);
-	void cancelVerification();
+	Q_INVOKABLE void verifyConnection(QString host, quint16 port);
+	Q_INVOKABLE void verifyConnection(const Node &n);
+	Q_INVOKABLE void provideSecurityCode(QString code);
+	Q_INVOKABLE void cancelVerification();
 
 private:
 	AutoDiscovery *m_autoDiscovery;

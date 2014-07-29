@@ -55,6 +55,16 @@ void ConnectionManager::stopReceiving()
 	close();
 }
 
+void ConnectionManager::verifyConnection(QString host, quint16 port)
+{
+	Node n;
+	n.setId();
+	n.setHost(host);
+	n.setPort(port);
+
+	verifyConnection(n);
+}
+
 void ConnectionManager::verifyConnection(const Node &n)
 {
 	m_verifiedNode = n;
@@ -220,6 +230,7 @@ void ConnectionManager::introduceComplete(QString name, QSslCertificate cert)
 	m_securityCode = generateSecurityCode(6);
 
 	emit introductionFinished();
+	emit securityCodeChanged(m_securityCode);
 }
 
 void ConnectionManager::introduceFinish(Communicator::CommunicationStatus status)
