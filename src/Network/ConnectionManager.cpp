@@ -55,6 +55,18 @@ void ConnectionManager::stopReceiving()
 	close();
 }
 
+void ConnectionManager::verifyConnection(unsigned int nodeId)
+{
+	foreach(const Node &n, Settings::get()->nodes())
+	{
+		if(n.id() == nodeId)
+		{
+			verifyConnection(n);
+			break;
+		}
+	}
+}
+
 void ConnectionManager::verifyConnection(QString host, quint16 port)
 {
 	Node n;
