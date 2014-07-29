@@ -62,6 +62,7 @@ signals:
 	void securityCodeChanged(QString code);
 
 public slots:
+	Q_INVOKABLE void verifyConnection(unsigned int nodeId);
 	Q_INVOKABLE void verifyConnection(QString host, quint16 port);
 	Q_INVOKABLE void verifyConnection(const Node &n);
 	Q_INVOKABLE void provideSecurityCode(QString code);

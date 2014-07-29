@@ -2,11 +2,20 @@
 #define SETTINGS_H
 
 #define SETTINGS_NETWORK "Network"
+#define SETTINGS_NETWORK_LIMITS "Network/Limits"
 #define SETTINGS_HISTORY "History"
 #define SETTINGS_SYNC "Sync"
 #define SETTINGS_SECURITY "Security"
 #define SETTINGS_POOL "Pool"
 #define SETTINGS_NODES "Pool/Nodes"
+
+#if defined(MER_SAILFISH)
+#define SETTINGS_DEFAULT_MAX_SEND_SIZE 5*1024*1024
+#define SETTINGS_DEFAULT_MAX_RECV_SIZE 5*1024*1024
+#else
+#define SETTINGS_DEFAULT_MAX_SEND_SIZE 100*1024*1024
+#define SETTINGS_DEFAULT_MAX_RECV_SIZE 100*1024*1024
+#endif
 
 #include <QObject>
 #include <QSettings>
@@ -23,8 +32,11 @@ class Settings : public QObject
 {
 	Q_OBJECT
 public:
+	~Settings();
 	static Settings* create(QObject *parent = 0);
 	static Settings* get();
+
+	void init();
 
 	Q_PROPERTY(QString host READ host WRITE setHost NOTIFY hostChanged)
 	QString host();
@@ -108,6 +120,7 @@ public:
 	Q_INVOKABLE void reset();
 
 signals:
+	void firstStart();
 	void hostChanged(QString host);
 	void portChanged(quint16 port);
 	void hostAndPortChanged(QString host, quint16 port);
@@ -157,7 +170,6 @@ private:
 	unsigned int m_nextNodeId;
 
 	Settings(QObject *parent = 0);
-	~Settings();
 	void load();
 	void loadNodes();
 	void saveNodes();
