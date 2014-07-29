@@ -45,10 +45,10 @@ void V2Migration::up()
 
 	// Change old and invalid certificate setting
 	if(m_settings->value("Connection/Certificate").toString() == "certs/haveclip.crt")
-		m_settings->setValue("Network/Certificate", storagePath() + "/haveclip.crt");
+		m_settings->setValue("Connection/Certificate", storagePath() + "/haveclip.crt");
 
 	if(m_settings->value("Connection/PrivateKey").toString() == "certs/haveclip.key")
-		m_settings->setValue("Network/PrivateKey", storagePath() + "/haveclip.key");
+		m_settings->setValue("Connection/PrivateKey", storagePath() + "/haveclip.key");
 
 	// Split Connection to Network and Security
 	m_settings->setValue("Network/Host", m_settings->value("Connection/Host"));
