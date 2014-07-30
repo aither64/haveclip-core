@@ -202,6 +202,12 @@ void Settings::setSyncEnabled(bool enabled)
 
 	m_syncEnabled = enabled;
 
+	m_settings->beginGroup(SETTINGS_SYNC);
+	{
+		m_settings->setValue("Enable", m_syncEnabled);
+	}
+	m_settings->endGroup();
+
 	emit syncEnabledChanged(enabled);
 }
 
@@ -216,6 +222,13 @@ void Settings::setSendEnabled(bool enabled)
 		return;
 
 	m_sendEnabled = enabled;
+
+	m_settings->beginGroup(SETTINGS_SYNC);
+	{
+		m_settings->setValue("Send", m_sendEnabled);
+	}
+	m_settings->endGroup();
+
 	emit sendEnabledChanged(enabled);
 }
 
@@ -230,6 +243,13 @@ void Settings::setRecvEnabled(bool enabled)
 		return;
 
 	m_recvEnabled = enabled;
+
+	m_settings->beginGroup(SETTINGS_SYNC);
+	{
+		m_settings->setValue("Receive", m_recvEnabled);
+	}
+	m_settings->endGroup();
+
 	emit recvEnabledChanged(enabled);
 }
 
