@@ -130,21 +130,31 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 	}
 }
 
-bool ConnectionManager::isAuthenticated(Communicator::Role role, ConnectionManager::AuthMode mode, QSslCertificate &cert)
+bool ConnectionManager::isAuthenticated(Communicator::Role role, ConnectionManager::AuthMode mode, QSslCertificate &cert, QHostAddress peerAddr)
 {
+	Settings *s = Settings::get();
+	QString addr = peerAddr.toString();
+
 	switch(mode)
 	{
 	case NoAuth:
 		return true;
 
 	case Introduced:
+		if(s->encryption() == Communicator::None)
+			return m_verifiedNode.host() == addr;
+
 		return m_verifiedNode.certificate() == cert;
 
 	case Verified:
-		foreach(const Node &n, Settings::get()->nodes())
+		foreach(const Node &n, s->nodes())
 		{
-			if(n.certificate() == cert)
+			if(s->encryption() == Communicator::None)
 			{
+				if(n.host() == addr)
+					return true;
+
+			} else if(n.certificate() == cert) {
 				if(
 					( role == Communicator::Receive && n.isReceiveEnabled() )
 					||

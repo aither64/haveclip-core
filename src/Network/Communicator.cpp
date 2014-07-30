@@ -212,7 +212,7 @@ void Communicator::readHeader()
 			return;
 		}
 
-		if(!m_conman->isAuthenticated(Communicator::Receive, m_conversation->authenticate(), m_peerCertificate))
+		if(!m_conman->isAuthenticated(Communicator::Receive, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
 		{
 			qDebug() << "Authentication failed";
 			emit finished(NotAuthenticated);
@@ -291,7 +291,7 @@ void Communicator::onEncrypted()
 {
 	m_peerCertificate = peerCertificate();
 
-	if(m_conversation && !m_conman->isAuthenticated(Communicator::Send, m_conversation->authenticate(), m_peerCertificate))
+	if(m_conversation && !m_conman->isAuthenticated(Communicator::Send, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
 	{
 		qDebug() << "Authentication failed" << m_conversation->type() << m_conversation->authenticate();
 		emit finished(NotAuthenticated);

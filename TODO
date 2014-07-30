@@ -1,9 +1,11 @@
 * v0.13.0
-- Node status
-  - show if the node is ok, offline or misconfigured
-- Generate certificate on first launch
-- Sync
-  - Honor the MIME type filters when sending clipboard
+- Core
+  - Node status
+    - show if the node is ok, offline or misconfigured
+  - Sync
+    - Honor the MIME type filters when sending clipboard
+
+- Sail
 
 * Next version
 - Node edit:
