@@ -391,36 +391,6 @@ void ClipboardManager::ensureClipboardContent(ClipboardItem *content, QClipboard
 //	}
 }
 
-void ClipboardManager::toggleSharedClipboard(bool enabled)
-{
-	toggleClipboardSending(enabled, true);
-	toggleClipboardReceiving(enabled, true);
-
-	Settings::get()->setSyncEnabled(enabled);
-}
-
-void ClipboardManager::toggleClipboardSending(bool enabled, bool masterChange)
-{
-	if(masterChange)
-		return;
-
-	Settings::get()->setSendEnabled(enabled);
-}
-
-void ClipboardManager::toggleClipboardReceiving(bool enabled, bool masterChange)
-{
-	if(enabled && !shouldListen())
-		m_conman->startReceiving();
-
-	else if(!enabled && shouldListen())
-		m_conman->stopReceiving();
-
-	if(!masterChange)
-	{
-		Settings::get()->setRecvEnabled(enabled);
-	}
-}
-
 QMimeData* ClipboardManager::copyMimeData(const QMimeData *mimeReference)
 {
 	QMimeData *mimeCopy = new QMimeData();

@@ -212,7 +212,11 @@ bool Settings::isSendEnabled() const
 
 void Settings::setSendEnabled(bool enabled)
 {
+	if(m_sendEnabled == enabled)
+		return;
+
 	m_sendEnabled = enabled;
+	emit sendEnabledChanged(enabled);
 }
 
 bool Settings::isRecvEnabled() const
@@ -222,7 +226,11 @@ bool Settings::isRecvEnabled() const
 
 void Settings::setRecvEnabled(bool enabled)
 {
+	if(m_recvEnabled == enabled)
+		return;
+
 	m_recvEnabled = enabled;
+	emit recvEnabledChanged(enabled);
 }
 
 ClipboardManager::SynchronizeMode Settings::syncMode() const

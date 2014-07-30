@@ -23,6 +23,9 @@ ConnectionManager::ConnectionManager(QObject *parent) :
 	connect(s, SIGNAL(hostChanged(QString)), this, SLOT(hostAndPortChanged()));
 	connect(s, SIGNAL(portChanged(quint16)), this, SLOT(hostAndPortChanged()));
 	connect(s, SIGNAL(hostAndPortChanged(QString,quint16)), this, SLOT(hostAndPortChanged()));
+
+	connect(s, SIGNAL(syncEnabledChanged(bool)), this, SLOT(receiveEnabledChange(bool)));
+	connect(s, SIGNAL(recvEnabledChanged(bool)), this, SLOT(receiveEnabledChange(bool)));
 }
 
 QString ConnectionManager::securityCode()
@@ -163,6 +166,17 @@ void ConnectionManager::hostAndPortChanged()
 		close();
 
 	startListening();
+}
+
+void ConnectionManager::receiveEnabledChange(bool enabled)
+{
+	enabled = enabled && Settings::get()->isRecvEnabled();
+
+	if(enabled && !isListening())
+		startReceiving();
+
+	else if(!enabled && isListening())
+		stopReceiving();
 }
 
 void ConnectionManager::incomingConnection(int handle)

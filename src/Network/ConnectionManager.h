@@ -82,6 +82,7 @@ private:
 
 private slots:
 	void hostAndPortChanged();
+	void receiveEnabledChange(bool enabled);
 	void incomingConnection(int handle);
 	void listenOnHost(const QHostInfo &m_host);
 	void introduceComplete(QString name, QSslCertificate cert);

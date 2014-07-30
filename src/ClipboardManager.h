@@ -64,9 +64,6 @@ public slots:
 	void delayedStart(int msecs);
 	void jumpTo(ClipboardItem *content);
 	void jumpToItemAt(int index);
-	void toggleSharedClipboard(bool enabled);
-	void toggleClipboardSending(bool enabled, bool masterChange = false);
-	void toggleClipboardReceiving(bool enabled, bool masterChange = false);
 
 private:
 	static ClipboardManager *m_instance;
