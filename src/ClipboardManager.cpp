@@ -150,7 +150,12 @@ bool ClipboardManager::isReceivingEnabled()
 
 void ClipboardManager::distributeCurrentClipboard()
 {
-	distributeClipboard(m_history->currentItem());
+	ClipboardItem *it = m_history->currentItem();
+
+	if(!it)
+		return;
+
+	distributeClipboard(it);
 }
 
 qint32 ClipboardManager::supportedModes()
