@@ -137,6 +137,8 @@ void Communicator::receiveMessage()
 
 	buffer.remove(0, msgLen);
 
+	qDebug() << "Received message" << msgLen;
+
 	haveHeader = false;
 	dataRead -= msgLen;
 	msgLen = 0;
@@ -259,8 +261,8 @@ void Communicator::continueConversation()
 {
 	if(m_conversation->isDone())
 	{
-		disconnectFromHost();
 		m_runPostDone = true;
+		disconnectFromHost();
 
 	} else if(m_conversation->currentRole() == Communicator::Send) {
 		sendMessage();
@@ -283,6 +285,14 @@ void Communicator::onError(QAbstractSocket::SocketError socketError)
 
 void Communicator::onConnect()
 {
+	if(encryption == Communicator::None
+		&& !m_conman->isAuthenticated(Communicator::Send, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
+	{
+		qDebug() << "Authentication failed" << m_conversation->type() << m_conversation->authenticate();
+		emit finished(NotAuthenticated);
+		this->deleteLater();
+	}
+
 	if(m_conversation->currentRole() == Communicator::Send)
 		sendMessage();
 }
@@ -323,7 +333,7 @@ void Communicator::onRead()
 
 void Communicator::onDisconnect()
 {
-	qDebug() << "Communicator::onDisconnect";
+	qDebug() << "Communicator::onDisconnect" << m_runPostDone;
 
 	if(m_runPostDone)
 		m_conversation->postDone();
