@@ -19,6 +19,8 @@
 
 #include "Communicator.h"
 
+#include <QTimer>
+
 #include "../Version.h"
 #include "../Settings.h"
 #include "Conversations/Introduction.h"
@@ -264,6 +266,14 @@ void Communicator::continueConversation()
 		m_runPostDone = true;
 		disconnectFromHost();
 
+#if defined(MER_SAILFISH)
+		if(encryption == Communicator::None && state() != QAbstractSocket::ClosingState)
+		{
+			QTimer::singleShot(500, this, SLOT(onDisconnect()));
+			return;
+		}
+#endif
+
 	} else if(m_conversation->currentRole() == Communicator::Send) {
 		sendMessage();
 
@@ -333,7 +343,7 @@ void Communicator::onRead()
 
 void Communicator::onDisconnect()
 {
-	qDebug() << "Communicator::onDisconnect" << m_runPostDone;
+	qDebug() << "Communicator::onDisconnect";
 
 	if(m_runPostDone)
 		m_conversation->postDone();
