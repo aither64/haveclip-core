@@ -3,18 +3,33 @@
 
 #define SETTINGS_NETWORK "Network"
 #define SETTINGS_NETWORK_LIMITS "Network/Limits"
+#define SETTINGS_NETWORK_FILTERS "Network/Filters"
 #define SETTINGS_HISTORY "History"
 #define SETTINGS_SYNC "Sync"
 #define SETTINGS_SECURITY "Security"
 #define SETTINGS_POOL "Pool"
 #define SETTINGS_NODES "Pool/Nodes"
 
-#if defined(MER_SAILFISH)
-#define SETTINGS_DEFAULT_MAX_SEND_SIZE 5*1024*1024
-#define SETTINGS_DEFAULT_MAX_RECV_SIZE 5*1024*1024
-#else
+#if defined(MER_SAILFISH) // Sailfish default settings
+#define SETTINGS_DEFAULT_MAX_SEND_SIZE (5*1024*1024)
+#define SETTINGS_DEFAULT_MAX_RECV_SIZE (5*1024*1024)
+
+#define SETTINGS_DEFAULT_FILTER_SEND_MODE Settings::Accept
+#define SETTINGS_DEFAULT_FILTER_SEND_FILTERS (QStringList() << "text/.+")
+
+#define SETTINGS_DEFAULT_FILTER_RECV_MODE Settings::Accept
+#define SETTINGS_DEFAULT_FILTER_RECV_FILTERS (QStringList() << "text/.+")
+
+#else // All other platforms
+
 #define SETTINGS_DEFAULT_MAX_SEND_SIZE 100*1024*1024
 #define SETTINGS_DEFAULT_MAX_RECV_SIZE 100*1024*1024
+
+#define SETTINGS_DEFAULT_FILTER_SEND_MODE Settings::Except
+#define SETTINGS_DEFAULT_FILTER_SEND_FILTERS (QStringList())
+
+#define SETTINGS_DEFAULT_FILTER_RECV_MODE Settings::Except
+#define SETTINGS_DEFAULT_FILTER_RECV_FILTERS (QStringList())
 #endif
 
 #include <QObject>
@@ -32,6 +47,13 @@ class Settings : public QObject
 {
 	Q_OBJECT
 public:
+	enum MimeFilterMode {
+		Accept=0,
+		Except
+	};
+
+	Q_ENUMS(MimeFilterMode)
+
 	~Settings();
 	static Settings* create(QObject *parent = 0);
 	static Settings* get();
@@ -103,12 +125,28 @@ public:
 	Q_PROPERTY(QSslCertificate certificate READ certificate NOTIFY certificateChanged)
 	QSslCertificate& certificate();
 
-	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath NOTIFY privateKeyPathChanged())
+	Q_PROPERTY(QString privateKeyPath READ privateKeyPath WRITE setPrivateKeyPath NOTIFY privateKeyPathChanged)
 	QString privateKeyPath();
 	void setPrivateKeyPath(QString key);
 
 	Q_PROPERTY(QSslKey privateKey READ privateKey NOTIFY privateKeyChanged)
 	QSslKey& privateKey();
+
+	Q_PROPERTY(Settings::MimeFilterMode sendFilterMode READ sendFilterMode WRITE setSendFilterMode NOTIFY sendFilterModeChanged)
+	MimeFilterMode sendFilterMode() const;
+	void setSendFilterMode(MimeFilterMode mode);
+
+	Q_PROPERTY(QStringList sendFilters READ sendFilters WRITE setSendFilters NOTIFY sendFiltersChanged)
+	QStringList sendFilters() const;
+	void setSendFilters(QStringList filters);
+
+	Q_PROPERTY(Settings::MimeFilterMode receiveFilterMode READ receiveFilterMode WRITE setReceiveFilterMode NOTIFY receiveFilterModeChanged)
+	MimeFilterMode receiveFilterMode() const;
+	void setReceiveFilterMode(MimeFilterMode mode);
+
+	Q_PROPERTY(QStringList receiveFilters READ receiveFilters WRITE setReceiveFilters NOTIFY receiveFiltersChanged)
+	QStringList receiveFilters() const;
+	void setReceiveFilters(QStringList filters);
 
 	QList<Node> nodes();
 	void setNodes(QList<Node> &nodes);
@@ -142,6 +180,10 @@ signals:
 	void certificateChanged(const QSslCertificate &certificate);
 	void privateKeyPathChanged();
 	void privateKeyChanged(const QSslKey &key);
+	void sendFilterModeChanged();
+	void sendFiltersChanged();
+	void receiveFilterModeChanged();
+	void receiveFiltersChanged();
 	void nodeUpdated(const Node &node);
 	void nodeAdded(const Node &node);
 
@@ -170,6 +212,10 @@ private:
 	ClipboardManager::SynchronizeMode m_syncMode;
 	QList<Node> m_nodes;
 	unsigned int m_nextNodeId;
+	MimeFilterMode m_sendFilterMode;
+	QStringList m_sendFilters;
+	MimeFilterMode m_recvFilterMode;
+	QStringList m_recvFilters;
 
 	Settings(QObject *parent = 0);
 	void load();

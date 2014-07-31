@@ -322,6 +322,62 @@ QSslKey& Settings::privateKey()
 	return m_privateKey;
 }
 
+Settings::MimeFilterMode Settings::sendFilterMode() const
+{
+	return m_sendFilterMode;
+}
+
+void Settings::setSendFilterMode(Settings::MimeFilterMode mode)
+{
+	if(m_sendFilterMode == mode)
+		return;
+
+	m_sendFilterMode = mode;
+	emit sendFilterModeChanged();
+}
+
+QStringList Settings::sendFilters() const
+{
+	return m_sendFilters;
+}
+
+void Settings::setSendFilters(QStringList filters)
+{
+	if(m_sendFilters == filters)
+		return;
+
+	m_sendFilters = filters;
+	emit sendFiltersChanged();
+}
+
+Settings::MimeFilterMode Settings::receiveFilterMode() const
+{
+	return m_recvFilterMode;
+}
+
+void Settings::setReceiveFilterMode(Settings::MimeFilterMode mode)
+{
+	if(m_recvFilterMode == mode)
+		return;
+
+	m_recvFilterMode = mode;
+	emit receiveFilterModeChanged();
+}
+
+QStringList Settings::receiveFilters() const
+{
+	return m_recvFilters;
+}
+
+void Settings::setReceiveFilters(QStringList filters)
+{
+	if(m_recvFilters == filters)
+		return;
+
+	m_recvFilters = filters;
+	emit receiveFiltersChanged();
+}
+
 QList<Node> Settings::nodes()
 {
 	return m_nodes;
@@ -379,14 +435,25 @@ void Settings::save()
 		// Auto discovery
 		m_settings->setValue("AutoDiscovery/Allow", m_allowAutoDiscovery);
 		m_settings->setValue("NetworkName", m_networkName);
+	}
+	m_settings->endGroup();
 
-		// Limits
-		m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
-		{
-			m_settings->setValue("MaxSendSize", m_maxSendSize);
-			m_settings->setValue("MaxReceiveSize", m_maxRecvSize);
-		}
-		m_settings->endGroup();
+	// Limits
+	m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
+	{
+		m_settings->setValue("MaxSendSize", m_maxSendSize);
+		m_settings->setValue("MaxReceiveSize", m_maxRecvSize);
+	}
+	m_settings->endGroup();
+
+	// Filters
+	m_settings->beginGroup(SETTINGS_NETWORK_FILTERS);
+	{
+		m_settings->setValue("SendMode", m_sendFilterMode);
+		m_settings->setValue("SendFilters", m_sendFilters);
+
+		m_settings->setValue("RecvMode", m_recvFilterMode);
+		m_settings->setValue("RecvFilters", m_recvFilters);
 	}
 	m_settings->endGroup();
 
@@ -451,14 +518,25 @@ void Settings::load()
 		// Auto discovery
 		m_allowAutoDiscovery = m_settings->value("AutoDiscovery/Allow", true).toBool();
 		m_networkName = m_settings->value("NetworkName", QHostInfo::localHostName()).toString();
+	}
+	m_settings->endGroup();
 
-		// Limits
-		m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
-		{
-			m_maxSendSize = m_settings->value("MaxSendSize", SETTINGS_DEFAULT_MAX_SEND_SIZE).toUInt();
-			m_maxRecvSize = m_settings->value("MaxReceiveSize", SETTINGS_DEFAULT_MAX_RECV_SIZE).toUInt();
-		}
-		m_settings->endGroup();
+	// Limits
+	m_settings->beginGroup(SETTINGS_NETWORK_LIMITS);
+	{
+		m_maxSendSize = m_settings->value("MaxSendSize", SETTINGS_DEFAULT_MAX_SEND_SIZE).toUInt();
+		m_maxRecvSize = m_settings->value("MaxReceiveSize", SETTINGS_DEFAULT_MAX_RECV_SIZE).toUInt();
+	}
+	m_settings->endGroup();
+
+	// Filters
+	m_settings->beginGroup(SETTINGS_NETWORK_FILTERS);
+	{
+		m_sendFilterMode = (Settings::MimeFilterMode) m_settings->value("SendMode", SETTINGS_DEFAULT_FILTER_SEND_MODE).toInt();
+		m_sendFilters = m_settings->value("SendFilters", SETTINGS_DEFAULT_FILTER_SEND_FILTERS).toStringList();
+
+		m_recvFilterMode = (Settings::MimeFilterMode) m_settings->value("RecvMode", SETTINGS_DEFAULT_FILTER_RECV_MODE).toInt();
+		m_recvFilters = m_settings->value("RecvFilters", SETTINGS_DEFAULT_FILTER_RECV_FILTERS).toStringList();
 	}
 	m_settings->endGroup();
 

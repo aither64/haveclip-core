@@ -57,7 +57,10 @@ void Sender::verify(QString code)
 
 void Sender::distribute(ClipboardItem *content)
 {
-	m_conversation = new Conversations::ClipboardUpdate(Communicator::Send, content, this);
+	Conversations::ClipboardUpdate *conv = new Conversations::ClipboardUpdate(Communicator::Send, content, this);
+	conv->setFilters(Settings::get()->sendFilterMode(), Settings::get()->sendFilters());
+
+	m_conversation = conv;
 
 	connectToPeer();
 }

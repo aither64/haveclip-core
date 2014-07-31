@@ -19,6 +19,8 @@
 
 #include "ClipboardUpdate.h"
 #include "../Commands/ClipboardUpdateReady.h"
+#include "../Commands/ClipboardUpdateConfirm.h"
+#include "../Commands/ClipboardUpdateSend.h"
 #include "../../ClipboardManager.h"
 
 using namespace Conversations;
@@ -33,6 +35,15 @@ ClipboardUpdate::ClipboardUpdate(Communicator::Role r, ClipboardContainer *cont,
 Conversation::Type ClipboardUpdate::type() const
 {
 	return Conversation::ClipboardUpdate;
+}
+
+void ClipboardUpdate::setFilters(Settings::MimeFilterMode mode, const QStringList &filters)
+{
+	m_filterMode = mode;
+	m_filters = filters;
+
+	if(m_role == Communicator::Receive)
+		static_cast<Commands::ClipboardUpdateConfirm*>(m_cmds[1])->setFilters(mode, filters);
 }
 
 void ClipboardUpdate::nextCommand(BaseCommand::Type lastCmd, int index)
@@ -67,6 +78,21 @@ void ClipboardUpdate::nextCommand(BaseCommand::Type lastCmd, int index)
 		{
 			addCommand(BaseCommand::ClipboardUpdateSend, m_role);
 			addCommand(BaseCommand::Confirm, reverse(m_role));
+
+			Commands::ClipboardUpdateConfirm *confirm = static_cast<Commands::ClipboardUpdateConfirm*>(m_cmds[1]);
+			Commands::ClipboardUpdateSend *send = static_cast<Commands::ClipboardUpdateSend*>(m_cmds[2]);
+
+			// Sender sends intersection of his send filters and receiver's accept filters
+			// Receiver receives only his receive filters
+
+			if(m_role == Communicator::Send)
+			{
+				send->setSendFilters(m_filterMode, m_filters);
+				send->setRecvFilters(confirm->filterMode(), confirm->filters());
+
+			} else { // Receive
+				send->setRecvFilters(m_filterMode, m_filters);
+			}
 		}
 
 		break;

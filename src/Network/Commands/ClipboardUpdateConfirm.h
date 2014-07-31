@@ -21,6 +21,7 @@
 #define CLIPBOARDUPDATECONFIRM_H
 
 #include "../Command.h"
+#include "../../Settings.h"
 
 namespace Commands {
 	class ClipboardUpdateConfirm : public BaseCommand
@@ -30,6 +31,13 @@ namespace Commands {
 		virtual Type type() const;
 		virtual void receive(QDataStream &ds);
 		virtual void send(QDataStream &ds);
+		Settings::MimeFilterMode filterMode() const;
+		const QStringList& filters() const;
+		void setFilters(Settings::MimeFilterMode mode, const QStringList &filters);
+
+	private:
+		Settings::MimeFilterMode m_mode;
+		QStringList m_filters;
 	};
 }
 

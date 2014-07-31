@@ -204,10 +204,14 @@ void Communicator::readHeader()
 			m_conversation = new Conversations::Verification(Communicator::Receive, 0, this);
 			break;
 
-		case Conversation::ClipboardUpdate:
+		case Conversation::ClipboardUpdate: {
 			qDebug() << "Initiating conversation ClipboardUpdate";
-			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
+			Conversations::ClipboardUpdate *conv = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
+			conv->setFilters(Settings::get()->receiveFilterMode(), Settings::get()->receiveFilters());
+
+			m_conversation = conv;
 			break;
+		}
 
 		default:
 			qDebug() << "Unknown conversation" << convType;

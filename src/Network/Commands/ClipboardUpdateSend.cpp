@@ -41,14 +41,22 @@ void ClipboardUpdateSend::receive(QDataStream &ds)
 	QStringList formats;
 	ds >> formats;
 
+	initRx(m_recvFilters, &m_recvRx);
+
 	QMimeData *mimedata = new QMimeData();
 
-	foreach(QString f, formats)
+	foreach(const QString &f, formats)
 	{
 		QByteArray tmp;
 		ds >> tmp;
 
-		mimedata->setData(f, tmp);
+		if(shouldReceive(f))
+		{
+			qDebug() << "Receive" << f;
+			mimedata->setData(f, tmp);
+		} else {
+			qDebug() << "Drop" << f;
+		}
 	}
 
 	ClipboardItem *item = new ClipboardItem(
@@ -66,10 +74,26 @@ void ClipboardUpdateSend::send(QDataStream &ds)
 {
 	ClipboardItem *item = static_cast<ClipboardItem*>(m_cont);
 
-	ds << (qint32) item->mode;
-	ds << item->mimeData()->formats();
+	initRx(m_sendFilters, &m_sendRx);
+	initRx(m_recvFilters, &m_recvRx);
 
-	foreach(QString mimetype, item->mimeData()->formats())
+	QStringList formatsToSend;
+
+	foreach(const QString &f, item->mimeData()->formats())
+	{
+		if(shouldSend(f))
+		{
+			qDebug() << "Send" << f;
+			formatsToSend << f;
+		} else {
+			qDebug() << "Drop" << f;
+		}
+	}
+
+	ds << (qint32) item->mode;
+	ds << formatsToSend;
+
+	foreach(const QString &mimetype, formatsToSend)
 	{
 		if(mimetype == "text/html")
 		{
@@ -83,5 +107,57 @@ void ClipboardUpdateSend::send(QDataStream &ds)
 	}
 
 	finish();
+}
+
+void ClipboardUpdateSend::setSendFilters(Settings::MimeFilterMode mode, const QStringList &filters)
+{
+	m_sendMode = mode;
+	m_sendFilters = filters;
+}
+
+void ClipboardUpdateSend::setRecvFilters(Settings::MimeFilterMode mode, const QStringList &filters)
+{
+	m_recvMode = mode;
+	m_recvFilters = filters;
+}
+
+void ClipboardUpdateSend::initRx(const QStringList &what, QList<QRegExp> *where)
+{
+	where->clear();
+
+	foreach(const QString &s, what)
+		*where << QRegExp(s);
+}
+
+bool ClipboardUpdateSend::shouldSend(const QString &mimeType)
+{
+	bool ret = m_recvMode == Settings::Accept ? false : true;
+
+	foreach(const QRegExp &rx, m_sendRx)
+	{
+		if(rx.exactMatch(mimeType))
+		{
+			ret = m_sendMode == Settings::Accept ? true : false;
+			break;
+		}
+	}
+
+	return ret && shouldReceive(mimeType);
+}
+
+bool ClipboardUpdateSend::shouldReceive(const QString &mimeType)
+{
+	bool ret = m_recvMode == Settings::Accept ? false : true;
+
+	foreach(const QRegExp &rx, m_recvRx)
+	{
+		if(rx.exactMatch(mimeType))
+		{
+			ret = m_recvMode == Settings::Accept ? true : false;
+			break;
+		}
+	}
+
+	return ret;
 }
 

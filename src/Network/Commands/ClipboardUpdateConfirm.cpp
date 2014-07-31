@@ -35,11 +35,12 @@ void ClipboardUpdateConfirm::receive(QDataStream &ds)
 {
 	readStatus(ds);
 
-	qint32 n;
-	QStringList tmp;
+	qint32 mode;
 
-	ds >> n;
-	ds >> tmp;
+	ds >> mode;
+	ds >> m_filters;
+
+	m_mode = (Settings::MimeFilterMode) mode;
 
 	finish();
 }
@@ -48,8 +49,24 @@ void ClipboardUpdateConfirm::send(QDataStream &ds)
 {
 	writeStatus(ds, status() == Undefined ? Ok : status());
 
-	ds << (qint32) 0;
-	ds << QStringList();
+	ds << (qint32) m_mode;
+	ds << m_filters;
 
 	finish();
+}
+
+Settings::MimeFilterMode ClipboardUpdateConfirm::filterMode() const
+{
+	return m_mode;
+}
+
+const QStringList &ClipboardUpdateConfirm::filters() const
+{
+	return m_filters;
+}
+
+void ClipboardUpdateConfirm::setFilters(Settings::MimeFilterMode mode, const QStringList &filters)
+{
+	m_mode = mode;
+	m_filters = filters;
 }
