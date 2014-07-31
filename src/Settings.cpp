@@ -292,14 +292,7 @@ void Settings::setCertificatePath(QString cert)
 
 	emit certificatePathChanged();
 
-	QList<QSslCertificate> certs = QSslCertificate::fromPath(cert);
-
-	if(certs.empty())
-		m_certificate = QSslCertificate();
-	else
-		m_certificate = certs.first();
-
-	emit certificateChanged(m_certificate);
+	loadCertificate();
 }
 
 QSslCertificate& Settings::certificate()
@@ -321,19 +314,7 @@ void Settings::setPrivateKeyPath(QString key)
 
 	emit privateKeyPathChanged();
 
-	QFile f(key);
-
-	if(!f.open(QIODevice::ReadOnly))
-	{
-		m_privateKey = QSslKey();
-		return;
-	}
-
-	m_privateKey = QSslKey(&f, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey);
-
-	f.close();
-
-	emit privateKeyChanged(m_privateKey);
+	loadPrivateKey();
 }
 
 QSslKey& Settings::privateKey()
@@ -374,6 +355,12 @@ void Settings::addOrUpdateNode(Node &n)
 	m_nodes << n;
 
 	emit nodeAdded(n);
+}
+
+void Settings::reloadIdentity()
+{
+	loadPrivateKey();
+	loadCertificate();
 }
 
 unsigned int Settings::nextNodeId()
@@ -604,4 +591,33 @@ bool Settings::isFirstLaunch()
 	// Key Version is not present until v0.13.0, therefore the check for another setting
 	// that was present in older versions.
 	return m_settings->value("Version").isNull() && m_settings->value("Connection/Host").isNull();
+}
+
+void Settings::loadCertificate()
+{
+	QList<QSslCertificate> certs = QSslCertificate::fromPath(m_certificatePath);
+
+	if(certs.empty())
+		m_certificate = QSslCertificate();
+	else
+		m_certificate = certs.first();
+
+	emit certificateChanged(m_certificate);
+}
+
+void Settings::loadPrivateKey()
+{
+	QFile f(m_privateKeyPath);
+
+	if(!f.open(QIODevice::ReadOnly))
+	{
+		m_privateKey = QSslKey();
+		return;
+	}
+
+	m_privateKey = QSslKey(&f, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey);
+
+	f.close();
+
+	emit privateKeyChanged(m_privateKey);
 }

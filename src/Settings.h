@@ -114,6 +114,8 @@ public:
 	void setNodes(QList<Node> &nodes);
 	void addOrUpdateNode(Node &n);
 
+	Q_INVOKABLE void reloadIdentity();
+
 	unsigned int nextNodeId();
 
 	Q_INVOKABLE void save();
@@ -179,6 +181,8 @@ private:
 	ConfigMigration* createMigration(int v);
 	QString dataStoragePath();
 	bool isFirstLaunch();
+	void loadCertificate();
+	void loadPrivateKey();
 
 };
 
