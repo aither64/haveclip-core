@@ -573,6 +573,8 @@ void Settings::load()
 
 void Settings::loadNodes()
 {
+	m_nodes.clear();
+
 	m_settings->beginGroup(SETTINGS_NODES);
 
 	foreach(QString grp, m_settings->childGroups())
@@ -589,7 +591,16 @@ void Settings::loadNodes()
 
 void Settings::reset()
 {
+	QString file = m_settings->fileName();
+	delete m_settings;
 
+	qDebug() << "Remove settings file" << file;
+	QFile::remove(file);
+
+	m_settings = new QSettings(this);
+	m_settings->setValue("Version", CONFIG_VERSION);
+
+	load();
 }
 
 void Settings::migrate(int from, int to)
