@@ -15,6 +15,11 @@ CertificateGenerator::~CertificateGenerator()
 
 }
 
+void CertificateGenerator::setCommonName(QString name)
+{
+	m_commonName = name;
+}
+
 void CertificateGenerator::generate()
 {
 	QCA::PKey::Type type;
@@ -53,7 +58,7 @@ void CertificateGenerator::generateCertificate()
 	QCA::CertificateOptions opts;
 
 	QCA::CertificateInfo info;
-	info.insert(QCA::CommonName, "haveclip (FIXME)");
+	info.insert(QCA::CommonName, m_commonName);
 	info.insert(QCA::Country, "Czech Republic");
 	info.insert(QCA::Organization, "HaveFun.cz");
 	info.insert(QCA::Email, "");

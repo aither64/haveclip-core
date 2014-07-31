@@ -16,6 +16,7 @@ public:
 
 	explicit CertificateGenerator(QObject *parent = 0);
 	~CertificateGenerator();
+	void setCommonName(QString name);
 	void generate();
 	void generatePrivateKey(QCA::PKey::Type type, int bits, QCA::DLGroupSet set);
 	void savePrivateKeyToFile(QString path);
@@ -40,6 +41,7 @@ private:
 	QCA::DLGroupSet m_set;
 	QCA::DLGroup m_group;
 	QCA::Certificate m_cert;
+	QString m_commonName;
 
 	bool mkpath(QString &path);
 
