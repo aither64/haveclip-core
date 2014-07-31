@@ -32,7 +32,8 @@ SOURCES +=\
     src/Network/AutoDiscovery.cpp \
     src/ConfigMigration.cpp \
     src/Settings.cpp \
-    src/ConfigMigrations/V2Migration.cpp
+    src/ConfigMigrations/V2Migration.cpp \
+    src/CertificateInfo.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -61,7 +62,8 @@ HEADERS  += \
     src/Version.h \
     src/ConfigMigration.h \
     src/Settings.h \
-    src/ConfigMigrations/V2Migration.h
+    src/ConfigMigrations/V2Migration.h \
+    src/CertificateInfo.h
 
 OTHER_FILES += \
     TODO \
