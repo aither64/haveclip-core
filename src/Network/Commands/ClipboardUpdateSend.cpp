@@ -131,7 +131,7 @@ void ClipboardUpdateSend::initRx(const QStringList &what, QList<QRegExp> *where)
 
 bool ClipboardUpdateSend::shouldSend(const QString &mimeType)
 {
-	bool ret = m_recvMode == Settings::Accept ? false : true;
+	bool ret = m_sendMode == Settings::Accept ? false : true;
 
 	foreach(const QRegExp &rx, m_sendRx)
 	{
