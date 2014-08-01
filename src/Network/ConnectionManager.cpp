@@ -326,6 +326,7 @@ void ConnectionManager::verificationComplete(int validity)
 		emit verificationFinished(v);
 
 		m_verifiedNode = Node();
+		m_verifiedNodeAdded = false;
 
 		return;
 	}
