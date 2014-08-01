@@ -591,13 +591,7 @@ void Settings::loadNodes()
 
 void Settings::reset()
 {
-	QString file = m_settings->fileName();
-	delete m_settings;
-
-	qDebug() << "Remove settings file" << file;
-	QFile::remove(file);
-
-	m_settings = new QSettings(this);
+	m_settings->remove("");
 	m_settings->setValue("Version", CONFIG_VERSION);
 
 	load();
