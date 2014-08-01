@@ -72,7 +72,11 @@ OTHER_FILES += \
     doc/protocol.md \
     CHANGELOG
 
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += x11
+unix {
+	!mac {
+		CONFIG += link_pkgconfig
+		PKGCONFIG += x11
+	}
+}
 
 unix|win32: LIBS += -lqca
