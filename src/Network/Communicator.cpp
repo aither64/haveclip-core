@@ -385,6 +385,7 @@ void Communicator::onSslError(const QList<QSslError> &errors)
 			qDebug() << "Unrecoverable SSL error" << e;
 			emit sslFatalError(errors);
 			emit finished(UnrecoverableSslError);
+			this->deleteLater();
 			return;
 		}
 	}
