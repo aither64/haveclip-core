@@ -20,7 +20,10 @@
 #ifndef CLIPBOARDUPDATESEND_H
 #define CLIPBOARDUPDATESEND_H
 
+#include <QRegExp>
+
 #include "../Command.h"
+#include "../../Settings.h"
 
 namespace Commands {
 	class ClipboardUpdateSend : public BaseCommand
@@ -30,6 +33,20 @@ namespace Commands {
 		virtual Type type() const;
 		virtual void receive(QDataStream &ds);
 		virtual void send(QDataStream &ds);
+		void setSendFilters(Settings::MimeFilterMode mode, const QStringList &filters);
+		void setRecvFilters(Settings::MimeFilterMode mode, const QStringList &filters);
+
+	private:
+		Settings::MimeFilterMode m_sendMode;
+		QStringList m_sendFilters;
+		QList<QRegExp> m_sendRx;
+		Settings::MimeFilterMode m_recvMode;
+		QStringList m_recvFilters;
+		QList<QRegExp> m_recvRx;
+
+		void initRx(const QStringList &what, QList<QRegExp> *where);
+		bool shouldSend(const QString &mimeType);
+		bool shouldReceive(const QString &mimeType);
 	};
 }
 

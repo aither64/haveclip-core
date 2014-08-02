@@ -44,7 +44,7 @@ public:
 	QStringList formats;
 
 	ClipboardItem(Mode m, QMimeData *data);
-	~ClipboardItem();
+	virtual ~ClipboardItem();
 	virtual void init();
 	virtual ItemType type() const;
 //	virtual Mode mode();

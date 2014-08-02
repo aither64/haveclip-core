@@ -3,15 +3,14 @@ QT       += core gui network
 TARGET = bin/haveclipcore
 TEMPLATE = lib
 
+target.path = /usr/lib/
+INSTALLS += target
+
 SOURCES +=\
     src/Network/Sender.cpp \
     src/Network/Receiver.cpp \
-    src/PasteServices/BasePasteService.cpp \
-    src/PasteServices/Stikked/Stikked.cpp \
-    src/PasteServices/Pastebin/Pastebin.cpp \
     src/ClipboardManager.cpp \
     src/ClipboardItem.cpp \
-    src/ClipboardSerialBatch.cpp \
     src/History.cpp \
     src/ClipboardContainer.cpp \
     src/Network/Conversation.cpp \
@@ -22,29 +21,25 @@ SOURCES +=\
     src/Network/Commands/ClipboardUpdateConfirm.cpp \
     src/Network/Commands/Confirm.cpp \
     src/Network/Command.cpp \
-    src/Network/Conversations/SerialModeBegin.cpp \
-    src/Network/Conversations/SerialModeEnd.cpp \
-    src/Network/Conversations/SerialModeBase.cpp \
-    src/Network/Commands/Cmd_SerialModeBase.cpp \
-    src/Network/Commands/SerialModeToggle.cpp \
-    src/Network/Conversations/SerialModeAppend.cpp \
-    src/Network/Commands/SerialModeAppendReady.cpp \
-    src/Network/Conversations/SerialModeCopy.cpp \
-    src/Network/Commands/SerialModeInfo.cpp \
-    src/Network/Conversations/HistoryMixin.cpp \
-    src/Network/Conversations/SerialModeNext.cpp \
-    src/Network/Conversations/SerialModeRestart.cpp \
-    src/PasteServices/HaveSnippet/HaveSnippet.cpp
+    src/CertificateGenerator.cpp \
+    src/Node.cpp \
+    src/Network/Conversations/Introduction.cpp \
+    src/Network/Commands/Ping.cpp \
+    src/Network/ConnectionManager.cpp \
+    src/Network/Commands/Introduce.cpp \
+    src/Network/Conversations/Verification.cpp \
+    src/Network/Commands/SecurityCode.cpp \
+    src/Network/AutoDiscovery.cpp \
+    src/ConfigMigration.cpp \
+    src/Settings.cpp \
+    src/ConfigMigrations/V2Migration.cpp \
+    src/CertificateInfo.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
     src/Network/Receiver.h \
-    src/PasteServices/BasePasteService.h \
-    src/PasteServices/Stikked/Stikked.h \
-    src/PasteServices/Pastebin/Pastebin.h \
     src/ClipboardManager.h \
     src/ClipboardItem.h \
-    src/ClipboardSerialBatch.h \
     src/History.h \
     src/ClipboardContainer.h \
     src/Network/Conversation.h \
@@ -55,28 +50,33 @@ HEADERS  += \
     src/Network/Commands/ClipboardUpdateConfirm.h \
     src/Network/Commands/Confirm.h \
     src/Network/Command.h \
-    src/Network/Conversations/SerialModeBegin.h \
-    src/Network/Conversations/SerialModeEnd.h \
-    src/Network/Conversations/SerialModeBase.h \
-    src/Network/Commands/Cmd_SerialModeBase.h \
-    src/Network/Commands/SerialModeToggle.h \
-    src/Network/Conversations/SerialModeAppend.h \
-    src/Network/Commands/SerialModeAppendReady.h \
-    src/Network/Conversations/SerialModeCopy.h \
-    src/Network/Commands/SerialModeInfo.h \
-    src/Network/Conversations/HistoryMixin.h \
-    src/Network/Conversations/SerialModeNext.h \
-    src/Network/Conversations/SerialModeRestart.h \
-    src/PasteServices/HaveSnippet/HaveSnippet.h
+    src/CertificateGenerator.h \
+    src/Node.h \
+    src/Network/Conversations/Introduction.h \
+    src/Network/Commands/Ping.h \
+    src/Network/ConnectionManager.h \
+    src/Network/Commands/Introduce.h \
+    src/Network/Conversations/Verification.h \
+    src/Network/Commands/SecurityCode.h \
+    src/Network/AutoDiscovery.h \
+    src/Version.h \
+    src/ConfigMigration.h \
+    src/Settings.h \
+    src/ConfigMigrations/V2Migration.h \
+    src/CertificateInfo.h
 
 OTHER_FILES += \
     TODO \
-    utils/stikked_lang_generator.php \
-    utils/pastebin_lang_generator.py \
     LICENSE \
     README.md \
     doc/protocol.md \
     CHANGELOG
 
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += x11
+unix {
+	!mac {
+		CONFIG += link_pkgconfig
+		PKGCONFIG += x11
+	}
+}
+
+unix|win32: LIBS += -lqca

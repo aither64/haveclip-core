@@ -1,3 +1,21 @@
+* Sat Aug 02 2014 - version 0.13.0
+- Removed support for paste services, serial mode
+- Removed Qxt dependency
+- New peer verification protocol
+- Auto-discovery
+- Use QCA to generate certificates
+- Config migration mechanism
+- New settings interface
+- Network limits, MIME filters
+
+* Fri Jan 24 2014 - version 0.12.1
+- Fix clipboard supported modes checking
+- Support make install
+- Improve build instructions in README
+
+* Sat Dec 28 2013 - version 0.12.0
+- Mobile version
+
 * Fri Dec 27 2013 - version 0.11.0
 - Core separated into a library
 - History and network protocol not compatible with older versions

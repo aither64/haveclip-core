@@ -24,8 +24,10 @@
 
 #include <QSslSocket>
 
-#include "../ClipboardManager.h"
+#include "../Node.h"
 
+class ConnectionManager;
+class ClipboardContainer;
 class Conversation;
 
 class Communicator : public QSslSocket
@@ -37,22 +39,47 @@ public:
 		Receive
 	};
 
-	explicit Communicator(History *history, QObject *parent = 0);
+	enum Encryption {
+		None=0,
+		Ssl,
+		Tls
+	};
+
+	enum CommunicationStatus {
+		Ok,
+		ConnectionFailed,
+		UnrecoverableSslError,
+		IncompleteHeader,
+		MagicNumberNotMatches,
+		ProtocolVersionMismatch,
+		UnknownConversation,
+		InvalidConversation,
+		UnexpectedMessageType,
+		NotAuthenticated,
+		MessageTooLarge,
+		UnknownError
+	};
+
+	Q_ENUMS(Encryption)
+	Q_ENUMS(CommunicationStatus)
+
+	explicit Communicator(ConnectionManager *parent = 0);
 	~Communicator();
-	ClipboardManager::Node *node();
-	void setCertificateAndKey(QString cert, QString key);
-	void setPassword(QString m_password);
+	Node node();
+	Q_INVOKABLE static QString statusToString(CommunicationStatus status);
 
 signals:
-	void untrustedCertificateError(ClipboardManager::Node *node, const QList<QSslError> errors);
+	void untrustedCertificateError(const Node &node, const QList<QSslError> errors);
 	void sslFatalError(const QList<QSslError> errors);
+	void finished(Communicator::CommunicationStatus status);
+	void verificationFinished(int validity);
 
 protected:
-	History *m_history;
+	ConnectionManager *m_conman;
 	ClipboardContainer *container;
-	ClipboardManager::Encryption encryption;
-	QString m_password;
+	Encryption encryption;
 	Conversation *m_conversation;
+	QSslCertificate m_peerCertificate;
 
 	void sendMessage();
 	void receiveMessage();
@@ -64,6 +91,7 @@ protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);
 	virtual void onSslError(const QList<QSslError> &errors);
 	void onConnect();
+	void onEncrypted();
 	void onRead();
 	void onDisconnect();
 	virtual void conversationDone();
@@ -75,7 +103,8 @@ private:
 	QByteArray buffer;
 	bool haveHeader;
 	quint64 msgLen;
-	
+	bool m_runPostDone;
+
 };
 
 #endif // COMMUNICATOR_H

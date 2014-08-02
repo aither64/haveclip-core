@@ -24,32 +24,36 @@
 #include <QMimeData>
 
 #include "Communicator.h"
+#include "ConnectionManager.h"
 
-class ClipboardSerialBatch;
+class ClipboardItem;
 
 class Sender : public Communicator
 {
 	Q_OBJECT
 public:
-	explicit Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent = 0);
-	ClipboardManager::Node *node();
+	explicit Sender(const Node &node, ConnectionManager *parent = 0);
+	Node node();
+
+signals:
+	void introduceFinished(QString name, QSslCertificate cert);
 
 public slots:
+	void introduce(QString name, quint16 port);
+	void verify(QString code);
 	void distribute(ClipboardItem *content);
 
-#ifdef INCLUDE_SERIAL_MODE
-	void serialMode(bool enable, qint64 id);
-	void serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item);
-	void serialModeNext(ClipboardSerialBatch *batch);
-	void serialModeRestart(ClipboardSerialBatch *batch);
-#endif
+protected:
+	virtual void conversationSignals();
 
 protected slots:
 	virtual void onError(QAbstractSocket::SocketError socketError);
-	virtual void onSslError(const QList<QSslError> &errors);
+
+private slots:
+	void interceptIntroductionFinish(QString name);
 
 private:
-	ClipboardManager::Node *m_node;
+	Node m_node;
 
 	void connectToPeer();
 	

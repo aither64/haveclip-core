@@ -1,5 +1,26 @@
-- add Nodes submenu to context menu to quickly enable/disable nodes in pool
-- copy files using FUSE
-- add an option to set global shortcut which would trigger clipboard sync,
-  so the clipboard would be synchronised on demand, not always
-- user actions - configurable scripts that would be run when clipboard changes
+* v0.13.0
+- Core
+  - Node status
+    - show if the node is ok, offline or misconfigured
+  - Sync
+    - Honor the MIME type filters when sending clipboard
+
+- Sail
+
+* Next version
+- Node edit:
+  - Support multiple IP addresses
+
+* Maybes
+- Solve the queueing problem in sync - currently, there may be more one
+  connection from one sender to one receiver. For example, when the user copies
+  something big that takes time to transfer and subsequently copies something
+  small. Now there are two transfers running with an uncertain result. The last
+  to finish will always override the clipboard content on the receiver.
+  Possible solutions:
+    - abort the previos transfer
+    - implement queueing
+
+* Long-term wishlist
+- Relay server
+- Copy files using FUSE

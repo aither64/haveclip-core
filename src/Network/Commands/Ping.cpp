@@ -17,36 +17,30 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CLIENT_H
-#define CLIENT_H
+#include "Ping.h"
 
-#include <QSslSocket>
+using namespace Commands;
 
-#include "Communicator.h"
-
-namespace Conversations {
-	class Verification;
+Ping::Ping(ClipboardContainer *cont, Communicator::Role r)
+	: BaseCommand(cont, r)
+{
 }
 
-/* Represents client connecting to this instance of HaveClip */
-class Receiver : public Communicator
+BaseCommand::Type Ping::type() const
 {
-	Q_OBJECT
-public:
-	explicit Receiver(ConnectionManager *parent = 0);
-	void communicate();
+	return BaseCommand::Ping;
+}
 
-protected:
-	virtual void conversationSignals();
-	
-signals:
-	void verificationRequested(const Node &n);
-	void verificationCodeReceived(Conversations::Verification *v, QString code);
-	void clipboardUpdated(ClipboardContainer *cont);
+void Ping::receive(QDataStream &ds)
+{
+	Q_UNUSED(ds);
 
-private slots:
-	void interceptVerificationRequest(QString name, quint16 port);
-	
-};
+	finish();
+}
 
-#endif // CLIENT_H
+void Ping::send(QDataStream &ds)
+{
+	Q_UNUSED(ds);
+
+	finish();
+}

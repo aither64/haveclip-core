@@ -25,10 +25,6 @@
 #include "ClipboardManager.h"
 #include "ClipboardItem.h"
 
-#ifdef INCLUDE_SERIAL_MODE
-class ClipboardSerialBatch;
-#endif
-
 class History : public QAbstractListModel
 {
 	Q_OBJECT
@@ -52,20 +48,9 @@ public:
 	ClipboardItem* lastItem();
 	ClipboardContainer* currentContainer();
 	bool isEnabled() const;
-	void setEnabled(bool enabled);
 	bool isSaving() const;
-	void setSave(bool save);
 	int stackSize() const;
-	void setStackSize(int size);
 	ClipboardItem* add(ClipboardItem *item, bool allowDuplicity);
-	bool isNew(ClipboardItem *item) const;
-#ifdef INCLUDE_SERIAL_MODE
-	void addBatch(ClipboardSerialBatch *batch);
-	void beginSerialMode(qint64 id = 0);
-	void endSerialMode();
-	qint64 preparedSerialbatchId() const;
-	ClipboardSerialBatch* searchBatchById(qint64 id);
-#endif
 	
 signals:
 	void historyChanged();
@@ -76,18 +61,13 @@ public slots:
 	void clear();
 	void deleteFile();
 	void jumpTo(ClipboardItem* item);
-#ifdef INCLUDE_SERIAL_MODE
-	void restartSerialBatch(ClipboardSerialBatch *batch);
-#endif
+
+private slots:
+	void saveChange(bool save);
 
 private:
 	ClipboardContainer *m_currentContainer;
 	QList<ClipboardContainer*> m_items;
-	bool m_track;
-	bool m_save;
-	int m_size;
-	bool m_serialInit;
-	qint64 m_serialBatchId;
 
 	QString filePath();
 	void popToFront(ClipboardContainer *item);

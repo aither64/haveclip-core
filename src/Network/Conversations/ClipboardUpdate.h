@@ -21,6 +21,7 @@
 #define CLIPBOARDUPDATE_H
 
 #include "../Conversation.h"
+#include "../../Settings.h"
 
 namespace Conversations {
 	class ClipboardUpdate : public Conversation
@@ -29,9 +30,14 @@ namespace Conversations {
 	public:
 		ClipboardUpdate(Communicator::Role r, ClipboardContainer *cont, QObject *parent = 0);
 		virtual Type type() const;
+		void setFilters(Settings::MimeFilterMode mode, const QStringList &filters);
 
 	protected:
 		virtual void nextCommand(BaseCommand::Type lastCmd, int index);
+
+	private:
+		Settings::MimeFilterMode m_filterMode;
+		QStringList m_filters;
 	};
 }
 

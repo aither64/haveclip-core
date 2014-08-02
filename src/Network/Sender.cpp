@@ -22,109 +22,68 @@
 #include <QDateTime>
 #include <QDataStream>
 
+#include "Communicator.h"
 #include "Sender.h"
+#include "Conversations/Introduction.h"
+#include "Conversations/Verification.h"
 #include "Conversations/ClipboardUpdate.h"
-#include "Conversations/SerialModeBegin.h"
-#include "Conversations/SerialModeEnd.h"
-#include "Conversations/SerialModeAppend.h"
-#include "Conversations/SerialModeNext.h"
-#include "Conversations/SerialModeRestart.h"
 
-#ifdef INCLUDE_SERIAL_MODE
-#include "../ClipboardSerialBatch.h"
-#endif
-
-Sender::Sender(History *history, ClipboardManager::Encryption enc, ClipboardManager::Node *node, QObject *parent) :
-	Communicator(history, parent),
+Sender::Sender(const Node &node, ConnectionManager *parent) :
+	Communicator(parent),
 	m_node(node)
 {
-	encryption = enc;
+}
+
+void Sender::introduce(QString name, quint16 port)
+{
+	Conversations::Introduction *conv = new Conversations::Introduction(Communicator::Send, 0, this);
+	conv->setName(name);
+	conv->setPort(port);
+
+	m_conversation = conv;
+
+	connectToPeer();
+}
+
+void Sender::verify(QString code)
+{
+	Conversations::Verification *conv = new Conversations::Verification(Communicator::Send, 0, this);
+	conv->setSecurityCode(code);
+
+	m_conversation = conv;
+
+	connectToPeer();
 }
 
 void Sender::distribute(ClipboardItem *content)
 {
-	m_conversation = new Conversations::ClipboardUpdate(Communicator::Send, content, this);
+	Conversations::ClipboardUpdate *conv = new Conversations::ClipboardUpdate(Communicator::Send, content, this);
+	conv->setFilters(Settings::get()->sendFilterMode(), Settings::get()->sendFilters());
+
+	m_conversation = conv;
 
 	connectToPeer();
 }
 
-#ifdef INCLUDE_SERIAL_MODE
-void Sender::serialMode(bool enable, qint64 id)
+void Sender::conversationSignals()
 {
-	if(enable)
-		m_conversation = new Conversations::SerialModeBegin(id, Communicator::Send, 0, this);
-	else
-		m_conversation = new Conversations::SerialModeEnd(id, Communicator::Send, 0, this);
-
-	connectToPeer();
+	connect(m_conversation, SIGNAL(introductionFinished(QString)), this, SLOT(interceptIntroductionFinish(QString)));
+	connect(m_conversation, SIGNAL(verificationFinished(int)), this, SIGNAL(verificationFinished(int)));
 }
-
-void Sender::serialModeAppend(ClipboardSerialBatch *batch, ClipboardItem *item)
-{
-	m_conversation = new Conversations::SerialModeAppend(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-void Sender::serialModeNext(ClipboardSerialBatch *batch)
-{
-	m_conversation = new Conversations::SerialModeNext(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-void Sender::serialModeRestart(ClipboardSerialBatch *batch)
-{
-	m_conversation = new Conversations::SerialModeRestart(batch->id(), Communicator::Send, batch, this);
-
-	connectToPeer();
-}
-
-#endif
 
 void Sender::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Unable to reach" << m_node->host << ":" << socketError;
-	this->deleteLater();
+	qDebug() << "Unable to reach" << m_node.host() << ":" << socketError;
+
+	Communicator::onError(socketError);
 }
 
-void Sender::onSslError(const QList<QSslError> &errors)
+void Sender::interceptIntroductionFinish(QString name)
 {
-	QList<QSslError::SslError> recoverable;
-	recoverable << QSslError::SelfSignedCertificate
-		<< QSslError::CertificateUntrusted
-		<< QSslError::HostNameMismatch
-		<< QSslError::CertificateExpired;
-
-	bool exception = true;
-
-	foreach(QSslError e, errors)
-	{
-		if(!recoverable.contains(e.error()))
-		{
-			qDebug() << "Unrecoverable SSL error" << e;
-			emit sslFatalError(errors);
-			return;
-		}
-
-		if(e.certificate() != m_node->certificate)
-		{
-			exception = false;
-			break;
-		}
-	}
-
-	if(exception)
-	{
-		qDebug() << "SSL errors ignored because of exception";
-		ignoreSslErrors();
-
-	} else {
-		emit untrustedCertificateError(m_node, errors);
-	}
+	emit introduceFinished(name, m_peerCertificate);
 }
 
-ClipboardManager::Node* Sender::node()
+Node Sender::node()
 {
 	return m_node;
 }
@@ -133,32 +92,35 @@ void Sender::connectToPeer()
 {
 	conversationSignals();
 
-	if(encryption != ClipboardManager::None)
+	if(encryption != Communicator::None)
 	{
-		setPeerVerifyMode(QSslSocket::VerifyNone);
+		setPeerVerifyMode(QSslSocket::QueryPeer);
 
 		connect(this, SIGNAL(encrypted()), this, SLOT(onConnect()));
 
 		switch(encryption)
 		{
-		case ClipboardManager::Ssl:
+		case Communicator::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ClipboardManager::Tls:
+		case Communicator::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else
 			setProtocol(QSsl::TlsV1);
 #endif
 			break;
+
+		default:
+			break;
 		}
 
-		connectToHostEncrypted(m_node->host, m_node->port);
+		connectToHostEncrypted(m_node.host(), m_node.port());
 
 	} else {
 		connect(this, SIGNAL(connected()), this, SLOT(onConnect()));
 
-		connectToHost(m_node->host, m_node->port);
+		connectToHost(m_node.host(), m_node.port());
 	}
 
 	/**

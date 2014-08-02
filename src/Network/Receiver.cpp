@@ -24,31 +24,33 @@
 #include "Receiver.h"
 #include "Conversation.h"
 
-Receiver::Receiver(History *history, ClipboardManager::Encryption enc, QObject *parent) :
-	Communicator(history, parent)
+Receiver::Receiver(ConnectionManager *parent) :
+	Communicator(parent)
 {
-	encryption = enc;
 }
 
 void Receiver::communicate()
 {
-	if(encryption != ClipboardManager::None)
+	if(encryption != Communicator::None)
 	{
 		switch(encryption)
 		{
-		case ClipboardManager::Ssl:
+		case Communicator::Ssl:
 			setProtocol(QSsl::SslV3);
 			break;
-		case ClipboardManager::Tls:
+		case Communicator::Tls:
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 			setProtocol(QSsl::TlsV1_0);
 #else
 			setProtocol(QSsl::TlsV1);
 #endif
 			break;
+
+		default:
+			break;
 		}
 
-		setPeerVerifyMode(QSslSocket::VerifyNone);
+		setPeerVerifyMode(QSslSocket::QueryPeer);
 
 		startServerEncryption();
 	}
@@ -58,13 +60,20 @@ void Receiver::conversationSignals()
 {
 	Communicator::conversationSignals();
 
+	connect(m_conversation, SIGNAL(verificationRequested(QString,quint16)), this, SLOT(interceptVerificationRequest(QString,quint16)));
+	connect(m_conversation, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)), this, SIGNAL(verificationCodeReceived(Conversations::Verification*,QString)));
+	connect(m_conversation, SIGNAL(verificationFinished(int)), this, SIGNAL(verificationFinished(int)));
 	connect(m_conversation, SIGNAL(clipboardSync(ClipboardContainer*)), this, SIGNAL(clipboardUpdated(ClipboardContainer*)));
+}
 
-#ifdef INCLUDE_SERIAL_MODE
-	connect(m_conversation, SIGNAL(serialModeToggled(bool,qint64)), this, SIGNAL(serialModeToggled(bool,qint64)));
-	connect(m_conversation, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)), this, SIGNAL(serialModeNewBatch(ClipboardSerialBatch*)));
-	connect(m_conversation, SIGNAL(serialModeAppend(ClipboardItem*)), this, SIGNAL(serialModeAppend(ClipboardItem*)));
-	connect(m_conversation, SIGNAL(serialModeNext()), this, SIGNAL(serialModeNext()));
-	connect(m_conversation, SIGNAL(serialModeRestart(ClipboardSerialBatch*)), this, SIGNAL(serialModeRestart(ClipboardSerialBatch*)));
-#endif
+void Receiver::interceptVerificationRequest(QString name, quint16 port)
+{
+	Node n;
+	n.setId();
+	n.setName(name);
+	n.setHost(peerAddress().toString());
+	n.setPort(port);
+	n.setCertificate(m_peerCertificate);
+
+	emit verificationRequested(n);
 }

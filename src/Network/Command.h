@@ -29,13 +29,13 @@ class BaseCommand
 {
 public:
 	enum Type {
-		ClipboardUpdateReady=0,
+		Ping=0,
+		Introduce,
+		SecurityCode,
+		ClipboardUpdateReady,
 		ClipboardUpdateConfirm,
 		ClipboardUpdateSend,
-		Confirm,
-		SerialModeToggle,
-		SerialModeAppendReady,
-		SerialModeInfo
+		Confirm
 	};
 
 	enum Status {
@@ -48,6 +48,7 @@ public:
 	};
 
 	BaseCommand(ClipboardContainer *cont, Communicator::Role r);
+	virtual ~BaseCommand();
 	Communicator::Role role() const;
 	bool isFinished() const;
 	Status status() const;

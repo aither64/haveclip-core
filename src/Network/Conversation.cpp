@@ -19,13 +19,13 @@
 
 #include "Conversation.h"
 
+#include "Commands/Ping.h"
+#include "Commands/Introduce.h"
+#include "Commands/SecurityCode.h"
 #include "Commands/ClipboardUpdateReady.h"
 #include "Commands/ClipboardUpdateConfirm.h"
 #include "Commands/ClipboardUpdateSend.h"
 #include "Commands/Confirm.h"
-#include "Commands/SerialModeToggle.h"
-#include "Commands/SerialModeAppendReady.h"
-#include "Commands/SerialModeInfo.h"
 
 Conversation::Conversation(Communicator::Role r, ClipboardContainer *cont, QObject *parent)
 	: QObject(parent),
@@ -74,6 +74,20 @@ void Conversation::send(QDataStream &ds)
 	moveToNextCommand();
 }
 
+void Conversation::postDone()
+{
+	if(m_role == Communicator::Send)
+		postDoneSender();
+
+	else
+		postDoneReceiver();
+}
+
+ConnectionManager::AuthMode Conversation::authenticate()
+{
+	return ConnectionManager::Verified;
+}
+
 BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 {
 	BaseCommand *cmd;
@@ -82,6 +96,18 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 
 	switch(t)
 	{
+	case BaseCommand::Ping:
+		cmd = new Ping(m_cont, r);
+		break;
+
+	case BaseCommand::Introduce:
+		cmd = new Introduce(m_cont, r);
+		break;
+
+	case BaseCommand::SecurityCode:
+		cmd = new SecurityCode(m_cont, r);
+		break;
+
 	case BaseCommand::ClipboardUpdateReady:
 		cmd = new ClipboardUpdateReady(m_cont, r);
 		break;
@@ -96,18 +122,6 @@ BaseCommand* Conversation::addCommand(BaseCommand::Type t, Communicator::Role r)
 
 	case BaseCommand::Confirm:
 		cmd = new Confirm(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeToggle:
-		cmd = new Commands::SerialModeToggle(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeAppendReady:
-		cmd = new Commands::SerialModeAppendReady(m_cont, r);
-		break;
-
-	case BaseCommand::SerialModeInfo:
-		cmd = new Commands::SerialModeInfo(m_cont, r);
 		break;
 	}
 
@@ -143,15 +157,28 @@ void Conversation::moveToNextCommand()
 
 void Conversation::nextCommand(BaseCommand::Type lastCmd, int index)
 {
-
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
 }
 
 void Conversation::nextCommandSender(BaseCommand::Type lastCmd, int index)
 {
-
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
 }
 
 void Conversation::nextCommandReceiver(BaseCommand::Type lastCmd, int index)
+{
+	Q_UNUSED(lastCmd);
+	Q_UNUSED(index);
+}
+
+void Conversation::postDoneSender()
+{
+
+}
+
+void Conversation::postDoneReceiver()
 {
 
 }

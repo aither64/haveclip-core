@@ -19,21 +19,29 @@
 
 #include "Communicator.h"
 
-#include "Conversations/ClipboardUpdate.h"
-#include "Conversations/SerialModeBegin.h"
-#include "Conversations/SerialModeEnd.h"
-#include "Conversations/SerialModeAppend.h"
-#include "Conversations/SerialModeNext.h"
-#include "Conversations/SerialModeRestart.h"
+#include <QTimer>
 
-Communicator::Communicator(History *history, QObject *parent) :
+#include "../Version.h"
+#include "../Settings.h"
+#include "Conversations/Introduction.h"
+#include "Conversations/Verification.h"
+#include "Conversations/ClipboardUpdate.h"
+
+Communicator::Communicator(ConnectionManager *parent) :
 	QSslSocket(parent),
-	m_history(history),
+	m_conman(parent),
 	m_conversation(0),
+	dataRead(0),
 	haveHeader(false),
 	msgLen(0),
-	dataRead(0)
+	m_runPostDone(false)
 {
+	encryption = Settings::get()->encryption();
+
+	setLocalCertificate(Settings::get()->certificate());
+	setPrivateKey(Settings::get()->privateKey());
+
+	connect(this, SIGNAL(encrypted()), this, SLOT(onEncrypted()));
 	connect(this, SIGNAL(readyRead()), this, SLOT(onRead()));
 	connect(this, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 	connect(this, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
@@ -46,21 +54,45 @@ Communicator::~Communicator()
 		delete m_conversation;
 }
 
-void Communicator::setCertificateAndKey(QString cert, QString key)
+QString Communicator::statusToString(CommunicationStatus status)
 {
-	setLocalCertificate(cert);
-	setPrivateKey(key);
-}
+	switch(status)
+	{
+	case Ok:
+		return tr("Ok");
 
-void Communicator::setPassword(QString password)
-{
-	m_password = password;
+	case ConnectionFailed:
+		return tr("Connection failed");
+
+	case UnrecoverableSslError:
+		return tr("Unrecoverable SSL error");
+
+	case IncompleteHeader:
+	case MagicNumberNotMatches:
+		return tr("Communication error");
+
+	case ProtocolVersionMismatch:
+	case UnknownConversation:
+	case InvalidConversation:
+	case UnexpectedMessageType:
+		return tr("Incompatible HaveClip version");
+
+	case NotAuthenticated:
+		return tr("Authentication failure");
+
+	case MessageTooLarge:
+		return tr("Message is too large");
+
+	default:
+		return tr("Unknown error");
+	}
 }
 
 void Communicator::sendMessage()
 {
 	QByteArray buf;
 	QDataStream ds(&buf, QIODevice::WriteOnly);
+	quint64 bufSize;
 
 	ds << (quint32) PROTO_MAGIC_NUMBER;
 	ds << (qint32) PROTO_VERSION;
@@ -68,15 +100,22 @@ void Communicator::sendMessage()
 	ds << (qint32) m_conversation->currentCommandType();
 	ds << (quint64) 0; // Filled later
 
-	ds << m_password;
-
 	m_conversation->send(ds);
 
 	ds.device()->seek(16); // seek to message length field
 
-	ds << (quint64) buf.size();
+	bufSize = buf.size();
 
-	qDebug() << "Send message" << m_conversation->currentCommandType() << buf.size() << "bytes";
+	if(bufSize > Settings::get()->maxSendSize())
+	{
+		qDebug() << "Message too large:" << bufSize << "bytes";
+		emit finished(MessageTooLarge);
+		this->deleteLater();
+	}
+
+	ds << (quint64) bufSize;
+
+	qDebug() << "Send message" << m_conversation->currentCommandType() << bufSize << "bytes";
 
 	write(buf);
 
@@ -88,20 +127,10 @@ void Communicator::receiveMessage()
 	QDataStream ds(&buffer, QIODevice::ReadOnly);
 	ds.device()->seek(HEADER_SIZE); // skip header
 
-	QString msgPassword;
-
-	ds >> msgPassword;
-
-	if(msgPassword != m_password)
-	{
-		qDebug() << "Password does not match!";
-		this->deleteLater();
-		return;
-	}
-
 	if(m_conversation->currentRole() != Communicator::Receive)
 	{
 		qDebug() << "Fuckup";
+		emit finished(UnknownError);
 		this->deleteLater();
 		return;
 	}
@@ -109,6 +138,8 @@ void Communicator::receiveMessage()
 	m_conversation->receive(ds);
 
 	buffer.remove(0, msgLen);
+
+	qDebug() << "Received message" << msgLen;
 
 	haveHeader = false;
 	dataRead -= msgLen;
@@ -127,6 +158,7 @@ void Communicator::readHeader()
 	if(buffer.size() < HEADER_SIZE)
 	{
 		qDebug() << "Invalid message - incomplete header";
+		emit finished(IncompleteHeader);
 		this->deleteLater();
 		return;
 	}
@@ -136,6 +168,7 @@ void Communicator::readHeader()
 	if(magic != PROTO_MAGIC_NUMBER)
 	{
 		qDebug() << "Invalid message - magic number does not match";
+		emit finished(MagicNumberNotMatches);
 		this->deleteLater();
 		return;
 	}
@@ -145,6 +178,7 @@ void Communicator::readHeader()
 	if(version != PROTO_VERSION)
 	{
 		qDebug() << "Protocol version does not match. Supported is" << PROTO_VERSION << ", received" << version;
+		emit finished(ProtocolVersionMismatch);
 		this->deleteLater();
 		return;
 	}
@@ -155,50 +189,41 @@ void Communicator::readHeader()
 	{
 		switch(convType)
 		{
-		case Conversation::ClipboardUpdate:
+		case Conversation::Introduction: {
+			qDebug() << "Initiating conversation Introduction";
+			Conversations::Introduction *c = new Conversations::Introduction(Communicator::Receive, 0, this);
+			c->setName(Settings::get()->networkName());
+			c->setPort(Settings::get()->port());
+			m_conversation = c;
+
+			break;
+		}
+
+		case Conversation::Verification:
+			qDebug() << "Initiating conversation Verification";
+			m_conversation = new Conversations::Verification(Communicator::Receive, 0, this);
+			break;
+
+		case Conversation::ClipboardUpdate: {
 			qDebug() << "Initiating conversation ClipboardUpdate";
-			m_conversation = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
-			break;
+			Conversations::ClipboardUpdate *conv = new Conversations::ClipboardUpdate(Communicator::Receive, 0, this);
+			conv->setFilters(Settings::get()->receiveFilterMode(), Settings::get()->receiveFilters());
 
-		case Conversation::SerialModeBegin:
-			qDebug() << "Initiating conversation SerialModeBegin";
-			m_conversation = new Conversations::SerialModeBegin(0, Communicator::Receive, 0, this);
-			break;
-
-		case Conversation::SerialModeEnd:
-			qDebug() << "Initiating conversation SerialModeEnd";
-			m_conversation = new Conversations::SerialModeEnd(0, Communicator::Receive, 0, this);
-			break;
-
-		case Conversation::SerialModeAppend: {
-			qDebug() << "Initiating conversation SerialModeAppend";
-			Conversations::SerialModeAppend *c = new Conversations::SerialModeAppend(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
-			break;
-		}
-
-		case Conversation::SerialModeNext: {
-			qDebug() << "Initiating conversation SerialModeNext";
-			Conversations::SerialModeNext *c = new Conversations::SerialModeNext(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
-			break;
-		}
-
-		case Conversation::SerialModeRestart: {
-			qDebug() << "Initiating conversation SerialModeRestart";
-			Conversations::SerialModeRestart *c = new Conversations::SerialModeRestart(0, Communicator::Receive, 0, this);
-			c->setHistory(m_history);
-
-			m_conversation = c;
+			m_conversation = conv;
 			break;
 		}
 
 		default:
 			qDebug() << "Unknown conversation" << convType;
+			emit finished(UnknownConversation);
+			this->deleteLater();
+			return;
+		}
+
+		if(!m_conman->isAuthenticated(Communicator::Receive, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
+		{
+			qDebug() << "Authentication failed";
+			emit finished(NotAuthenticated);
 			this->deleteLater();
 			return;
 		}
@@ -207,6 +232,7 @@ void Communicator::readHeader()
 
 	} else if(convType != m_conversation->type()) {
 		qDebug() << "Invalid conversation: expected" << m_conversation->type() << ", received" << convType;
+		emit finished(InvalidConversation);
 		this->deleteLater();
 		return;
 	}
@@ -216,11 +242,19 @@ void Communicator::readHeader()
 	if(cmdType != m_conversation->currentCommandType())
 	{
 		qDebug() << "Unexpected message type: expected" << m_conversation->currentCommandType() << ", received" << cmdType;
+		emit finished(UnexpectedMessageType);
 		this->deleteLater();
 		return;
 	}
 
 	ds >> msgLen;
+
+	if(msgLen > Settings::get()->maxReceiveSize())
+	{
+		qDebug() << "Message too large:" << msgLen << "bytes";
+		emit finished(MessageTooLarge);
+		this->deleteLater();
+	}
 }
 
 void Communicator::conversationSignals()
@@ -232,25 +266,62 @@ void Communicator::conversationSignals()
 void Communicator::continueConversation()
 {
 	if(m_conversation->isDone())
+	{
+		m_runPostDone = true;
 		disconnectFromHost();
 
-	else if(m_conversation->currentRole() == Communicator::Send)
+#if defined(MER_SAILFISH)
+		if(encryption == Communicator::None && state() != QAbstractSocket::ClosingState)
+		{
+			QTimer::singleShot(500, this, SLOT(onDisconnect()));
+			return;
+		}
+#endif
+
+	} else if(m_conversation->currentRole() == Communicator::Send) {
 		sendMessage();
 
-	else
+	} else {
 		onRead();
+	}
 }
 
 void Communicator::onError(QAbstractSocket::SocketError socketError)
 {
 	qDebug() << "Connection error" << socketError;
-	this->deleteLater();
+
+	if(!m_conversation || (m_conversation && !m_conversation->isDone()))
+	{
+		emit finished(ConnectionFailed);
+		this->deleteLater();
+	}
 }
 
 void Communicator::onConnect()
 {
+	if(encryption == Communicator::None
+		&& !m_conman->isAuthenticated(Communicator::Send, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
+	{
+		qDebug() << "Authentication failed" << m_conversation->type() << m_conversation->authenticate();
+		emit finished(NotAuthenticated);
+		this->deleteLater();
+	}
+
 	if(m_conversation->currentRole() == Communicator::Send)
 		sendMessage();
+}
+
+void Communicator::onEncrypted()
+{
+	m_peerCertificate = peerCertificate();
+
+	if(m_conversation && !m_conman->isAuthenticated(Communicator::Send, m_conversation->authenticate(), m_peerCertificate, peerAddress()))
+	{
+		qDebug() << "Authentication failed" << m_conversation->type() << m_conversation->authenticate();
+		emit finished(NotAuthenticated);
+		this->deleteLater();
+		return;
+	}
 }
 
 void Communicator::onRead()
@@ -276,7 +347,12 @@ void Communicator::onRead()
 
 void Communicator::onDisconnect()
 {
-//	qDebug() << "Communicator::onDisconnect";
+	qDebug() << "Communicator::onDisconnect";
+
+	if(m_runPostDone)
+		m_conversation->postDone();
+
+	emit finished(Ok);
 	this->deleteLater();
 }
 
@@ -297,5 +373,23 @@ void Communicator::morphConversation(Conversation *c)
 
 void Communicator::onSslError(const QList<QSslError> &errors)
 {
+	QList<QSslError::SslError> recoverable;
+	recoverable << QSslError::SelfSignedCertificate
+		<< QSslError::CertificateUntrusted
+		<< QSslError::HostNameMismatch
+		<< QSslError::NoError;
+
+	foreach(QSslError e, errors)
+	{
+		if(!recoverable.contains(e.error()))
+		{
+			qDebug() << "Unrecoverable SSL error" << e;
+			emit sslFatalError(errors);
+			emit finished(UnrecoverableSslError);
+			this->deleteLater();
+			return;
+		}
+	}
+
 	ignoreSslErrors();
 }

@@ -30,8 +30,7 @@ class ClipboardContainer
 {
 public:
 	enum ItemType {
-		BasicItem=0,
-		SerialBatch
+		BasicItem=0
 	};
 
 	enum Mode {
@@ -45,6 +44,7 @@ public:
 	QString title;
 
 	ClipboardContainer();
+	virtual ~ClipboardContainer();
 	virtual ItemType type() const = 0;
 	virtual ClipboardItem* item() = 0;
 	virtual bool hasNext() const = 0;
