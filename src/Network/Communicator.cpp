@@ -376,7 +376,8 @@ void Communicator::onSslError(const QList<QSslError> &errors)
 	QList<QSslError::SslError> recoverable;
 	recoverable << QSslError::SelfSignedCertificate
 		<< QSslError::CertificateUntrusted
-		<< QSslError::HostNameMismatch;
+		<< QSslError::HostNameMismatch
+		<< QSslError::NoError;
 
 	foreach(QSslError e, errors)
 	{
