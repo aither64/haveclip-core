@@ -59,6 +59,9 @@ public:
 	inline bool shouldDistribute();
 	inline bool shouldListen();
 
+signals:
+	void initialized();
+
 public slots:
 	void start();
 	void delayedStart(int msecs);

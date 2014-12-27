@@ -116,6 +116,8 @@ void ClipboardManager::start()
 	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
 	timer->start(1000);
 #endif
+
+	emit initialized();
 }
 
 void ClipboardManager::delayedStart(int msecs)
