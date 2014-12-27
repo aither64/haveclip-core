@@ -9,7 +9,8 @@ Settings* Settings::m_instance = 0;
 
 Settings::Settings(QObject *parent) :
 	QObject(parent),
-	m_nextNodeId(1)
+    m_firstStart(false),
+    m_nextNodeId(1)
 {
 	m_settings = new QSettings(this);
 }
@@ -34,8 +35,8 @@ Settings* Settings::get()
 
 void Settings::init()
 {
-	bool firstLaunch = isFirstLaunch();
-	int v = m_settings->value("Version", firstLaunch ? CONFIG_VERSION : 1).toInt();
+    m_firstStart = isFirstLaunch();
+    int v = m_settings->value("Version", m_firstStart ? CONFIG_VERSION : 1).toInt();
 
 	if(v != CONFIG_VERSION)
 		migrate(v);
@@ -44,8 +45,13 @@ void Settings::init()
 
 	load();
 
-	if(firstLaunch)
-		emit firstStart();
+    if(m_firstStart)
+        emit firstStart();
+}
+
+bool Settings::isFirstStart() const
+{
+    return m_firstStart;
 }
 
 QString Settings::host()
