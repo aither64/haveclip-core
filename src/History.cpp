@@ -381,5 +381,7 @@ void History::popToFront(ClipboardContainer *item)
 	m_items.removeAt(i);
 	m_items << item;
 
-	emit dataChanged(index(0, 0), index(i, 0));
+	m_currentContainer = item;
+
+	emit dataChanged(index(0, 0), index(m_items.count() - i - 1, 0));
 }
