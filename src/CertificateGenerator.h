@@ -14,15 +14,22 @@ public:
 		SaveFailed
 	};
 
+    Q_ENUMS(ErrorType)
+
 	explicit CertificateGenerator(QObject *parent = 0);
 	~CertificateGenerator();
+
+    Q_PROPERTY(QString commonName READ commonName WRITE setCommonName NOTIFY commonNameChanged)
+    QString commonName();
 	void setCommonName(QString name);
-	void generate();
+
+    Q_INVOKABLE void generate();
 	void generatePrivateKey(QCA::PKey::Type type, int bits, QCA::DLGroupSet set);
-	void savePrivateKeyToFile(QString path);
-	void saveCertificateToFile(QString path);
+    Q_INVOKABLE void savePrivateKeyToFile(QString path);
+    Q_INVOKABLE void saveCertificateToFile(QString path);
 
 signals:
+    void commonNameChanged(const QString &name);
 	void privateKeyGenerated();
 	void finished();
 	void errorOccured(CertificateGenerator::ErrorType type, const QString &msg);
