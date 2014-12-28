@@ -33,6 +33,7 @@
 
 class History;
 class Node;
+class RemoteControl;
 
 class ClipboardManager : public QObject
 {
@@ -71,6 +72,7 @@ private:
 	QSettings *m_settings;
 	ConnectionManager *m_conman;
 	History* m_history;
+	RemoteControl *remoteControl;
 	QTimer *selectionTimer;
 	QTimer *delayedEnsureTimer;
 	ClipboardItem *delayedEnsureItem;

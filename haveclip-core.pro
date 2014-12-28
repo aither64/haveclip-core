@@ -33,7 +33,11 @@ SOURCES +=\
     src/ConfigMigration.cpp \
     src/Settings.cpp \
     src/ConfigMigrations/V2Migration.cpp \
-    src/CertificateInfo.cpp
+    src/CertificateInfo.cpp \
+    src/RemoteControl.cpp \
+    src/Cli.cpp \
+    src/RemoteClient.cpp \
+    src/RemoteControls/RemoteBase.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -63,7 +67,11 @@ HEADERS  += \
     src/ConfigMigration.h \
     src/Settings.h \
     src/ConfigMigrations/V2Migration.h \
-    src/CertificateInfo.h
+    src/CertificateInfo.h \
+    src/RemoteControl.h \
+    src/Cli.h \
+    src/RemoteClient.h \
+    src/RemoteControls/RemoteBase.h
 
 OTHER_FILES += \
     TODO \
@@ -80,3 +88,4 @@ unix {
 }
 
 unix|win32: LIBS += -lqca
+

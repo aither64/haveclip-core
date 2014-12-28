@@ -15,4 +15,6 @@
 
 #define VERIFICATION_TRIES 5
 
+#define SOCKET_NAME "haveclip"
+
 #endif // VERSION_H

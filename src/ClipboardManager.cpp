@@ -35,6 +35,7 @@
 
 #include "Settings.h"
 #include "Node.h"
+#include "RemoteControl.h"
 
 #ifdef Q_WS_X11
 #include <QX11Info>
@@ -116,6 +117,8 @@ void ClipboardManager::start()
 	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
 	timer->start(1000);
 #endif
+
+	remoteControl = new RemoteControl(this);
 }
 
 void ClipboardManager::delayedStart(int msecs)
