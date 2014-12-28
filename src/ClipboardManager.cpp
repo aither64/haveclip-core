@@ -107,6 +107,8 @@ void ClipboardManager::start()
 	connect(Settings::get(), SIGNAL(trackingEnabledChanged(bool)), this, SLOT(clipboardTracking()));
 
 	remoteControl = new RemoteControl(this);
+
+	emit initialized();
 }
 
 void ClipboardManager::delayedStart(int msecs)

@@ -15,9 +15,18 @@ CertificateGenerator::~CertificateGenerator()
 
 }
 
+QString CertificateGenerator::commonName()
+{
+    return m_commonName;
+}
+
 void CertificateGenerator::setCommonName(QString name)
 {
-	m_commonName = name;
+    if (m_commonName != name)
+    {
+        m_commonName = name;
+        emit commonNameChanged(m_commonName);
+    }
 }
 
 void CertificateGenerator::generate()

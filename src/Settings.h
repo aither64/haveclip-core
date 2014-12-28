@@ -61,6 +61,9 @@ public:
 
 	void init();
 
+	Q_PROPERTY(bool firstStart READ isFirstStart)
+	bool isFirstStart() const;
+
 	Q_PROPERTY(QString host READ host WRITE setHost NOTIFY hostChanged)
 	QString host();
 	void setHost(QString host);
@@ -198,6 +201,7 @@ private:
 	QSettings *m_settings;
 
 	// properties
+	bool m_firstStart;
 	QString m_host;
 	quint16 m_port;
 	bool m_allowAutoDiscovery;
