@@ -36,6 +36,7 @@ SOURCES +=\
     src/CertificateInfo.cpp \
     src/RemoteControl.cpp \
     src/Cli.cpp \
+    src/RemoteControls/Sync.cpp \
     src/RemoteClient.cpp \
     src/RemoteControls/RemoteBase.cpp
 
@@ -70,6 +71,7 @@ HEADERS  += \
     src/CertificateInfo.h \
     src/RemoteControl.h \
     src/Cli.h \
+    src/RemoteControls/Sync.h \
     src/RemoteClient.h \
     src/RemoteControls/RemoteBase.h
 
