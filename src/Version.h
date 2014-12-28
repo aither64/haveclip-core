@@ -15,6 +15,6 @@
 
 #define VERIFICATION_TRIES 5
 
-#define SOCKET_NAME "haveclip"
+#define SOCKET_NAME "haveclip.sock"
 
 #endif // VERSION_H

@@ -77,7 +77,7 @@ bool Cli::remoteConnect()
 	bool connected;
 
 	m_socket = new QLocalSocket();
-	m_socket->connectToServer(SOCKET_NAME, QIODevice::WriteOnly);
+	m_socket->connectToServer(RemoteControl::socketPath(), QIODevice::WriteOnly);
 
 	connected = m_socket->waitForConnected();
 

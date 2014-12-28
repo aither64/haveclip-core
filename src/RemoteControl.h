@@ -36,6 +36,7 @@ public:
 
 	explicit RemoteControl(ClipboardManager *manager);
 	~RemoteControl();
+	static QString socketPath(bool mkpath = false);
 
 private slots:
 	void localClientConnected();

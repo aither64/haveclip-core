@@ -22,14 +22,17 @@
 #include "ClipboardManager.h"
 #include "RemoteClient.h"
 
+#include <QDesktopServices>
+#include <QDir>
+
 RemoteControl::RemoteControl(ClipboardManager *manager)
 	: QObject(manager),
 	  m_manager(manager)
 {
-	QLocalServer::removeServer(SOCKET_NAME);
+	QLocalServer::removeServer(socketPath());
 	server = new QLocalServer(this);
 
-	if (!server->listen(SOCKET_NAME))
+	if (!server->listen(socketPath(true)))
 	{
 		qWarning() << "Unable to listen on local server, CLI will not work";
 		return;
@@ -43,6 +46,31 @@ RemoteControl::RemoteControl(ClipboardManager *manager)
 RemoteControl::~RemoteControl()
 {
 	server->close();
+}
+
+QString RemoteControl::socketPath(bool mkpath)
+{
+	QString path;
+	QDir d;
+
+#if defined(Q_OS_UNIX)
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+	path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+#else
+	path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+#endif
+
+	if (mkpath)
+		d.mkpath(path);
+
+	path += "/" SOCKET_NAME;
+
+#else
+	path = SOCKET_NAME;
+#endif
+
+	return QDir::cleanPath(path);
 }
 
 void RemoteControl::localClientConnected()
