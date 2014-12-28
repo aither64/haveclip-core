@@ -78,6 +78,11 @@ private:
 	ClipboardItem *delayedEnsureItem;
 	bool clipboardChangedCalled;
 	bool uniteCalled;
+	QTimer *lollll;
+
+#if defined(Q_OS_MAC)
+	QTimer *m_macTrackingTimer;
+#endif
 
 #ifdef Q_WS_X11
 	bool isUserSelecting();
@@ -89,6 +94,7 @@ private:
 	QMimeData* copyMimeData(const QMimeData *mimeReference);
 
 private slots:
+	void clipboardTracking();
 	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
 	void updateClipboard(ClipboardContainer *content, bool fromHistory = false);

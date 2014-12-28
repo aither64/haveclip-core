@@ -101,22 +101,10 @@ void ClipboardManager::start()
 	if(shouldListen())
 		m_conman->startReceiving();
 
-	// Load contents of clipboard
-	clipboardChanged();
+	// Clipboard tracking
+	clipboardTracking();
 
-#if defined(Q_OS_LINUX)
-	connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
-
-#elif defined(Q_OS_WIN32)
-	// Signal change(QClipboard::Mode) is not sent on Windows
-	connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
-
-#elif defined(Q_OS_MAC)
-	// There's no notification about clipboard changes on OS X, active checking is needed
-	QTimer *timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
-	timer->start(1000);
-#endif
+	connect(Settings::get(), SIGNAL(trackingEnabledChanged(bool)), this, SLOT(clipboardTracking()));
 
 	remoteControl = new RemoteControl(this);
 }
@@ -153,7 +141,12 @@ bool ClipboardManager::isReceivingEnabled()
 
 void ClipboardManager::distributeCurrentClipboard()
 {
-	ClipboardItem *it = m_history->currentItem();
+	ClipboardItem *it;
+
+	if (!Settings::get()->isTrackingEnabled())
+		clipboardChanged();
+
+	it = m_history->currentItem();
 
 	if(!it)
 		return;
@@ -420,6 +413,41 @@ QMimeData* ClipboardManager::copyMimeData(const QMimeData *mimeReference)
 	}
 
 	return mimeCopy;
+}
+
+void ClipboardManager::clipboardTracking()
+{
+	if (Settings::get()->isTrackingEnabled())
+	{
+		// Load contents of clipboard
+		clipboardChanged();
+
+#if defined(Q_OS_LINUX)
+		connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
+
+#elif defined(Q_OS_WIN32)
+		// Signal change(QClipboard::Mode) is not sent on Windows
+		connect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
+
+#elif defined(Q_OS_MAC)
+		// There's no notification about clipboard changes on OS X, active checking is needed
+		m_macTrackingTimer = new QTimer(this);
+		connect(m_macTrackingTimer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
+		m_macTrackingTimer->start(1000);
+#endif
+
+	} else {
+#if defined(Q_OS_LINUX)
+		disconnect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
+
+#elif defined(Q_OS_WIN32)
+		disconnect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
+
+#elif defined(Q_OS_MAC)
+		m_macTrackingTimer->stop();
+		m_macTrackingTimer->deleteLater();
+#endif
+	}
 }
 
 void ClipboardManager::delayedClipboardEnsure()

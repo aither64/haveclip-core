@@ -190,6 +190,21 @@ void Settings::setSaveHistory(bool save)
 	emit saveHistoryChanged(save);
 }
 
+bool Settings::isTrackingEnabled() const
+{
+	return m_trackingEnabled;
+}
+
+void Settings::setTrackingEnabled(bool enabled)
+{
+	if(m_trackingEnabled == enabled)
+		return;
+
+	m_trackingEnabled = enabled;
+
+	emit trackingEnabledChanged(enabled);
+}
+
 bool Settings::isSyncEnabled() const
 {
 	return m_syncEnabled;
@@ -475,6 +490,13 @@ void Settings::save()
 	}
 	m_settings->endGroup();
 
+	// Clipboard
+	m_settings->beginGroup(SETTINGS_CLIPBOARD);
+	{
+		m_settings->setValue("Tracking", m_trackingEnabled);
+	}
+	m_settings->endGroup();
+
 	// Sync
 	m_settings->beginGroup(SETTINGS_SYNC);
 	{
@@ -555,6 +577,13 @@ void Settings::load()
 		m_historyEnabled = m_settings->value("Enable", true).toBool();
 		m_historySize = m_settings->value("Size", 10).toInt();
 		m_saveHistory = m_settings->value("Save", true).toBool();
+	}
+	m_settings->endGroup();
+
+	// Clipboard
+	m_settings->beginGroup(SETTINGS_CLIPBOARD);
+	{
+		m_trackingEnabled = m_settings->value("Tracking", true).toBool();
 	}
 	m_settings->endGroup();
 

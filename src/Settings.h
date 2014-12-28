@@ -5,6 +5,7 @@
 #define SETTINGS_NETWORK_LIMITS "Network/Limits"
 #define SETTINGS_NETWORK_FILTERS "Network/Filters"
 #define SETTINGS_HISTORY "History"
+#define SETTINGS_CLIPBOARD "Clipboard"
 #define SETTINGS_SYNC "Sync"
 #define SETTINGS_SECURITY "Security"
 #define SETTINGS_POOL "Pool"
@@ -98,6 +99,10 @@ public:
 	bool saveHistory() const;
 	void setSaveHistory(bool save);
 
+	Q_PROPERTY(bool trackingEnabled READ isTrackingEnabled WRITE setTrackingEnabled NOTIFY trackingEnabledChanged)
+	bool isTrackingEnabled() const;
+	void setTrackingEnabled(bool enabled);
+
 	Q_PROPERTY(bool syncEnabled READ isSyncEnabled WRITE setSyncEnabled NOTIFY syncEnabledChanged)
 	bool isSyncEnabled() const;
 	void setSyncEnabled(bool enabled);
@@ -171,6 +176,7 @@ signals:
 	void historyEnabledChanged(bool enabled);
 	void historySizeChanged(int size);
 	void saveHistoryChanged(bool save);
+	void trackingEnabledChanged(bool enabled);
 	void syncEnabledChanged(bool enabled);
 	void sendEnabledChanged(bool enabled);
 	void recvEnabledChanged(bool enabled);
@@ -206,6 +212,7 @@ private:
 	bool m_historyEnabled;
 	int m_historySize;
 	bool m_saveHistory;
+	bool m_trackingEnabled;
 	bool m_syncEnabled;
 	bool m_sendEnabled;
 	bool m_recvEnabled;
