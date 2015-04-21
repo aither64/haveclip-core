@@ -40,6 +40,11 @@ QString QmlClipboardManager::content()
 	return m_content;
 }
 
+void QmlClipboardManager::checkClipboard()
+{
+	m_manager->clipboardChanged();
+}
+
 void QmlClipboardManager::doSync()
 {
 	m_manager->distributeCurrentClipboard();

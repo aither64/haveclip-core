@@ -68,6 +68,7 @@ public slots:
 	void delayedStart(int msecs);
 	void jumpTo(ClipboardItem *content);
 	void jumpToItemAt(int index);
+	void clipboardChanged();
 
 private:
 	static ClipboardManager *m_instance;
@@ -98,7 +99,6 @@ private:
 
 private slots:
 	void clipboardTracking();
-	void clipboardChanged();
 	void clipboardChanged(QClipboard::Mode m, bool fromSelection = false);
 	void updateClipboard(ClipboardContainer *content, bool fromHistory = false);
 	void updateClipboardFromNetwork(ClipboardContainer *cont);

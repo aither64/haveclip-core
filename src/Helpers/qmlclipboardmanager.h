@@ -36,6 +36,7 @@ public:
 	Q_PROPERTY(QString content READ content NOTIFY contentChanged)
 	QString content();
 
+	Q_INVOKABLE void checkClipboard();
 	Q_INVOKABLE void doSync();
 
 signals:
