@@ -1,18 +1,22 @@
 #include "CertificateGenerator.h"
 
+#include <QThread>
 #include <QFileInfo>
 #include <QDir>
 
+#include "CertificateGeneratorThread.h"
+
 CertificateGenerator::CertificateGenerator(QObject *parent) :
-        QObject(parent)
+		QObject(parent),
+		m_generator(0),
+		m_phase(GenerateFailed)
 {
-	m_generator.setBlockingEnabled(false);
-	connect(&m_generator, SIGNAL(finished()), this, SLOT(privateKeyReady()));
 }
 
 CertificateGenerator::~CertificateGenerator()
 {
-
+	if (m_generator)
+		m_generator->deleteLater();
 }
 
 QString CertificateGenerator::commonName()
@@ -31,74 +35,17 @@ void CertificateGenerator::setCommonName(QString name)
 
 void CertificateGenerator::generate()
 {
-	QCA::PKey::Type type;
+	QThread *thread = new QThread(this);
+	m_generator = new CertificateGeneratorThread(m_commonName);
+	m_generator->moveToThread(thread);
 
-	if(QCA::isSupported("rsa"))
-	{
-		type = QCA::PKey::RSA;
+	connect(this, SIGNAL(start()), m_generator, SLOT(generate()));
+	connect(m_generator, SIGNAL(errorOccurred(QString)), this, SLOT(error(QString)));
+	connect(m_generator, SIGNAL(finished()), this, SLOT(finish()));
 
-//	} else if(QCA::isSupported("dsa")) { // would have to save key type
-//		type = QCA::PKey::DSA;
+	thread->start();
 
-	} else {
-		QString err;
-
-		emit errorOccured(UnsupportedKeyType, err);
-		return;
-	}
-
-	connect(this, SIGNAL(privateKeyGenerated()), this, SLOT(generateCertificate()));
-
-	generatePrivateKey(type, 2048, QCA::DSA_1024);
-}
-
-void CertificateGenerator::generatePrivateKey(QCA::PKey::Type type, int bits, QCA::DLGroupSet set)
-{
-	m_type = type;
-
-	if(type == QCA::PKey::RSA)
-		m_generator.createRSA(bits);
-	else
-		m_generator.createDLGroup(set);
-}
-
-void CertificateGenerator::generateCertificate()
-{
-	QCA::CertificateOptions opts;
-
-	QCA::CertificateInfo info;
-	info.insert(QCA::CommonName, m_commonName);
-	info.insert(QCA::Country, "Czech Republic");
-	info.insert(QCA::Organization, "HaveFun.cz");
-	info.insert(QCA::Email, "");
-	opts.setInfo(info);
-
-	QDateTime start = QDateTime::currentDateTime().toUTC();
-
-	opts.setValidityPeriod(start, start.addYears(10));
-
-	m_cert = QCA::Certificate(opts, m_key);
-
-	emit finished();
-}
-
-void CertificateGenerator::privateKeyReady()
-{
-	if(m_type == QCA::PKey::DSA)
-	{
-		if(m_group.isNull())
-		{
-			m_group = m_generator.dlGroup();
-			m_generator.createDSA(m_group);
-
-			return;
-		}
-	}
-
-	m_group = QCA::DLGroup();
-	m_key = m_generator.key();
-
-	emit privateKeyGenerated();
+	emit start();
 }
 
 bool CertificateGenerator::mkpath(QString &path)
@@ -111,7 +58,7 @@ bool CertificateGenerator::mkpath(QString &path)
 		return true;
 
 	} else {
-		emit errorOccured(MkpathFailed, f.absolutePath());
+		emit errorOccurred(MkpathFailed, f.absolutePath());
 		return false;
 	}
 }
@@ -121,8 +68,7 @@ void CertificateGenerator::savePrivateKeyToFile(QString path)
 	if(!mkpath(path))
 		return;
 
-	if(!m_key.toPEMFile(path))
-		emit errorOccured(SaveFailed, path);
+	m_generator->savePrivateKeyToFile(path);
 }
 
 void CertificateGenerator::saveCertificateToFile(QString path)
@@ -130,6 +76,17 @@ void CertificateGenerator::saveCertificateToFile(QString path)
 	if(!mkpath(path))
 		return;
 
-	if(!m_cert.toPEMFile(path))
-		emit errorOccured(SaveFailed, path);
+	m_generator->saveCertificateToFile(path);
+}
+
+void CertificateGenerator::error(const QString &error)
+{
+	emit errorOccurred(m_phase, error);
+}
+
+void CertificateGenerator::finish()
+{
+	m_phase = SaveFailed;
+
+	emit finished();
 }

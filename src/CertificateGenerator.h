@@ -2,14 +2,15 @@
 #define CERTIFICATEGENERATOR_H
 
 #include <QObject>
-#include <QtCrypto/QtCrypto>
+
+class CertificateGeneratorThread;
 
 class CertificateGenerator : public QObject
 {
 	Q_OBJECT
 public:
 	enum ErrorType {
-		UnsupportedKeyType,
+		GenerateFailed,
 		MkpathFailed,
 		SaveFailed
 	};
@@ -24,31 +25,23 @@ public:
 	void setCommonName(QString name);
 
     Q_INVOKABLE void generate();
-	void generatePrivateKey(QCA::PKey::Type type, int bits, QCA::DLGroupSet set);
     Q_INVOKABLE void savePrivateKeyToFile(QString path);
     Q_INVOKABLE void saveCertificateToFile(QString path);
 
 signals:
-    void commonNameChanged(const QString &name);
-	void privateKeyGenerated();
+	void start();
+	void commonNameChanged(const QString &name);
 	void finished();
-	void errorOccured(CertificateGenerator::ErrorType type, const QString &msg);
-
-public slots:
-	void generateCertificate();
+	void errorOccurred(CertificateGenerator::ErrorType type, const QString &msg);
 
 private slots:
-	void privateKeyReady();
+	void error(const QString &error);
+	void finish();
 
 private:
-	QCA::Initializer m_qcaInit;
-	QCA::KeyGenerator m_generator;
-	QCA::PKey::Type m_type;
-	QCA::PrivateKey m_key;
-	QCA::DLGroupSet m_set;
-	QCA::DLGroup m_group;
-	QCA::Certificate m_cert;
+	CertificateGeneratorThread *m_generator;
 	QString m_commonName;
+	ErrorType m_phase;
 
 	bool mkpath(QString &path);
 

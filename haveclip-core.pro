@@ -38,7 +38,8 @@ SOURCES +=\
     src/Cli.cpp \
     src/RemoteControls/Sync.cpp \
     src/RemoteClient.cpp \
-    src/RemoteControls/RemoteBase.cpp
+    src/RemoteControls/RemoteBase.cpp \
+    src/CertificateGeneratorThread.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -73,7 +74,8 @@ HEADERS  += \
     src/Cli.h \
     src/RemoteControls/Sync.h \
     src/RemoteClient.h \
-    src/RemoteControls/RemoteBase.h
+    src/RemoteControls/RemoteBase.h \
+    src/CertificateGeneratorThread.h
 
 OTHER_FILES += \
     TODO \
