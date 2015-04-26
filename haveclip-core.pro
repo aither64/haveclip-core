@@ -90,6 +90,3 @@ unix {
 		PKGCONFIG += x11
 	}
 }
-
-unix|win32: LIBS += -lqca
-
