@@ -80,6 +80,10 @@ ClipboardManager::ClipboardManager(QObject *parent) :
 	m_conman = new ConnectionManager(this);
 
 	connect(m_conman, SIGNAL(clipboardUpdated(ClipboardContainer*)), this, SLOT(updateClipboardFromNetwork(ClipboardContainer*)));
+
+#if defined(Q_OS_MAC)
+	m_macTrackingTimer = 0;
+#endif
 }
 
 ClipboardManager::~ClipboardManager()
@@ -446,8 +450,12 @@ void ClipboardManager::clipboardTracking()
 		disconnect(clipboard, SIGNAL(dataChanged()), this, SLOT(clipboardChanged()));
 
 #elif defined(Q_OS_MAC)
-		m_macTrackingTimer->stop();
-		m_macTrackingTimer->deleteLater();
+		if (m_macTrackingTimer)
+		{
+			m_macTrackingTimer->stop();
+			m_macTrackingTimer->deleteLater();
+			m_macTrackingTimer = 0;
+		}
 #endif
 	}
 }
