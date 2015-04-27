@@ -53,7 +53,9 @@ void CertificateGeneratorThread::generate()
 	if ((e = BN_new()) == NULL)
 		return error();
 
-	if (BN_generate_prime_ex(e, bits, 1, NULL, NULL, NULL) == 0)
+	// Cannot generate a prime - connection does not work when exponent is
+	// bigger than 65537.
+	if (!BN_set_word(e, 65537))
 		return error();
 
 	if (RSA_generate_key_ex(rsa, bits, e, NULL) == NULL)
@@ -95,7 +97,7 @@ void CertificateGeneratorThread::generate()
 
 	X509_set_issuer_name(m_x509, name);
 
-	if (!addExtension(NID_basic_constraints, "critical,CA:TRUE"))
+	if (!addExtension(NID_basic_constraints, "critical,CA:FALSE,pathlen:0"))
 		return error();
 
 	if (!addExtension(NID_subject_key_identifier, "hash"))
@@ -173,4 +175,3 @@ void CertificateGeneratorThread::error()
 
 	emit errorOccurred(qerr);
 }
-
