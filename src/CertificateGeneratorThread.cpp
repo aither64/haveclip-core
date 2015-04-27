@@ -173,5 +173,7 @@ void CertificateGeneratorThread::error()
 		qerr = QString(str);
 	}
 
+	QThread::currentThread()->quit();
+
 	emit errorOccurred(qerr);
 }
