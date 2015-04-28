@@ -1,6 +1,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <QtGlobal>
+
 #define SETTINGS_NETWORK "Network"
 #define SETTINGS_NETWORK_LIMITS "Network/Limits"
 #define SETTINGS_NETWORK_FILTERS "Network/Filters"
@@ -11,7 +13,8 @@
 #define SETTINGS_POOL "Pool"
 #define SETTINGS_NODES "Pool/Nodes"
 
-#if defined(MER_SAILFISH) // Sailfish default settings
+#if defined(MER_SAILFISH) || defined(Q_OS_ANDROID)
+// Sailfish and Android default settings
 #define SETTINGS_DEFAULT_MAX_SEND_SIZE (5*1024*1024)
 #define SETTINGS_DEFAULT_MAX_RECV_SIZE (5*1024*1024)
 
