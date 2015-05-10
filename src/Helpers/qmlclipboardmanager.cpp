@@ -19,6 +19,7 @@
 
 #include "qmlclipboardmanager.h"
 #include "../Version.h"
+#include "../git_version.h"
 
 QmlClipboardManager::QmlClipboardManager(QObject *parent) :
     QObject(parent)
@@ -33,6 +34,11 @@ QmlClipboardManager::QmlClipboardManager(QObject *parent) :
 QString QmlClipboardManager::version()
 {
 	return VERSION;
+}
+
+QString QmlClipboardManager::commitSha1()
+{
+	return GIT_CURRENT_SHA1;
 }
 
 QString QmlClipboardManager::content()

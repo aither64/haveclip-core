@@ -33,6 +33,9 @@ public:
 	Q_PROPERTY(QString version READ version)
 	QString version();
 
+	Q_PROPERTY(QString commitSha1 READ commitSha1)
+	QString commitSha1();
+
 	Q_PROPERTY(QString content READ content NOTIFY contentChanged)
 	QString content();
 
