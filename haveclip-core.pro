@@ -1,10 +1,8 @@
 QT       += core gui network
 
-TARGET = bin/haveclipcore
+TARGET = haveclipcore
 TEMPLATE = lib
-
-target.path = /usr/lib/
-INSTALLS += target
+CONFIG += staticlib
 
 SOURCES +=\
     src/Network/Sender.cpp \
@@ -85,8 +83,11 @@ OTHER_FILES += \
     CHANGELOG
 
 unix {
+        CONFIG += link_pkgconfig
+        PKGCONFIG += openssl
+
 	!mac {
-		CONFIG += link_pkgconfig
 		PKGCONFIG += x11
+                LIBS += -lX11
 	}
 }
