@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Generating header for git version" $1 $2
-HEADER_FILE="$1/$2"
+HEADER_FILE="$2"
 
 if [ -z "$2" ]; then
     GIT_HEADER="$1/src/git_version.h"
