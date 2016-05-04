@@ -41,7 +41,6 @@ public:
 
 	enum Encryption {
 		None=0,
-		Ssl,
 		Tls
 	};
 

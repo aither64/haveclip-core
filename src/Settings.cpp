@@ -23,6 +23,7 @@
 #include <QFile>
 
 #include "ConfigMigrations/V2Migration.h"
+#include "ConfigMigrations/V3Migration.h"
 
 Settings* Settings::m_instance = 0;
 
@@ -705,6 +706,11 @@ ConfigMigration* Settings::createMigration(int v)
 	case 2:
 		m = new ConfigMigrations::V2Migration(this);
 		break;
+
+	case 3:
+		m = new ConfigMigrations::V3Migration(this);
+		break;
+
 	default:
 		return 0;
 	}

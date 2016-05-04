@@ -44,7 +44,8 @@ SOURCES +=\
     src/CertificateGeneratorThread.cpp \
     src/Helpers/qmlclipboardmanager.cpp \
     src/Helpers/qmlhelpers.cpp \
-    src/Helpers/qmlnode.cpp
+    src/Helpers/qmlnode.cpp \
+    src/ConfigMigrations/V3Migration.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -83,7 +84,8 @@ HEADERS  += \
     src/CertificateGeneratorThread.h \
     src/Helpers/qmlclipboardmanager.h \
     src/Helpers/qmlhelpers.h \
-    src/Helpers/qmlnode.h
+    src/Helpers/qmlnode.h \
+    src/ConfigMigrations/V3Migration.h
 
 OTHER_FILES += \
     TODO \
