@@ -7,7 +7,11 @@ if [ -z "$2" ]; then
     GIT_HEADER="$1/src/git_version.h"
 fi
 
-GIT_COMMIT="`git -C \"$1\" rev-parse HEAD`"
+# git -C is not available in Mer SDK
+pushd "$1"
+GIT_COMMIT="`git rev-parse HEAD`"
+popd
+
 if grep --quiet "$GIT_COMMIT" "$HEADER_FILE" ; then
     echo "No need to generate new $HEADER_FILE"
     exit 0;
