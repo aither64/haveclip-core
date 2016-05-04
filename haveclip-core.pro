@@ -4,6 +4,10 @@ TARGET = haveclipcore
 TEMPLATE = lib
 CONFIG += staticlib
 
+packagesExist(sailfishapp) {
+	DEFINES += MER_SAILFISH
+}
+
 SOURCES +=\
     src/Network/Sender.cpp \
     src/Network/Receiver.cpp \
@@ -83,12 +87,14 @@ OTHER_FILES += \
     CHANGELOG
 
 unix {
-        CONFIG += link_pkgconfig
-        PKGCONFIG += openssl
+	CONFIG += link_pkgconfig
+	PKGCONFIG += openssl
 
-	!mac {
+	!packagesExist(sailfishapp) {
+		!mac {
 		PKGCONFIG += x11
-                LIBS += -lX11
+			LIBS += -lX11
+		}
 	}
 }
 
