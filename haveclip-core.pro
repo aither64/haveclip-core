@@ -41,7 +41,10 @@ SOURCES +=\
     src/RemoteControls/Sync.cpp \
     src/RemoteClient.cpp \
     src/RemoteControls/RemoteBase.cpp \
-    src/CertificateGeneratorThread.cpp
+    src/CertificateGeneratorThread.cpp \
+    src/Helpers/qmlclipboardmanager.cpp \
+    src/Helpers/qmlhelpers.cpp \
+    src/Helpers/qmlnode.cpp
 
 HEADERS  += \
     src/Network/Sender.h \
@@ -77,7 +80,10 @@ HEADERS  += \
     src/RemoteControls/Sync.h \
     src/RemoteClient.h \
     src/RemoteControls/RemoteBase.h \
-    src/CertificateGeneratorThread.h
+    src/CertificateGeneratorThread.h \
+    src/Helpers/qmlclipboardmanager.h \
+    src/Helpers/qmlhelpers.h \
+    src/Helpers/qmlnode.h
 
 OTHER_FILES += \
     TODO \
