@@ -1,3 +1,11 @@
+* Thu May 04 2016 - version 0.15.0
+- Remove SSL, use only TLS (config version 3)
+- Remove QCA as a dependency
+- Set latest git commit hash as a preprocessor constant
+
+* Mon Jan 19 2015 - version 0.14.0
+- CLI, command haveclip sync
+
 * Sat Aug 02 2014 - version 0.13.0
 - Removed support for paste services, serial mode
 - Removed Qxt dependency
