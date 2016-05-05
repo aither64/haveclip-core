@@ -2,6 +2,8 @@
 - Remove SSL, use only TLS (config version 3)
 - Remove QCA as a dependency
 - Set latest git commit hash as a preprocessor constant
+- haveclip-core linked as a static library
+- Support for Android
 
 * Mon Jan 19 2015 - version 0.14.0
 - CLI, command haveclip sync
