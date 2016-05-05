@@ -20,7 +20,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "0.15.0-dev"
+#define VERSION "0.15.0"
 
 #define HISTORY_MAGIC_NUMBER 0x84D3C117
 #define HISTORY_VERSION 3
