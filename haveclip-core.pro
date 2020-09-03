@@ -87,6 +87,22 @@ HEADERS  += \
     src/Helpers/qmlnode.h \
     src/ConfigMigrations/V3Migration.h
 
+mac {
+    CONFIG += objective_c
+
+    # https://doc.qt.io/qt-5.12/qmake-variable-reference.html#objective-sources   #objective-headers
+    # OBJECTIVE_SOURCES is obsolete since Qt5.6 (QTBUG-36575)
+    # - https://codereview.qt-project.org/c/qt/qtbase/+/77117/  (Branch 5.6, "INCLUDED IN" button)
+    # - before Qt5.6 it only shows the warning:
+    #   - https://github.com/qt/qtbase/commit/9ff1310af51814e521572fa3de4e086907633a90#diff-b42d489993899e48fa93c92b344e9201
+    #   - https://codereview.qt-project.org/c/qt/qtbase/+/77117/13/mkspecs/features/mac/objective_c.prf#b4
+    #
+    SOURCES           += src/darwin/AppNapPreventingActivity.mm
+    OBJECTIVE_HEADERS += src/darwin/AppNapPreventingActivity.h
+
+    LIBS += -framework Foundation
+}
+
 OTHER_FILES += \
     TODO \
     LICENSE \

@@ -31,6 +31,10 @@
 #include "ClipboardItem.h"
 #include "History.h"
 
+#ifdef Q_OS_MAC
+#include "darwin/AppNapPreventingActivity.h"
+#endif
+
 class History;
 class Node;
 class RemoteControl;
@@ -86,6 +90,7 @@ private:
 
 #if defined(Q_OS_MAC)
 	QTimer *m_macTrackingTimer;
+	AppNapPreventingActivity m_macAppNapPreventingActivity;
 #endif
 
 #ifdef Q_WS_X11

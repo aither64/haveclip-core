@@ -151,6 +151,7 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 		// - https://stackoverflow.com/questions/46249616/qtcpsocket-setting-lowdelayoption-seems-to-have-no-effect#comment79463584_46249616
 		// - https://doc.qt.io/qt-5.12/qsslsocket.html#flush
 		d->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // TCP_NODELAY
+		// But, really it's caused by App Nap (macOS) - see "haveclip-core/src/darwin/AppNapPreventingActivity.mm"
 
 		connect(d, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));

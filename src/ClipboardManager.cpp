@@ -437,6 +437,8 @@ void ClipboardManager::clipboardTracking()
 
 #elif defined(Q_OS_MAC)
 		// There's no notification about clipboard changes on OS X, active checking is needed
+		m_macAppNapPreventingActivity.begin();
+
 		m_macTrackingTimer = new QTimer(this);
 		connect(m_macTrackingTimer, SIGNAL(timeout()), this, SLOT(clipboardChanged()));
 		m_macTrackingTimer->start(1000);
@@ -452,6 +454,8 @@ void ClipboardManager::clipboardTracking()
 #elif defined(Q_OS_MAC)
 		if (m_macTrackingTimer)
 		{
+			m_macAppNapPreventingActivity.end();
+
 			m_macTrackingTimer->stop();
 			m_macTrackingTimer->deleteLater();
 			m_macTrackingTimer = 0;
