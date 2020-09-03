@@ -142,6 +142,16 @@ void ConnectionManager::syncClipboard(ClipboardItem *it)
 
 		Sender *d = new Sender(n, this);
 
+		// TCP Performance problems caused by interaction between Nagle’s Algorithm and Delayed ACK
+		// - http://www.stuartcheshire.org/papers/NagleDelayedAck/
+		// - https://stackoverflow.com/questions/14896990/windows-socket-tcp-client-receives-data-only-every-200ms-qtcpsocket
+		// - https://doc.qt.io/qt-5.12/qabstractsocket.html#SocketOption-enum
+		// - https://doc.qt.io/qt-5.12/qabstractsocket.html#setSocketOption
+		// and don't `flush()` in `Communicator::sendMessage()` (after `write(buf)`):
+		// - https://stackoverflow.com/questions/46249616/qtcpsocket-setting-lowdelayoption-seems-to-have-no-effect#comment79463584_46249616
+		// - https://doc.qt.io/qt-5.12/qsslsocket.html#flush
+		d->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // TCP_NODELAY
+
 		connect(d, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)), this, SIGNAL(untrustedCertificateError(Node,QList<QSslError>)));
 		connect(d, SIGNAL(sslFatalError(QList<QSslError>)), this, SIGNAL(sslFatalError(QList<QSslError>)));
 
