@@ -2,7 +2,9 @@ QT       += core gui network
 
 TARGET = haveclipcore
 TEMPLATE = lib
-CONFIG += staticlib
+CONFIG += staticlib create_prl
+# Note: add `CONFIG += link_prl` to an app:
+#       https://doc.qt.io/qt-5.12/qmake-advanced-usage.html#library-dependencies
 
 packagesExist(sailfishapp) {
 	DEFINES += MER_SAILFISH
