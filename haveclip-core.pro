@@ -112,16 +112,35 @@ OTHER_FILES += \
     doc/protocol.md \
     CHANGELOG
 
-unix {
+unix:!mac {
 	CONFIG += link_pkgconfig
 	PKGCONFIG += openssl
 
 	!packagesExist(sailfishapp) {
-		!mac {
 		PKGCONFIG += x11
 			LIBS += -lX11
-		}
 	}
+}
+
+mac {
+    #> brew info openssl
+    # openssl@1.1 is keg-only, which means it was not symlinked into /usr/local,
+    # because macOS provides LibreSSL.
+    #
+    # For compilers to find openssl@1.1 you may need to set:
+    #  export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+    #  export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
+
+    # Don't `ln -s`!: https://medium.com/@timmykko/using-openssl-library-with-macos-sierra-7807cfd47892
+    #                 https://stackoverflow.com/questions/38670295/homebrew-refusing-to-link-openssl#comment64722608_38670295
+
+    # https://github.com/openssl/openssl/blob/OpenSSL_1_1_1/NOTES.UNIX
+
+    INCLUDEPATH += /usr/local/opt/openssl/include
+
+    # for application (haveclip-desktop.pro, ...)
+    # https://doc.qt.io/qt-5.12/qmake-advanced-usage.html#library-dependencies
+    LIBS += -L/usr/local/opt/openssl/lib -lcrypto
 }
 
 GITVERSION = src/git_version.h
