@@ -41,7 +41,13 @@ CertificateGeneratorThread::~CertificateGeneratorThread()
 
 	CRYPTO_cleanup_all_ex_data();
 
+#ifndef OPENSSL_NO_CRYPTO_MDEBUG
+	// Time to retired crypto-mdebug
+	//   https://github.com/openssl/openssl/pull/10572
+	// - https://github.com/openssl/openssl/pull/10572/files#diff-0ad35796f3b4040e66893ac4cb4b6b28R282-R331
+	// - https://github.com/openssl/openssl/pull/10572/files#diff-a88baedd3b3f460db4620f1794f6ef48R334
 	CRYPTO_mem_leaks(m_bio);
+#endif
 	BIO_free(m_bio);
 }
 
