@@ -219,7 +219,7 @@ void ConnectionManager::receiveEnabledChange(bool enabled)
 		stopReceiving();
 }
 
-void ConnectionManager::incomingConnection(int handle)
+void ConnectionManager::incomingConnection(qintptr handle)
 {
 	Receiver *c = new Receiver(this);
 	c->setSocketDescriptor(handle);
