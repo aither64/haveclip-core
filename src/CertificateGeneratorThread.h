@@ -55,7 +55,7 @@ private:
 	X509 *m_x509;
 	EVP_PKEY *m_pkey;
 
-	bool addExtension(int nid, char *value);
+	bool addExtension(int nid, const char *value);
 	void error();
 };
 

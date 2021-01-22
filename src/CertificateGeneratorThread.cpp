@@ -174,7 +174,7 @@ void CertificateGeneratorThread::finish()
 		emit finished();
 }
 
-bool CertificateGeneratorThread::addExtension(int nid, char *value)
+bool CertificateGeneratorThread::addExtension(int nid, const char *value)
 {
 	X509_EXTENSION *ex;
 	X509V3_CTX ctx;
