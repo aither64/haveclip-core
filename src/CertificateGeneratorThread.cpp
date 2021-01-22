@@ -122,7 +122,12 @@ void CertificateGeneratorThread::generate()
 
 	X509_set_issuer_name(m_x509, name);
 
-	if (!addExtension(NID_basic_constraints, "critical,CA:FALSE,pathlen:0"))
+	// Reminder: don't set `NID_basic_constraints` to "CA:FALSE,pathlen:0":
+	// - these extension values are inconsistent (see RFC 5280, section 4.2.1.9 "Basic Constraints")
+	// - results in "pathlen:0" only
+	// => "Certificate does not exist or is not valid." (`ui->certInvalidLabel->show()`) on macOS (Secure Transport)
+	// More details in the commit message and PR...
+	if (!addExtension(NID_basic_constraints, "CA:FALSE"))
 		return error();
 
 	if (!addExtension(NID_subject_key_identifier, "hash"))
