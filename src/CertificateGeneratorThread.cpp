@@ -64,7 +64,6 @@ void CertificateGeneratorThread::generate()
 	BIGNUM *e;
 	X509_NAME *name = NULL;
 	int bits = 2048;
-	long days = 10 * 365;
 
 	if ((m_pkey = EVP_PKEY_new()) == NULL)
 		return error();
@@ -94,7 +93,8 @@ void CertificateGeneratorThread::generate()
 	X509_set_version(m_x509, 2);
 	ASN1_INTEGER_set(X509_get_serialNumber(m_x509), 0);
 	X509_gmtime_adj(X509_get_notBefore(m_x509), 0);
-	X509_gmtime_adj(X509_get_notAfter(m_x509), 60 * 60 * 24 * days);
+	X509_gmtime_adj(X509_get_notAfter(m_x509), 1);  // or set notAfter to 99991231235959Z (GeneralizedTime)
+	                                                // https://tools.ietf.org/html/rfc5280#section-4.1.2.5
 	X509_set_pubkey(m_x509, m_pkey);
 
 	name = X509_get_subject_name(m_x509);
