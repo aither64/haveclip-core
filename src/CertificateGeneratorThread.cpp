@@ -133,7 +133,7 @@ void CertificateGeneratorThread::generate()
 	if (!addExtension(NID_subject_key_identifier, "hash"))
 		return error();
 
-	if (!X509_sign(m_x509, m_pkey, EVP_sha1()))
+	if (!X509_sign(m_x509, m_pkey, EVP_sha256()))
 		return error();
 
 	BN_clear_free(e);
