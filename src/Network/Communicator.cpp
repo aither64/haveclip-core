@@ -288,7 +288,7 @@ void Communicator::continueConversation()
 
 void Communicator::onError(QAbstractSocket::SocketError socketError)
 {
-	qDebug() << "Connection error" << socketError;
+	qDebug() << "Connection error" << socketError << ": " << errorString();
 
 	if(!m_conversation || (m_conversation && !m_conversation->isDone()))
 	{
