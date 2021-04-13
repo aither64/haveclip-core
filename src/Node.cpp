@@ -155,7 +155,12 @@ Node Node::load(QSettings *settings, unsigned int id)
 	QByteArray cert = settings->value("Certificate").toString().toUtf8();
 
 	if(!cert.isEmpty())
-		n.m_certificate = QSslCertificate::fromData(cert).first();
+	{
+		QList<QSslCertificate> certs = QSslCertificate::fromData(cert);
+
+		if(!certs.isEmpty())
+			n.m_certificate = certs.first();
+	}
 
 	return n;
 }
