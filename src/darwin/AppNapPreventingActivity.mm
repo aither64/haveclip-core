@@ -36,6 +36,18 @@
 //   https://github.com/bitcoin/bitcoin/issues/11896
 //   https://git.gnu.io/gnu/emacs/commit/04a7977f700fc46cf29d5a41bc7dcffef71044c6
 //
+// - `LSUIElement` key of Info.plist - disables App Nap by default (this behavior may change in the future)
+//   https://stackoverflow.com/questions/19577541/disabling-timer-coalescing-in-osx-for-a-given-process/19578413#19578413
+//   - to set dynamically from code, not from Info.plist
+//     https://forum.qt.io/post/252840
+//     https://developer.apple.com/documentation/appkit/nsapplicationactivationpolicy/nsapplicationactivationpolicyaccessory?language=objc
+//   - `dispatch_source*`: *_create, *_set_event_handler, *_set_timer, dispatch_resume
+//     https://stackoverflow.com/a/19588636
+//   - WWDC 2013: Improving Power Efficiency with App Nap
+//     https://developer.apple.com/videos/play/wwdc2013/209/
+//   - use `NSSupportsAppNap` key to opt-in to App Nap
+//     https://forum.xojo.com/t/mavericks-is-putting-my-app-to-sleep/15643/20
+//
 // - Some more examples
 //   - manual retain/release with ARC, `id` vs `id<NSObject>` vs `NSObject*`
 //     https://github.com/krab/bitcoin/blob/1e0f3c44992fb82e6bf36c2ef9277b0759c17c4c/src/qt/macos_appnap.mm#L20-L53
