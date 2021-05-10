@@ -112,6 +112,13 @@ OTHER_FILES += \
     doc/protocol.md \
     CHANGELOG
 
+
+# For dead code stripping:
+#  Place each function/data in its own section,
+#  so they can be discarded if unused in an app.
+CONFIG(release, debug|release):!mac: CONFIG += gc_binaries
+
+
 #================== Libs ==================
 # How to set library paths (OpenSSL)?
 # Several ways (by priority) to do this (with examples):
