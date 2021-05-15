@@ -193,9 +193,9 @@ unix:!darwin:!packagesExist(sailfishapp) {
          LIBS += -lX11
 }
 
-GITVERSION = src/git_version.h
-versiontarget.target =  $$GITVERSION
-versiontarget.commands = '$$PWD/utils/git_version.sh \"$$PWD/../\" \"$$PWD/$$GITVERSION\"'
+GITVERSION = $$PWD/src/git_version.h
+versiontarget.target = $$GITVERSION
+versiontarget.commands = $$PWD/utils/git_version.sh \"$$PWD/../\" \"$$GITVERSION\"
 versiontarget.depends = FORCE
 PRE_TARGETDEPS += $$GITVERSION
 QMAKE_EXTRA_TARGETS += versiontarget
