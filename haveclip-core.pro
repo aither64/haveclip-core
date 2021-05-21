@@ -73,7 +73,7 @@ HEADERS  += \
     src/Network/Conversations/Verification.h \
     src/Network/Commands/SecurityCode.h \
     src/Network/AutoDiscovery.h \
-    src/Version.h \
+    src/Version.pri.h \
     src/ConfigMigration.h \
     src/Settings.h \
     src/ConfigMigrations/V2Migration.h \
@@ -191,6 +191,12 @@ unix:!darwin:!packagesExist(sailfishapp) {
     CONFIG *= link_pkgconfig
     PKGCONFIG += x11
          LIBS += -lX11
+}
+
+
+#================== Version ==================
+!include(src/Version.pri.h) {
+    error(Problem with \"src/Version.pri.h\" file)
 }
 
 GITVERSION = $$PWD/src/git_version.h

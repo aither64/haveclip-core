@@ -21,7 +21,7 @@
 
 #include <QTimer>
 
-#include "../Version.h"
+#include "../Version.pri.h"
 #include "../Settings.h"
 #include "Conversations/Introduction.h"
 #include "Conversations/Verification.h"

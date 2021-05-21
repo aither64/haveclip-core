@@ -18,7 +18,7 @@
 */
 
 #include "RemoteControl.h"
-#include "Version.h"
+#include "Version.pri.h"
 #include "ClipboardManager.h"
 #include "RemoteClient.h"
 

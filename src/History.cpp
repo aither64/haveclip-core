@@ -24,7 +24,7 @@
 #include <QFileInfo>
 #include <QDesktopServices>
 
-#include "Version.h"
+#include "Version.pri.h"
 #include "Settings.h"
 
 History::History(QObject *parent) :

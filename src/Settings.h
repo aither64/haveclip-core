@@ -60,7 +60,7 @@
 #include <QSslCertificate>
 #include <QSslKey>
 
-#include "Version.h"
+#include "Version.pri.h"
 #include "ClipboardManager.h"
 #include "Node.h"
 

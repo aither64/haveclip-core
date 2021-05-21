@@ -18,7 +18,7 @@
 */
 
 #include "Cli.h"
-#include "Version.h"
+#include "Version.pri.h"
 
 #include <QCoreApplication>
 #include <QStringList>

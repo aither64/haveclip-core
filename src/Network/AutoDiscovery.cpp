@@ -23,7 +23,7 @@
 
 #include "../Settings.h"
 #include "../Node.h"
-#include "../Version.h"
+#include "../Version.pri.h"
 
 AutoDiscovery::AutoDiscovery(QObject *parent) :
 	QUdpSocket(parent),

@@ -18,7 +18,7 @@
 */
 
 #include "qmlclipboardmanager.h"
-#include "../Version.h"
+#include "../Version.pri.h"
 #include "../git_version.h"
 
 QmlClipboardManager::QmlClipboardManager(QObject *parent) :
